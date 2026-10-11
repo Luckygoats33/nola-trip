@@ -560,6 +560,21 @@ h3{font-family:var(--display);font-style:normal;font-weight:600}
 .ai-card button.img{width:100%}
 .ai-card img{max-width:100%;height:auto}
 .ai-grid > *{min-width:0}
+/* ---- contrast: every control sets its own text color ---- */
+.plink,.chip,.mood,.vote,.cakebtn,.btn,.tab,.n2-item,.hearts button{color:var(--ink)}
+.chip[aria-pressed="true"]{color:var(--accent-ink)}
+.chip.cake[aria-pressed="true"],.seg .chip[aria-pressed="true"]{color:var(--surface)}
+:root[data-mode="night"] .chip.cake[aria-pressed="true"],:root[data-mode="night"] .seg .chip[aria-pressed="true"]{color:#23172C}
+.mood[aria-pressed="true"]{color:var(--bg)}
+.plink.picked{color:var(--coral)}
+.vote[aria-pressed="true"]{color:var(--surface)}
+:root[data-mode="night"] .vote[aria-pressed="true"]{color:#23172C}
+/* controls sitting on the dark hero cards */
+.hero .plink,.hero .btn:not(.primary),.tm-card .plink,.tm-card .btn:not(.primary),.colhead .plink,.colhead .btn:not(.primary){background:rgba(246,235,221,.12);border-color:rgba(246,235,221,.45);color:var(--hero-ink)}
+.hero .plink:hover,.tm-card .plink:hover,.colhead .plink:hover,.tm-card .btn:not(.primary):hover,.colhead .btn:not(.primary):hover{background:rgba(246,235,221,.22);border-color:var(--brass);color:var(--hero-ink)}
+.hero .btn.primary,.tm-card .btn.primary,.colhead .btn.primary{background:var(--brass);border-color:var(--brass);color:#23172C}
+.tm-card .btn:disabled{opacity:.4}
+.hero .eyebrow,.tm-card .eyebrow,.colhead .eyebrow{color:var(--brass)}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
@@ -2224,7 +2239,7 @@ document.addEventListener("keydown", e=>{
 
 /* version links: GitHub Pages uses folders, claude.ai uses two artifacts */
 (function(){ const gh=/github.io$/.test(location.hostname);
-  const u = gh ? {v1:"/nola-trip/", v2:"/nola-trip/v2/"} : {v1:"https://claude.ai/artifact/8yff42c7e6u81psANnuHfQ", v2:"#"};
+  const u = gh ? {v1:"/nola-trip/", v2:"/nola-trip/v2/"} : {v1:"https://claude.ai/artifact/8yff42c7e6u81psANnuHfQ", v2:"https://claude.ai/artifact/8RHHe6W9CEt16ZjTSmPCQg"};
   const a=document.getElementById("v1link"); if(a){ a.href=u.v1; if(!gh){ a.target="_blank"; a.rel="noopener"; } } })();
 try{ if("serviceWorker" in navigator && /github\.io$/.test(location.hostname)) navigator.serviceWorker.register("../sw.js"); }catch(e){}
 /* keep "right now" fresh while it's on screen */
