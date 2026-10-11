@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="New Orleans trip hub: what is open now, a real map, the plan, saved places, and tattoo ideas.">
-<meta name="theme-color" content="#D2614C">
-<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#23172C">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="../icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -575,6 +575,12 @@ h3{font-family:var(--display);font-style:normal;font-weight:600}
 .hero .btn.primary,.tm-card .btn.primary,.colhead .btn.primary{background:var(--brass);border-color:var(--brass);color:#23172C}
 .tm-card .btn:disabled{opacity:.4}
 .hero .eyebrow,.tm-card .eyebrow,.colhead .eyebrow{color:var(--brass)}
+/* phones: no double-tap zoom delay swallowing taps */
+button,a,.chip,.tab,.plink,.btn,.mood,.tile,.colcard,summary{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.adv-head{font-family:var(--display);font-size:1.05rem}
+.adv{animation:advIn .35s ease-out}
+@keyframes advIn{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.adv{animation:none}}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
@@ -2399,8 +2405,8 @@ function toggleVisit(id){
 S.surp = {mood:"hidden", hrs:2, mode:"walk", seed:1}; S.surpRes = null;
 function rng(seed){ let x = seed*9301+49297; return ()=>{ x = (x*9301+49297)%233280; return x/233280; }; }
 function dwellOf(p){ return has(p,"river") ? 120 : has(p,"eat","jazz","drink","party","queer") ? 60 : has(p,"history","spooky","cats","tattoo") ? 45 : 35; }
-function runSurprise(){
-  const W = nolaNow(), o = originPt(), start = o ? o.pt : QUARTER, r = rng(S.surp.seed+S.surp.hrs*7+S.surp.mood.length);
+function runSurprise(startW){
+  const W = startW || nolaNow(), o = originPt(), start = o ? o.pt : QUARTER, r = rng(S.surp.seed+S.surp.hrs*7+S.surp.mood.length);
   const maxLeg = S.surp.mode==="walk" ? 1600 : 9000, total = S.surp.hrs*60;
   let pool = colPlaces(S.surp.mood).filter(p=>coordOf(p));
   const stops = []; let cur = start, t = W.mins;
@@ -2421,7 +2427,14 @@ function runSurprise(){
     const pick = cands[Math.floor(r()*Math.min(3,cands.length))];
     stops.push({p:pick.p, at:pick.at, dw:pick.dw, leg:pick.leg}); cur = coordOf(pick.p); t = pick.at + pick.dw;
   }
-  return {stops, end:t, from:o?o.from:"the French Quarter", made:Date.now()};
+  return {stops, end:t, from:o?o.from:"the French Quarter", made:Date.now(), later:!!startW, startMins:W.mins};
+}
+/* plan now; if nothing in that mood is open, plan the next good window instead */
+function surpriseNow(){
+  let R = runSurprise(); if(R.stops.length) return R;
+  const N = nolaNow(), tryAt = [N.mins<10*60 ? Object.assign({},N,{mins:10*60}) : null, N.mins<18*60 ? Object.assign({},N,{mins:18*60}) : null, shiftW(Object.assign({},N,{mins:0}),1440+10*60)].filter(Boolean);
+  for(const W of tryAt){ R = runSurprise(W); if(R.stops.length) return R; }
+  return R;
 }
 function surpriseCard(){
   const s = S.surp;
@@ -2431,9 +2444,12 @@ function surpriseCard(){
   h += '<div class="row"><button class="btn primary big" data-surprun="go">Find our adventure</button>'+(S.surpRes?'<button class="btn" data-surprun="again">Spin again</button>':'')+'</div>';
   const R = S.surpRes;
   if(R){
-    if(!R.stops.length) h += '<div class="empty">Nothing in that mood fits right now. Try another mood, more time, or Rideshare.</div>';
+    if(!R.stops.length) h += '<div class="empty">Nothing in that mood fits in the next day. Try another mood, more time, or Rideshare.</div>';
     else {
-      h += '<div class="adv" id="adv"><p class="small muted">Starting from '+esc(R.from)+' · back by about '+fmtM(R.end)+'</p>';
+      const lab = (MOODS.find(m=>m[0]===s.mood)||[,"Your mood"])[1]+" · "+s.hrs+" hr"+(s.hrs>1?"s":"")+" · "+(s.mode==="walk"?"walking":"rideshare");
+      h += '<div class="adv" id="adv"><p class="adv-head"><b>'+esc(lab)+'</b></p>'
+        + (R.later ? '<p class="small">Nothing in this mood is open right now, so here\x27s the next good window: starting at '+fmtM(R.startMins)+(R.startMins<nolaNow().mins?' tomorrow':' today')+'.</p>' : '')
+        + '<p class="small muted">Starting from '+esc(R.from)+' · back by about '+fmtM(R.end)+'</p>';
       R.stops.forEach((st,i)=>{ h += '<div class="adv-leg">↓ '+esc(st.leg.txt)+'</div><div class="adv-stop"><span class="t">'+fmtM(st.at)+'</span><div class="what"><button class="plink" data-open="'+st.p.id+'">'+esc(st.p.n)+'</button>'+(WHY[st.p.id]?'<span class="why">'+esc(WHY[st.p.id])+'</span>':'')+'<span class="small muted">About '+dur(st.dw)+' · '+esc(st.p.a)+'</span></div></div>'; });
       const pts = R.stops.map(st=>coordOf(st.p)), o = originPt(), seq = (o?[o.pt]:[]).concat(pts), sp = q=>q[0].toFixed(5)+","+q[1].toFixed(5);
       const url = seq.length>=2 ? "https://www.google.com/maps/dir/?api=1&origin="+sp(seq[0])+"&destination="+sp(seq[seq.length-1])+"&travelmode="+(s.mode==="walk"?"walking":"driving")+(seq.length>2?"&waypoints="+encodeURIComponent(seq.slice(1,-1).map(sp).join("|")):"") : dirUrl(R.stops[0].p);
@@ -2707,14 +2723,15 @@ render = function(){
 };
 
 /* ---------- v2 events ---------- */
+window.addEventListener("error", e=>{ try{ toast("Something hiccuped. Pull down to refresh if a button stops working."); console.error(e.error||e.message); }catch(_){} });
 document.addEventListener("click", e=>{
   const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq]");
   if(!el) return; const d = el.dataset;
-  if(d.surp){ const [k,v]=d.surp.split(":"); S.surp[k] = k==="hrs" ? +v : v; S.surpRes = null; if(!d.go){ render(); return; } }
+  if(d.surp){ const [k,v]=d.surp.split(":"); S.surp[k] = k==="hrs" ? +v : v; S.surpRes = surpriseNow(); if(!d.go){ render(); return; } }
   if(d.savedtab){ S.savedTab = d.savedtab; if(!d.go){ render(); return; } }
   if(d.go){ const [v,arg] = d.go.split(":"); S.tab = v; if(v==="col") S.col = arg; if(v==="trip" && arg) S.day = +arg; S.sheet = null; window.scrollTo(0,0); render(); if(d.surp) document.getElementById("surprise")?.scrollIntoView({block:"start"}); return; }
   if(d.col){ S.tab = "col"; S.col = d.col; S.sheet = null; window.scrollTo(0,0); render(); return; }
-  if(d.surprun){ if(d.surprun==="again") S.surp.seed++; S.surpRes = runSurprise(); render(); setTimeout(()=>document.getElementById("adv")?.scrollIntoView({block:"nearest", behavior:"smooth"}),30); return; }
+  if(d.surprun){ if(d.surprun==="again") S.surp.seed++; S.surpRes = surpriseNow(); render(); setTimeout(()=>document.getElementById("adv")?.scrollIntoView({block:"nearest", behavior:"smooth"}),30); return; }
   if(d.surpadd){ const R = S.surpRes; if(!R||!R.stops.length) return; const ts = tripStatus(), dn = (ts&&ts.day) || S.day || 1, day = plan.days.find(x=>x.n===dn) || plan.days[0];
     R.stops.forEach(st=>{ const m = st.at%1440; day.items.push({k:uidk(), t:String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0"), h:st.p.n, d:"From Surprise Me", p:[st.p.id]}); });
     savePlan("Added "+R.stops.length+" stops to Day "+day.n+"."); return; }
