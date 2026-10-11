@@ -3,7 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="New Orleans trip hub: what is open now, the plan, a map with safety colors, cruises, and bookings.">
+<meta name="description" content="New Orleans trip hub: what is open now, a real map, the plan, saved places, and tattoo ideas.">
+<meta name="theme-color" content="#D2614C">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
@@ -286,6 +291,7 @@ svg.map .hood{fill:var(--muted);font-family:var(--mono);letter-spacing:.06em;tex
 svg.map .st-l{fill:var(--muted);font-family:var(--body);font-style:italic;pointer-events:none}
 svg.map .pin{cursor:pointer} svg.map .pin:hover circle:nth-child(2),svg.map .pin:focus circle:nth-child(2){stroke:var(--coral)}
 svg.map .pin-l{fill:var(--ink);font-family:var(--body);font-weight:700;paint-order:stroke;stroke:var(--surface);stroke-width:.35;pointer-events:none}
+.hscroll{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}.hscroll::-webkit-scrollbar{display:none}.hscroll>*{flex-shrink:0}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px;border:1px solid var(--ink)}
 .safety{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;gap:10px}
@@ -306,7 +312,99 @@ li.bk.done .bk-body{opacity:.6}
   .talk .again{grid-column:1 / -1;justify-self:start}
   .leaf{width:64px;height:64px}
 }
+
+/* ---- phone-first sizing ---- */
+.chip{min-height:40px;padding:8px 14px}
+.btn{min-height:44px;padding:8px 14px;font-size:.85rem}
+.btn.big{font-size:.95rem;padding:10px 18px}
+.plink{min-height:36px;padding:6px 12px}
+.field{font-size:16px;min-height:44px}
+.cakebtn{min-height:40px;padding:6px 12px 6px 10px}
+.tab{display:flex;align-items:center;gap:6px}
+.tab svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tab .n{font-family:var(--mono);font-size:.68rem;background:var(--coral);color:var(--surface);border-radius:999px;padding:0 6px}
+.hbtn{min-height:36px;padding:4px 12px}
+@media (max-width:899px){
+  body{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;margin:0;background:var(--surface);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));justify-content:space-around;gap:2px;box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+  .tab{flex:1 1 0;flex-direction:column;justify-content:center;gap:2px;min-height:56px;padding:4px 2px;border:0;border-radius:12px;background:transparent;font-size:.72rem}
+  .tab svg{width:22px;height:22px}
+  .tab[aria-selected="true"]{background:var(--coral-soft);color:var(--coral);border:0}
+  .tab .n{position:absolute;margin:-30px 0 0 26px}
+  .tab{position:relative}
+  .sheet{border-radius:18px 18px 0 0;width:100%;max-height:88dvh;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+  .scrim{padding:0}
+  .toast{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+  .logo{font-size:1.5rem}
+  .top-row .sub{display:none}
+  .leaf{display:none}
+}
+@media (orientation:landscape) and (max-height:500px){ .top .wicker{display:none} .logo{font-size:1.2rem} .leafmap,.leaf-host .leaflet-container{height:80dvh} }
+/* ---- next two hours ---- */
+.next2{background:var(--surface);border:2px solid var(--coral);border-radius:16px;padding:14px 16px;display:grid;gap:10px}
+.n2-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.n2-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.n2-col{display:grid;gap:6px;align-content:start;min-width:0}
+.n2-item{all:unset;cursor:pointer;display:grid;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);min-height:44px}
+.n2-item:hover,.n2-item:focus-visible{border-color:var(--coral);outline:none}
+.n2-item span{font-size:.8rem;color:var(--muted)}
+/* ---- votes ---- */
+.votes{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:6px}
+.vote{border:1px solid var(--line);background:var(--surface);border-radius:999px;min-height:40px;padding:6px 12px;font-weight:800;font-size:.82rem;display:inline-flex;align-items:center;gap:6px}
+.vote.v-must[aria-pressed="true"]{background:var(--coral);border-color:var(--coral);color:var(--surface)}
+.vote.v-maybe[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:var(--surface)}
+.vote.v-skip[aria-pressed="true"]{background:var(--muted);border-color:var(--muted);color:var(--surface)}
+/* ---- itinerary travel + fixed/flex ---- */
+ol.tl li.conn{border-top:0;padding-block:0 2px;font-size:.78rem;color:var(--muted);font-family:var(--mono)}
+ol.tl li.conn.tight{color:var(--warn)}
+.fx{justify-self:start;font-family:var(--mono);font-size:.68rem;padding:1px 8px;border-radius:999px}
+.fx.fixed{background:var(--lav-soft);color:var(--lav)} .fx.flex{background:var(--sunk);color:var(--muted)}
+/* ---- ink ---- */
+.ink-sec{display:grid;gap:10px;scroll-margin-top:120px}
+.ink-head{display:flex;gap:12px;align-items:center}
+.ink-num{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:var(--bg);font-family:var(--mono);flex-shrink:0}
+.ink-num.custom{background:#8E5BD6;color:#fff}
+.ink-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.ink-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:grid;align-content:start}
+.ink-card.star{border:2px solid var(--coral)}
+.ink-card.custom{border-color:#B48AF0}
+.ink-art{all:unset;cursor:zoom-in;display:block;background:var(--surface);border-bottom:1px dashed var(--line);padding:10px;color:var(--ink)}
+.ink-art:focus-visible{outline:2px solid var(--coral);outline-offset:-4px}
+.ink-art svg{display:block;width:100%;height:auto;aspect-ratio:1}
+.inkart *{vector-effect:non-scaling-stroke}
+.inkart{stroke-width:1.4}
+.ink-meta{padding:12px 14px 14px;display:grid;gap:8px}
+.ink-meta h3{font-size:1rem}
+.ink-large{color:var(--ink);background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:8px}
+.ink-large svg{display:block;width:100%;max-width:440px;margin:0 auto;height:auto;aspect-ratio:1}
+/* ---- real map ---- */
+.mapslot{position:relative}
+.mapwrap{position:relative;z-index:0;isolation:isolate}
+.leafmap{height:min(68dvh,620px);width:100%;display:block}
+.leaflet-container{font-family:var(--body);background:var(--sunk)}
+.leafmap.dark .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.9) contrast(.9)}
+.leaflet-tooltip{font-family:var(--body);font-weight:700}
+.clu{background:var(--coral);color:var(--surface);border:3px solid var(--surface);border-radius:50%;display:grid!important;place-items:center;font-family:var(--mono);font-weight:500;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.leaflet-control-zoom a{width:40px!important;height:40px!important;line-height:40px!important;font-size:20px!important}
+.leaflet-image-layer,.leaflet-layer,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-pane,.leaflet-pane>canvas,.leaflet-pane>svg,.leaflet-tile,.leaflet-tile-container,.leaflet-zoom-box{position:absolute;left:0;top:0}.leaflet-container{overflow:hidden}.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-tile{-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-user-drag:none}.leaflet-tile::selection{background:0 0}.leaflet-safari .leaflet-tile{image-rendering:-webkit-optimize-contrast}.leaflet-safari .leaflet-tile-container{width:1600px;height:1600px;-webkit-transform-origin:0 0}.leaflet-marker-icon,.leaflet-marker-shadow{display:block}.leaflet-container .leaflet-overlay-pane svg{max-width:none!important;max-height:none!important}.leaflet-container .leaflet-marker-pane img,.leaflet-container .leaflet-shadow-pane img,.leaflet-container .leaflet-tile,.leaflet-container .leaflet-tile-pane img,.leaflet-container img.leaflet-image-layer{max-width:none!important;max-height:none!important;width:auto;padding:0}.leaflet-container img.leaflet-tile{mix-blend-mode:plus-lighter}.leaflet-container.leaflet-touch-zoom{-ms-touch-action:pan-x pan-y;touch-action:pan-x pan-y}.leaflet-container.leaflet-touch-drag{-ms-touch-action:pinch-zoom;touch-action:none;touch-action:pinch-zoom}.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom{-ms-touch-action:none;touch-action:none}.leaflet-container{-webkit-tap-highlight-color:transparent}.leaflet-container a{-webkit-tap-highlight-color:rgba(51,181,229,.4)}.leaflet-tile{filter:inherit;visibility:hidden}.leaflet-tile-loaded{visibility:inherit}.leaflet-zoom-box{width:0;height:0;-moz-box-sizing:border-box;box-sizing:border-box;z-index:800}.leaflet-overlay-pane svg{-moz-user-select:none}.leaflet-pane{z-index:400}.leaflet-tile-pane{z-index:200}.leaflet-overlay-pane{z-index:400}.leaflet-shadow-pane{z-index:500}.leaflet-marker-pane{z-index:600}.leaflet-tooltip-pane{z-index:650}.leaflet-popup-pane{z-index:700}.leaflet-map-pane canvas{z-index:100}.leaflet-map-pane svg{z-index:200}.leaflet-vml-shape{width:1px;height:1px}.lvml{behavior:url(#default#VML);display:inline-block;position:absolute}.leaflet-control{position:relative;z-index:800;pointer-events:visiblePainted;pointer-events:auto}.leaflet-bottom,.leaflet-top{position:absolute;z-index:1000;pointer-events:none}.leaflet-top{top:0}.leaflet-right{right:0}.leaflet-bottom{bottom:0}.leaflet-left{left:0}.leaflet-control{float:left;clear:both}.leaflet-right .leaflet-control{float:right}.leaflet-top .leaflet-control{margin-top:10px}.leaflet-bottom .leaflet-control{margin-bottom:10px}.leaflet-left .leaflet-control{margin-left:10px}.leaflet-right .leaflet-control{margin-right:10px}.leaflet-fade-anim .leaflet-popup{opacity:0;-webkit-transition:opacity .2s linear;-moz-transition:opacity .2s linear;transition:opacity .2s linear}.leaflet-fade-anim .leaflet-map-pane .leaflet-popup{opacity:1}.leaflet-zoom-animated{-webkit-transform-origin:0 0;-ms-transform-origin:0 0;transform-origin:0 0}svg.leaflet-zoom-animated{will-change:transform}.leaflet-zoom-anim .leaflet-zoom-animated{-webkit-transition:-webkit-transform .25s cubic-bezier(0,0,.25,1);-moz-transition:-moz-transform .25s cubic-bezier(0,0,.25,1);transition:transform .25s cubic-bezier(0,0,.25,1)}.leaflet-pan-anim .leaflet-tile,.leaflet-zoom-anim .leaflet-tile{-webkit-transition:none;-moz-transition:none;transition:none}.leaflet-zoom-anim .leaflet-zoom-hide{visibility:hidden}.leaflet-interactive{cursor:pointer}.leaflet-grab{cursor:-webkit-grab;cursor:-moz-grab;cursor:grab}.leaflet-crosshair,.leaflet-crosshair .leaflet-interactive{cursor:crosshair}.leaflet-control,.leaflet-popup-pane{cursor:auto}.leaflet-dragging .leaflet-grab,.leaflet-dragging .leaflet-grab .leaflet-interactive,.leaflet-dragging .leaflet-marker-draggable{cursor:move;cursor:-webkit-grabbing;cursor:-moz-grabbing;cursor:grabbing}.leaflet-image-layer,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-pane>svg path,.leaflet-tile-container{pointer-events:none}.leaflet-image-layer.leaflet-interactive,.leaflet-marker-icon.leaflet-interactive,.leaflet-pane>svg path.leaflet-interactive,svg.leaflet-image-layer.leaflet-interactive path{pointer-events:visiblePainted;pointer-events:auto}.leaflet-container{background:#ddd;outline-offset:1px}.leaflet-container a{color:#0078a8}.leaflet-zoom-box{border:2px dotted #38f;background:rgba(255,255,255,.5)}.leaflet-container{font-family:"Helvetica Neue",Arial,Helvetica,sans-serif;font-size:12px;font-size:.75rem;line-height:1.5}.leaflet-bar{box-shadow:0 1px 5px rgba(0,0,0,.65);border-radius:4px}.leaflet-bar a{background-color:#fff;border-bottom:1px solid #ccc;width:26px;height:26px;line-height:26px;display:block;text-align:center;text-decoration:none;color:#000}.leaflet-bar a,.leaflet-control-layers-toggle{background-position:50% 50%;background-repeat:no-repeat;display:block}.leaflet-bar a:focus,.leaflet-bar a:hover{background-color:#f4f4f4}.leaflet-bar a:first-child{border-top-left-radius:4px;border-top-right-radius:4px}.leaflet-bar a:last-child{border-bottom-left-radius:4px;border-bottom-right-radius:4px;border-bottom:none}.leaflet-bar a.leaflet-disabled{cursor:default;background-color:#f4f4f4;color:#bbb}.leaflet-touch .leaflet-bar a{width:30px;height:30px;line-height:30px}.leaflet-touch .leaflet-bar a:first-child{border-top-left-radius:2px;border-top-right-radius:2px}.leaflet-touch .leaflet-bar a:last-child{border-bottom-left-radius:2px;border-bottom-right-radius:2px}.leaflet-control-zoom-in,.leaflet-control-zoom-out{font:bold 18px 'Lucida Console',Monaco,monospace;text-indent:1px}.leaflet-touch .leaflet-control-zoom-in,.leaflet-touch .leaflet-control-zoom-out{font-size:22px}.leaflet-control-layers{box-shadow:0 1px 5px rgba(0,0,0,.4);background:#fff;border-radius:5px}.leaflet-control-layers-toggle{background-image:none;width:36px;height:36px}.leaflet-retina .leaflet-control-layers-toggle{background-image:none;background-size:26px 26px}.leaflet-touch .leaflet-control-layers-toggle{width:44px;height:44px}.leaflet-control-layers .leaflet-control-layers-list,.leaflet-control-layers-expanded .leaflet-control-layers-toggle{display:none}.leaflet-control-layers-expanded .leaflet-control-layers-list{display:block;position:relative}.leaflet-control-layers-expanded{padding:6px 10px 6px 6px;color:#333;background:#fff}.leaflet-control-layers-scrollbar{overflow-y:scroll;overflow-x:hidden;padding-right:5px}.leaflet-control-layers-selector{margin-top:2px;position:relative;top:1px}.leaflet-control-layers label{display:block;font-size:13px;font-size:1.08333em}.leaflet-control-layers-separator{height:0;border-top:1px solid #ddd;margin:5px -10px 5px -6px}.leaflet-default-icon-path{background-image:none}.leaflet-container .leaflet-control-attribution{background:#fff;background:rgba(255,255,255,.8);margin:0}.leaflet-control-attribution,.leaflet-control-scale-line{padding:0 5px;color:#333;line-height:1.4}.leaflet-control-attribution a{text-decoration:none}.leaflet-control-attribution a:focus,.leaflet-control-attribution a:hover{text-decoration:underline}.leaflet-attribution-flag{display:inline!important;vertical-align:baseline!important;width:1em;height:.6669em}.leaflet-left .leaflet-control-scale{margin-left:5px}.leaflet-bottom .leaflet-control-scale{margin-bottom:5px}.leaflet-control-scale-line{border:2px solid #777;border-top:none;line-height:1.1;padding:2px 5px 1px;white-space:nowrap;-moz-box-sizing:border-box;box-sizing:border-box;background:rgba(255,255,255,.8);text-shadow:1px 1px #fff}.leaflet-control-scale-line:not(:first-child){border-top:2px solid #777;border-bottom:none;margin-top:-2px}.leaflet-control-scale-line:not(:first-child):not(:last-child){border-bottom:2px solid #777}.leaflet-touch .leaflet-bar,.leaflet-touch .leaflet-control-attribution,.leaflet-touch .leaflet-control-layers{box-shadow:none}.leaflet-touch .leaflet-bar,.leaflet-touch .leaflet-control-layers{border:2px solid rgba(0,0,0,.2);background-clip:padding-box}.leaflet-popup{position:absolute;text-align:center;margin-bottom:20px}.leaflet-popup-content-wrapper{padding:1px;text-align:left;border-radius:12px}.leaflet-popup-content{margin:13px 24px 13px 20px;line-height:1.3;font-size:13px;font-size:1.08333em;min-height:1px}.leaflet-popup-content p{margin:17px 0;margin:1.3em 0}.leaflet-popup-tip-container{width:40px;height:20px;position:absolute;left:50%;margin-top:-1px;margin-left:-20px;overflow:hidden;pointer-events:none}.leaflet-popup-tip{width:17px;height:17px;padding:1px;margin:-10px auto 0;pointer-events:auto;-webkit-transform:rotate(45deg);-moz-transform:rotate(45deg);-ms-transform:rotate(45deg);transform:rotate(45deg)}.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#fff;color:#333;box-shadow:0 3px 14px rgba(0,0,0,.4)}.leaflet-container a.leaflet-popup-close-button{position:absolute;top:0;right:0;border:none;text-align:center;width:24px;height:24px;font:16px/24px Tahoma,Verdana,sans-serif;color:#757575;text-decoration:none;background:0 0}.leaflet-container a.leaflet-popup-close-button:focus,.leaflet-container a.leaflet-popup-close-button:hover{color:#585858}.leaflet-popup-scrolled{overflow:auto}.leaflet-oldie .leaflet-popup-content-wrapper{-ms-zoom:1}.leaflet-oldie .leaflet-popup-tip{width:24px;margin:0 auto}.leaflet-oldie .leaflet-control-layers,.leaflet-oldie .leaflet-control-zoom,.leaflet-oldie .leaflet-popup-content-wrapper,.leaflet-oldie .leaflet-popup-tip{border:1px solid #999}.leaflet-div-icon{background:#fff;border:1px solid #666}.leaflet-tooltip{position:absolute;padding:6px;background-color:#fff;border:1px solid #fff;border-radius:3px;color:#222;white-space:nowrap;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.4)}.leaflet-tooltip.leaflet-interactive{cursor:pointer;pointer-events:auto}.leaflet-tooltip-bottom:before,.leaflet-tooltip-left:before,.leaflet-tooltip-right:before,.leaflet-tooltip-top:before{position:absolute;pointer-events:none;border:6px solid transparent;background:0 0;content:""}.leaflet-tooltip-bottom{margin-top:6px}.leaflet-tooltip-top{margin-top:-6px}.leaflet-tooltip-bottom:before,.leaflet-tooltip-top:before{left:50%;margin-left:-6px}.leaflet-tooltip-top:before{bottom:0;margin-bottom:-12px;border-top-color:#fff}.leaflet-tooltip-bottom:before{top:0;margin-top:-12px;margin-left:-6px;border-bottom-color:#fff}.leaflet-tooltip-left{margin-left:-6px}.leaflet-tooltip-right{margin-left:6px}.leaflet-tooltip-left:before,.leaflet-tooltip-right:before{top:50%;margin-top:-6px}.leaflet-tooltip-left:before{right:0;margin-right:-12px;border-left-color:#fff}.leaflet-tooltip-right:before{left:0;margin-left:-12px;border-right-color:#fff}@media print{.leaflet-control{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+.leaflet-cluster-anim .leaflet-marker-icon, .leaflet-cluster-anim .leaflet-marker-shadow {
+	-webkit-transition: -webkit-transform 0.3s ease-out, opacity 0.3s ease-in;
+	-moz-transition: -moz-transform 0.3s ease-out, opacity 0.3s ease-in;
+	-o-transition: -o-transform 0.3s ease-out, opacity 0.3s ease-in;
+	transition: transform 0.3s ease-out, opacity 0.3s ease-in;
+}
+
+.leaflet-cluster-spider-leg {
+	/* stroke-dashoffset (duration and function) should match with leaflet-marker-icon transform in order to track it exactly */
+	-webkit-transition: -webkit-stroke-dashoffset 0.3s ease-out, -webkit-stroke-opacity 0.3s ease-in;
+	-moz-transition: -moz-stroke-dashoffset 0.3s ease-out, -moz-stroke-opacity 0.3s ease-in;
+	-o-transition: -o-stroke-dashoffset 0.3s ease-out, -o-stroke-opacity 0.3s ease-in;
+	transition: stroke-dashoffset 0.3s ease-out, stroke-opacity 0.3s ease-in;
+}
+
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
 
 <div class="wrap">
   <header class="top">
@@ -314,7 +412,7 @@ li.bk.done .bk-body{opacity:.6}
     <div class="top-row">
       <svg class="leaf" viewBox="0 0 100 100" aria-hidden="true"><path d="M95 5C60 8 30 25 18 55c-5 12-6 25-3 38 4-14 10-27 19-38-6 14-9 28-8 42 10-22 28-40 50-52-18 14-32 32-40 52 30-12 52-40 59-92z"/></svg>
       <div class="brand"><h1 class="logo">The <span>NOLA</span> Girls</h1><span class="sub" id="sub">Emily · you · niece</span></div>
-      <div class="row"><button class="nowbtn" data-nowbtn="1"><span class="pulse" aria-hidden="true"></span>What's open now?</button><span class="sync" id="sync">Saved on this device</span></div>
+      <div class="row"><button class="btn hbtn" data-tab="info">Trip info</button><span class="sync" id="sync">Saved on this device</span></div>
     </div>
     <div class="tabs" role="tablist" id="tabs"></div>
   </header>
@@ -328,13 +426,13 @@ li.bk.done .bk-body{opacity:.6}
 const CATS = {
   coffee:"Coffee & beignets", eat:"Vegetarian eats", drink:"Cocktails", jazz:"Jazz", party:"Bourbon & party",
   queer:"Queer nights", date:"Date night", history:"History", spooky:"Voodoo & weird", shop:"Antiques & shops",
-  river:"River & cruises", nature:"Swamp & outdoors", daytrip:"Day trips", sports:"Saints"
+  river:"River & cruises", tattoo:"Tattoos", nature:"Swamp & outdoors", daytrip:"Day trips", sports:"Saints"
 };
 /* who signs off on each kind of place */
 const APPROVER = {date:"Blanche", party:"Blanche", drink:"Blanche", queer:"Blanche", history:"Dorothy", jazz:"Dorothy", sports:"Dorothy",
-  nature:"Rose", daytrip:"Rose", coffee:"Rose", river:"Rose", eat:"Sophia", spooky:"Sophia", shop:"Sophia"};
+  nature:"Rose", daytrip:"Rose", coffee:"Rose", river:"Rose", eat:"Sophia", spooky:"Sophia", shop:"Sophia", tattoo:"Blanche"};
 /* filter groups and the reason each kind of place is worth your time */
-const FG = [["Eat & drink",["coffee","eat","drink"]],["Music & nights",["jazz","party","queer","date"]],["See & do",["history","spooky","shop","river"]],["Out of town",["nature","daytrip","sports"]]];
+const FG = [["Eat & drink",["coffee","eat","drink"]],["Music & nights",["jazz","party","queer","date"]],["See & do",["history","spooky","shop","river","tattoo"]],["Out of town",["nature","daytrip","sports"]]];
 const CAT_WHY = {
  coffee:"Beignets and chicory café au lait are the city's morning ritual, and the cheapest great moment of the trip. Go early or late to skip the line.",
  eat:"Proof a vegetarian can eat like a local here: vegan gumbo, tofu po-boys, Creole dishes made plant-based. Pick these so nobody is stuck ordering side dishes.",
@@ -349,6 +447,7 @@ const CAT_WHY = {
  river:"The Mississippi is why the city exists. A riverboat with a jazz band at sunset is the classic for a reason.",
  nature:"Cypress swamps, gators, and lakefront sunsets. Wild Louisiana within an hour of Bourbon Street.",
  daytrip:"For a break from the Quarter: plantations, small towns, and swamps, all under an hour away.",
+ tattoo:"The souvenir that lasts. Several shops take walk-ins for small flash pieces; bring photo ID (18+) and your sketch from the Ink tab.",
  sports:"A Saints game in the Dome, or a packed bar on game day, is pure New Orleans."
 };
 const WHY = {
@@ -459,7 +558,7 @@ const P = [
  {id:"cure", n:"Cure", c:["date","drink"], a:"Uptown", d:15, pr:"$$–$$$", ph:"504-302-2357", ad:"4905 Freret St", note:"James Beard–winning cocktail bar, opened 2009. Rideshare home."},
  {id:"marilou", n:"Bar Marilou", c:["date","drink"], a:"CBD", d:5, pr:"$$–$$$", ph:"504-814-7711", ad:"544 Carondelet St", note:"Dark, library-like, French-inflected. A strong nightcap for two."},
  {id:"bacchanal", n:"Bacchanal Wine", c:["drink","jazz","date"], a:"Bywater", d:12, pr:"$$–$$$", ph:"504-948-9111", ad:"600 Poland Ave", note:"Wine garden with live music. 21+, no reservations. Rideshare late."},
- {id:"oldpoint", n:"Old Point Bar", c:["drink","jazz"], a:"West Bank", d:10, pr:"$", ad:"545 Patterson Rd, Algiers Point", note:"Real neighborhood bar with live music, a short walk from the Algiers ferry."},
+ {id:"oldpoint", n:"Old Point Bar", c:["drink","jazz"], a:"West Bank", d:10, pr:"$", ad:"545 Patterson Dr, Algiers Point", note:"Real neighborhood bar with live music, a short walk from the Algiers ferry."},
  {id:"patobriens", n:"Pat O'Brien's", c:["party","drink"], a:"French Quarter", d:0, pr:"$$", ph:"504-525-4823", ad:"718 St Peter St", note:"The famous courtyard and Hurricane. Hurricanes are strong; pace them."},
  {id:"cooter", n:"Cooter Brown's", c:["sports","drink"], a:"Uptown", d:20, pr:"$$", ph:"504-866-9104", ad:"509 S Carrollton Ave", note:"Where to watch a Saints game. 84 taps, 21+."},
  {id:"preshall", n:"Preservation Hall", c:["jazz"], a:"French Quarter", d:0, pr:"$$–$$$", ph:"504-522-2841", ad:"726 St Peter St", note:"Intimate acoustic traditional jazz since 1961. Reserve a set.", url:"https://www.preservationhall.com"},
@@ -628,7 +727,7 @@ function todayText(p, dow){
   return w.map(([o,c])=>fmtM(toM(o))+"–"+fmtM(toM(c))).join(", ");
 }
 function pill(st){
-  if(st.state==="open") return st.left<=45 ? '<span class="st closing">Closes in '+dur(st.left)+'</span>' : '<span class="st open">Open till '+st.closeLabel+'</span>';
+  if(st.state==="open") return st.left<=60 ? '<span class="st closing">Closes in '+dur(st.left)+'</span>' : '<span class="st open">Open till '+st.closeLabel+'</span>';
   if(st.state==="later") return '<span class="st later">Opens '+st.openLabel+'</span>';
   if(st.state==="closed") return '<span class="st closed">Closed</span>';
   return '<span class="st unknown">Check hours</span>';
@@ -746,6 +845,10 @@ const CHECKS = [
   when:"Day 1, 3:00 pm.", price:"Not posted online; ask when you book.",
   how:"Walk in, or book online or by phone to guarantee a reader.", ph:"1-800-729-7148", url:"https://www.bottomofthecup.com/",
   tips:["Open 10 am–6 pm daily.","Treat it as fun, and set a spending limit first."]},
+ {id:"b14", t:"Book your tattoo, or plan a walk-in (optional)", day:2, p:["tat-luckydagger","tat-downtown","tat-bigeasy"],
+  when:"Early in the trip, so it can settle before you leave.", price:"Shops don't post minimums; small fine-line pieces usually start around a shop minimum. Downtown Tattoos takes a $100 deposit.",
+  how:"Pick a design on the Ink tab and copy its artist brief. Message or call the shop to book, or walk in at a walk-in shop and ask who does fine-line.",
+  tips:["Bring photo ID; Louisiana requires 18+.","Lucky Dagger is listed as LGBTQ+-owned and women-owned.","Downtown Tattoos and Big Easy say they welcome walk-ins and stay open late."]},
  {id:"b13", t:"Check WWOZ Livewire for the week's bands", day:1, p:[],
   when:"A week before the trip, and again on each music night.", price:"Free.",
   how:"Open Livewire and filter by date. Look for bands at Snug Harbor, d.b.a., the Spotted Cat, and Bacchanal.", url:"https://www.wwoz.org/calendar/livewire-music",
@@ -773,7 +876,15 @@ const TALK = {
 /* ---------- state ---------- */
 const S = {tab:"now", day:1, q:"", cat:"all", area:"all", picksOnly:false, sort:"drive", sheet:null, editing:false, draft:null, talkIx:{}, secs:{}, openStop:{},
   when:null, nowCat:"all", walkOnly:false, nowPicks:false};
-const TABS = [["now","Open Now"],["plan","The Plan"],["explore","Explore"],["map","Map"],["river","River"],["info","Info"]];
+const TABS = [["now","Today"],["map","Map"],["explore","Explore"],["plan","Plan"],["saved","Saved"],["ink","Ink"]];
+const VIEWKEYS = ["now","map","explore","plan","saved","ink","river","info"];
+const TAB_ICON = {
+ now:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+ map:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg>',
+ explore:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M16 16l4 4"/></svg>',
+ plan:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>',
+ saved:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16 20 8v8z"/><path d="M3 16h17v3H3z"/></svg>',
+ ink:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3C9 7 7 10 7 13a5 5 0 0 0 10 0c0-3-2-6-5-10z"/><path d="M10 14c0 1.5 1 2.5 2.5 2.5"/></svg>'};
 let db=null, user=null, uid=null, shared=false, readOnly=false;
 const LOCAL = "_me";
 let picks = {}, checks = {}, profiles = {}, trip = {};
@@ -785,8 +896,8 @@ let plan = null;
 try{ const lp = JSON.parse(localStorage.getItem("nola-plan")||"null"); if(lp && Array.isArray(lp.days)) plan = lp; }catch(e){}
 if(!plan) plan = seedPlan();
 S.planEdit = false; S.confirmReset = false;
-try{ const t = localStorage.getItem("nola-tab"); if(t && TABS.some(x=>x[0]===t)) S.tab=t; }catch(e){}
-if(location.hash && TABS.some(x=>x[0]===location.hash.slice(1))) S.tab = location.hash.slice(1);
+try{ const t = localStorage.getItem("nola-tab"); if(t && VIEWKEYS.includes(t)) S.tab=t; }catch(e){}
+if(location.hash && VIEWKEYS.includes(location.hash.slice(1))) S.tab = location.hash.slice(1);
 
 const me = () => shared ? uid : LOCAL;
 const myPicks = () => picks[me()] || new Set();
@@ -889,7 +1000,7 @@ function card(p){
    +'<p class="note">'+esc(p.note)+'</p>'
    +(p.hrs&&p.hrs.detail?'<p class="note muted">'+esc(p.hrs.detail)+'</p>':'')
    +'<div class="actions">'
-     +'<a class="btn" href="'+mapUrl(p)+'" target="_blank" rel="noopener">Map</a>'
+     +dirBtns(p)
      +(p.ph?'<button class="btn" data-copy="'+esc(p.ph)+'"><span class="mono">'+esc(p.ph)+'</span></button>':'')
      +(p.url?'<a class="btn" href="'+esc(p.url)+'" target="_blank" rel="noopener">Website</a>':'')
    +'</div></article>';
@@ -904,13 +1015,13 @@ function talk(tab){
 }
 
 /* ---------- views ---------- */
-const GROUP_ORDER = ["coffee","eat","drink","jazz","party","queer","history","spooky","shop","nature","daytrip","river","sports"];
+const GROUP_ORDER = ["coffee","eat","drink","jazz","party","queer","history","spooky","shop","tattoo","nature","daytrip","river","sports"];
 const isSailing = p => p.c.includes("river") && p.hrs && p.hrs.times && p.hrs.times.length;
 function resRow(p, st){
   const tt = todayText(p, (S.when||nolaNow()).dow), g = approver(p);
   return '<div class="res"><button class="nm" data-open="'+p.id+'">'+esc(p.n)+'</button><div class="right">'+pill(st)+cakeBtn(p)+'</div>'
    +(WHY[p.id]?'<p class="why" style="grid-column:1 / -1">'+esc(WHY[p.id])+'</p>':'')
-   +'<div class="sub2"><span>'+esc(p.a)+' · '+driveLabel(p.d)+'</span>'+(tt?'<span>Today: '+esc(tt)+'</span>':'')
+   +'<div class="sub2"><span>'+esc(p.a)+' · '+esc(shortDist(p))+'</span>'+(tt?'<span>Today: '+esc(tt)+'</span>':'')
    +(p.hrs&&p.hrs.music?'<span>Music: '+esc(p.hrs.music)+'</span>':'')+'<span class="ok '+g+'">'+g+' approves</span></div></div>';
 }
 function evRow(e){
@@ -929,7 +1040,9 @@ function vNow(){
   if(ti){ const n = ti.D ? Math.round((ti.D-ti.A)/DAY)+1 : 5; for(let i=1;i<=n;i++){ const x=ti.dateOf(i), v=x.toISOString().slice(0,10); opts += '<option value="d:'+v+'"'+(W.date===v&&!live?' selected':'')+'>Trip day '+i+' · '+esc(dayLabel(x))+'</option>'; } }
   DOWL.forEach((nm,i)=>{ opts += '<option value="w:'+i+'"'+(!live&&!W.date&&W.dow===i?' selected':'')+'>Any '+nm+'</option>'; });
   const hh = String(Math.floor(W.mins/60)).padStart(2,"0")+":"+String(W.mins%60).padStart(2,"0");
-  h += '<div class="whenrow"><label class="small muted" for="nowday">Or pick a time</label><select class="field" id="nowday">'+(live?'<option value="">Today</option>':'')+opts+'</select><input class="field" id="nowtime" type="time" value="'+hh+'" aria-label="Time of day"></div></div>';
+  h += '<div class="whenrow"><label class="small muted" for="nowday">Or pick a time</label><select class="field" id="nowday">'+(live?'<option value="">Today</option>':'')+opts+'</select><input class="field" id="nowtime" type="time" value="'+hh+'" aria-label="Time of day"></div>'
+    + '<div class="row"><button class="btn primary big" data-next2="1">Find me something for the next 2 hours</button><button class="btn" data-locate="1">◎ Near me</button>'+(originPt()?'<span class="small muted">Distances from '+originPt().from+'.</span>':'')+'</div></div>';
+  if(S.next2) h += vNext2(W);
   /* counts of what's open (or starting soon) per type, ignoring the type filter */
   const q = (S.nowQ||"").trim().toLowerCase();
   const isOpenish = p => isSailing(p) ? eventsAt(p,W,240).length>0 : (statusAt(p,W).state==="open" || eventsAt(p,W,240).length>0);
@@ -953,7 +1066,8 @@ function vNow(){
   const events = list.flatMap(p=>eventsAt(p,W,240).slice(0,2)).sort((a,b)=>(a.state==="now"?-1:0)-(b.state==="now"?-1:0) || a.start-b.start);
   const evIds = new Set(events.map(e=>e.p.id));
   const rows = list.filter(p=>!isSailing(p)).map(p=>({p, st:statusAt(p,W)}));
-  const open = rows.filter(r=>r.st.state==="open").sort((a,b)=>a.p.d-b.p.d || a.p.n.localeCompare(b.p.n));
+  const dcmp = (x,y)=>{ const a=distInfo(x), b=distInfo(y); return (a&&b) ? a.m-b.m : x.d-y.d; };
+  const open = rows.filter(r=>r.st.state==="open").sort((a,b)=>dcmp(a.p,b.p) || a.p.n.localeCompare(b.p.n));
   const later = rows.filter(r=>r.st.state==="later").sort((a,b)=>a.st.opensIn-b.st.opensIn);
   const closed = rows.filter(r=>r.st.state==="closed");
   const unknown = rows.filter(r=>r.st.state==="unknown" && !evIds.has(r.p.id));
@@ -965,7 +1079,7 @@ function vNow(){
       +'<div class="body">'+(why?'<p class="why"><b>Why go:</b> '+esc(why)+'</p>':'')+inner+'</div></details>';
   };
   const single = S.nowCat!=="all";
-  h += '<p class="small muted">Tap a section to open it. Each one tells you why it\'s worth it, then what\'s open.</p>';
+  h += '<p class="small muted">Open and closed are <b>estimates</b> from posted hours, last checked Oct 11, 2026, not live from the venue. Tap a section to open it. Each one tells you why it\'s worth it, then what\'s open.</p>';
   if(events.length) h += sec("ev", "Shows, tours, and cruises", events.length+" starting soon", "Set start times: "+events.slice(0,3).map(e=>fmtM(e.start)+" "+(e.ev.label||e.p.n)).join(" · "), "These run on a clock. Get there for the start, or wait for the next one.", events.map(evRow).join(""), true);
   if(open.length){
     GROUP_ORDER.forEach(c=>{
@@ -1026,7 +1140,7 @@ function chipStatus(p, W){
   const evs = eventsAt(p, W, 120);
   if(evs.length && !(p.hrs.hours)) return '<span class="st open">'+(evs[0].state==="now"?"on now":"starts "+fmtM(evs[0].start))+'</span>';
   const st = statusAt(p, W);
-  if(st.state==="open") return st.left<=45 ? '<span class="st closing">closes '+st.closeLabel+'</span>' : '<span class="st open">open then</span>';
+  if(st.state==="open") return st.left<=60 ? '<span class="st closing">closes '+st.closeLabel+'</span>' : '<span class="st open">open then</span>';
   if(st.state==="later") return '<span class="st later">opens '+st.openLabel+'</span>';
   if(st.state==="closed") return '<span class="st closed">closed then</span>';
   return '';
@@ -1036,6 +1150,14 @@ function planChips(it, W, editing){
   return '<div class="links">'+it.p.map(id=>{ const p=BY[id]; if(!p) return ''; const on=pickersOf(id).length;
     return '<span class="row" style="gap:4px"><button class="plink'+(on?' picked':'')+'" data-open="'+id+'">'+esc(p.n)+'</button>'+chipStatus(p,W)
       +(editing?'<button class="plink" data-rmp="'+it.k+'|'+id+'" aria-label="Remove '+esc(p.n)+' from this stop">✕</button>':'')+'</span>'; }).join("")+'</div>';
+}
+const stopPt = it => { const id=(it.p||[]).find(x=>COORD[x]); return id ? [COORD[id][0],COORD[id][1]] : null; };
+function dayRoute(d){
+  const pts = []; d.items.forEach(it=>{ const q=stopPt(it); if(q && !(pts.length && meters(pts[pts.length-1],q)<40)) pts.push(q); });
+  const start = trip.lat&&trip.lon ? [trip.lat,trip.lon] : null;
+  const seq = start ? [start].concat(pts) : pts; if(seq.length<2) return null;
+  const s = q => q[0].toFixed(5)+","+q[1].toFixed(5), wps = seq.slice(1,-1).slice(0,8);
+  return "https://www.google.com/maps/dir/?api=1&origin="+s(seq[0])+"&destination="+s(seq[seq.length-1])+"&travelmode=walking"+(wps.length?"&waypoints="+encodeURIComponent(wps.map(s).join("|")):"");
 }
 function vPlan(){
   if(!plan.days.find(x=>x.n===S.day)) S.day = plan.days[0].n;
@@ -1058,19 +1180,27 @@ function vPlan(){
       const W = dayW(d.n, it.t);
       let extra = "";
       if(it.sun){ const ss = ti ? sunsetNOLA(ti.dateOf(d.n)) : null; extra = ss ? ' Sunset tonight is about '+ss.label+'. '+cruiseVerdict(ss) : ' Add your dates to see tonight\'s sunset time.'; }
-      let li = '<li'+(it.key?' class="key"':'')+'><span class="t">'+(ed?'<input class="field" type="time" id="t-'+it.k+'" value="'+esc(it.t)+'" aria-label="Time" style="padding:4px 6px">':fmtM(toM(it.t)))+'</span><div class="what">';
+      const here = stopPt(it), prev = ix>0 ? stopPt(d.items[ix-1]) : null;
+      let conn = '';
+      if(ix>0 && here && prev){ const m=meters(prev,here), tr=travel(m), gap=toM(it.t)-toM(d.items[ix-1].t), tight = m>60 && tr.mins>gap;
+        conn = m<60 ? '' : '<li class="conn'+(tight?' tight':'')+'"><span></span><span>↓ '+tr.txt+' · '+miles(m)+(tight?' · tight: only '+dur(Math.max(gap,0))+' between stops':'')+'</span></li>'; }
+      const fixed = it.fixed!==undefined ? !!it.fixed : !!it.key;
+      let li = conn + '<li'+(it.key?' class="key"':'')+'><span class="t">'+(ed?'<input class="field" type="time" id="t-'+it.k+'" value="'+esc(it.t)+'" aria-label="Time" style="padding:4px 6px">':fmtM(toM(it.t)))+'</span><div class="what">';
       const exp = ed || !!S.openStop[it.k], why = whyOf(it);
       li += ed ? '<input class="field" id="h-'+it.k+'" value="'+esc(it.h)+'" aria-label="Stop name">' : '<button class="stop" data-stop="'+it.k+'" aria-expanded="'+exp+'">'+esc(it.h)+'</button>';
+      li += '<span class="fx '+(fixed?'fixed':'flex')+'">'+(fixed?'Booked / fixed':'Flexible')+'</span>';
       li += planChips(it, W, ed);
       if(exp){
         li += '<div class="stopbody">'+(why?'<p class="why"><b>Why go:</b> '+esc(why)+'</p>':'')+((it.d||extra)?'<span class="d">'+esc((it.d||"")+extra)+'</span>':'');
-        li += '<div class="actions"><button class="btn" data-planb="'+it.k+'">Plan B: what\x27s open then?</button>'
+        const dp = (it.p||[]).map(x=>BY[x]).find(p=>p&&COORD[p.id]);
+        li += '<div class="actions"><button class="btn" data-planb="'+it.k+'">Plan B: what\x27s open then?</button>'+(dp?'<a class="btn" href="'+dirUrl(dp)+'" target="_blank" rel="noopener">Directions</a>':'')+(ed?'<button class="btn" data-fixed="'+it.k+'">'+(fixed?'Make flexible':'Mark as booked')+'</button>':'')
           + (ed ? '<button class="btn" data-addplace="'+it.k+'">+ Place</button><button class="btn" data-mv="'+it.k+'|-1"'+(ix===0?' disabled':'')+' aria-label="Move earlier">↑</button><button class="btn" data-mv="'+it.k+'|1"'+(ix===d.items.length-1?' disabled':'')+' aria-label="Move later">↓</button><button class="btn" data-del="'+it.k+'">Remove</button>' : '')
           + '</div></div>';
       }
       li += '</div></li>';
       return li;
     }).join("")+'</ol>';
+    const rt = dayRoute(d); if(rt) h += '<div class="row"><a class="btn primary" href="'+rt+'" target="_blank" rel="noopener">Route this day in Google Maps</a><span class="small muted">All of this day\x27s stops as one walking route'+(trip.lat?', starting from your hotel':'')+'. Switch to driving in Maps for far stops.</span></div>';
   } else h += '<p class="muted small">No stops yet.'+(ed?'':' Tap Edit the plan to add some, or use "Add to plan" on any place.')+'</p>';
   if(ed) h += '<div class="row"><button class="btn primary" data-addstop="1">+ Add a stop</button></div>';
   if(seed.alt) h += '<div class="alt"><b>'+esc(seed.alt.h)+'</b><span>'+esc(seed.alt.d)+'</span>'+plinks(seed.alt.p)+'</div>';
@@ -1104,7 +1234,7 @@ function vAlts(sh){
   h += '<p class="small muted">Open places first, then ones opening later. '+(readOnly?'You can look, but only Contributors and Editors can change the plan.':'"Swap in" replaces this stop\'s place; "Add" keeps both.')+'</p>';
   h += '<div class="sect">'+rows.slice(0,40).map(r=>'<div class="res"><button class="nm" data-open="'+r.p.id+'">'+esc(r.p.n)+'</button><div class="right">'+r.pillH+'</div>'
      + (WHY[r.p.id]?'<p class="why" style="grid-column:1 / -1">'+esc(WHY[r.p.id])+'</p>':'')
-     + '<div class="sub2"><span>'+esc(r.p.a)+' · '+driveLabel(r.p.d)+'</span>'+(readOnly?'':'<button class="btn" data-swap="'+r.p.id+'">Swap in</button><button class="btn" data-addp="'+r.p.id+'">Add</button>')+'</div></div>').join("")
+     + '<div class="sub2"><span>'+esc(r.p.a)+' · '+esc(shortDist(r.p))+'</span>'+(readOnly?'':'<button class="btn" data-swap="'+r.p.id+'">Swap in</button><button class="btn" data-addp="'+r.p.id+'">Add</button>')+'</div></div>').join("")
      + (rows.length?'':'<div class="empty">Nothing matches.</div>')+'</div>';
   return h;
 }
@@ -1135,16 +1265,16 @@ function vExplore(){
   );
   const counts = {all: base.length}; Object.keys(CATS).forEach(c=>{ counts[c] = base.filter(p=>p.c.includes(c)).length; });
   let list = base.filter(p => S.cat==="all" || p.c.includes(S.cat));
-  if(S.sort==="drive") list.sort((a,b)=>a.d-b.d || a.n.localeCompare(b.n));
+  if(S.sort==="drive") list.sort((a,b)=>{ const x=distInfo(a), y=distInfo(b); return (x&&y) ? x.m-y.m : a.d-b.d || a.n.localeCompare(b.n); });
   if(S.sort==="name") list.sort((a,b)=>a.n.localeCompare(b.n));
   if(S.sort==="picks") list.sort((a,b)=>pickersOf(b.id).length-pickersOf(a.id).length || a.d-b.d);
   if(S.sort==="open") list.sort((a,b)=>(openNow(b)?1:0)-(openNow(a)?1:0) || a.d-b.d);
   const anyFilter = q || S.cat!=="all" || S.area!=="all" || S.picksOnly || S.exOpen || S.exWalk;
-  let h = talk("explore");
-  h += '<div class="head"><span class="eyebrow">Everything in one place</span><h2>Explore</h2><p class="muted small">Tap the cheesecake to save a place to the kitchen table. '+(shared?'Everyone on this page sees the group\'s saves.':'Saves stay on this device.')+'</p></div>';
+  let h = "";
+  h += '<div class="head"><span class="eyebrow">Everything in one place</span><h2>Explore</h2><div class="row"><button class="btn" data-tab="river">River cruise times</button><button class="btn" data-locate="1">◎ Near me</button></div><p class="muted small">Tap the cheesecake to save a place to the kitchen table. '+(shared?'Everyone on this page sees the group\'s saves.':'Saves stay on this device.')+'</p></div>';
   const top = '<div class="fg"><span class="fg-l">Search</span><div class="fg-c"><input class="field search" id="q" type="search" placeholder="Try vegan, rooftop, balcony, Voodoo, Blanche…" value="'+esc(S.q)+'" aria-label="Search places">'+(q?'<button class="btn" data-clearex="q">Clear</button>':'')+'</div></div>'
     + '<div class="fg"><span class="fg-l">Where &amp; order</span><div class="fg-c"><select class="field" id="area" aria-label="Area"><option value="all">All areas</option>'+areas.map(a=>'<option'+(a===S.area?' selected':'')+'>'+esc(a)+'</option>').join("")+'</select>'
-    + '<select class="field" id="sort" aria-label="Sort"><option value="drive"'+(S.sort==="drive"?" selected":"")+'>Closest first</option><option value="open"'+(S.sort==="open"?" selected":"")+'>Open now first</option><option value="picks"'+(S.sort==="picks"?" selected":"")+'>Most saved</option><option value="name"'+(S.sort==="name"?" selected":"")+'>A–Z</option></select></div></div>';
+    + '<select class="field" id="sort" aria-label="Sort"><option value="drive"'+(S.sort==="drive"?" selected":"")+'>'+(originPt()?'Nearest to '+originPt().from:'Closest to the Quarter')+'</option><option value="open"'+(S.sort==="open"?" selected":"")+'>Open now first</option><option value="picks"'+(S.sort==="picks"?" selected":"")+'>Most saved</option><option value="name"'+(S.sort==="name"?" selected":"")+'>A–Z</option></select></div></div>';
   const extra = '<button class="chip" id="exOpen" aria-pressed="'+!!S.exOpen+'">Open now</button><button class="chip" id="exWalk" aria-pressed="'+!!S.exWalk+'">Walkable</button><button class="chip cake" id="picksOnly" aria-pressed="'+S.picksOnly+'">Kitchen table only</button>'
     + (anyFilter?'<button class="btn" data-clearex="all">Clear filters</button>':'');
   h += filterBlock(S.cat, "data-cat", extra, counts, top);
@@ -1156,7 +1286,7 @@ function vExplore(){
 
 function vRiver(){
   const ti = tripInfo(), ss = ti ? sunsetNOLA(ti.dateOf(4)) : null;
-  return talk("river") + `<div class="head"><span class="eyebrow">Mississippi River</span><h2>Cruises</h2></div>
+  return '<div class="row"><button class="btn" data-tab="explore">← Back to Explore</button></div>' + `<div class="head"><span class="eyebrow">Mississippi River</span><h2>Cruises</h2></div>
   ${ss?`<div class="callout"><b>Your cruise night: ${esc(dayLabel(ti.dateOf(4)))}</b><span class="small">Sunset is about <span class="mono">${esc(ss.label)}</span>. ${esc(cruiseVerdict(ss))}</span></div>`:''}
   <div class="callout warn"><b>Confirm which boat is sailing</b><span class="small">The Steamboat Company homepage says the NATCHEZ is in renovation and the CITY of NEW ORLEANS is covering; the NATCHEZ page says it's freshly renovated. Call <span class="mono">${SB}</span> before booking. Schedules and prices are the same either way.</span></div>
   <h3>Steamboat Company · 400 Toulouse St</h3>
@@ -1215,18 +1345,11 @@ function vBook(){
 
 /* ---------- map ---------- */
 const COORD = {
- cdm:[29.9575,-90.0618], cafebeignet:[29.9563,-90.0677], cdmpark:[29.9863,-90.0937], mfth:[29.9595,-90.0592], killer:[29.9566,-90.0682],
- palmpine:[29.9570,-90.0710], jewel:[29.9592,-90.0692], sneaky:[29.9689,-90.0434], breads:[29.9483,-90.1325], elysian:[29.9663,-90.0526],
- bayoubar:[29.9375,-90.0805], cure:[29.9345,-90.1078], marilou:[29.9495,-90.0718], bacchanal:[29.9638,-90.0370], oldpoint:[29.9555,-90.0522],
- patobriens:[29.9584,-90.0651], cooter:[29.9403,-90.1336], preshall:[29.9583,-90.0654], snug:[29.9646,-90.0578], dba:[29.9642,-90.0581],
- spottedcat:[29.9645,-90.0584], fritzels:[29.9592,-90.0645], bourbono:[29.9595,-90.0641], razzoo:[29.9575,-90.0661], bourbonheat:[29.9588,-90.0648],
- republic:[29.9445,-90.0650], soileddove:[29.9572,-90.0713], stl1:[29.9595,-90.0714], anansi:[29.9611,-90.0683], voodoo:[29.9597,-90.0634],
- death:[29.9549,-90.0689], hnoc:[29.9574,-90.0650], garden:[29.9286,-90.0846], chalmette:[29.9420,-89.9900], bottomcup:[29.9555,-90.0656],
- royal:[29.9581,-90.0640], msrau:[29.9578,-90.0646], moss:[29.9562,-90.0660], magazine:[29.9268,-90.0790],
- "cruise-eve":[29.9561,-90.0609], "cruise-day":[29.9559,-90.0612], "cruise-75":[29.9557,-90.0615],
- "cq-eve":[29.9482,-90.0625], "cq-battle":[29.9479,-90.0628], "cq-brunch":[29.9481,-90.0631], "cq-halloween":[29.9478,-90.0622],
- ferry:[29.9505,-90.0613], lakefront:[30.0250,-90.0850], gretna:[29.9145,-90.0540], superdome:[29.9511,-90.0812]
+ "cdm":[29.95756,-90.06185], "cafebeignet":[29.95588,-90.06850], "cdmpark":[29.98543,-90.09510], "mfth":[29.95975,-90.05955], "killer":[29.95655,-90.06794], "palmpine":[29.95747,-90.07092], "jewel":[29.95855,-90.06951], "sneaky":[29.96487,-90.04295], "breads":[29.95111,-90.13492], "elysian":[29.96693,-90.05494], "bayoubar":[29.93508,-90.07969], "cure":[29.93503,-90.10755], "marilou":[29.94921,-90.07194], "bacchanal":[29.95978,-90.03324], "oldpoint":[29.95494,-90.05019], "patobriens":[29.95809,-90.06549], "cooter":[29.94253,-90.13439], "preshall":[29.95830,-90.06543], "snug":[29.96413,-90.05792], "dba":[29.96394,-90.05804], "spottedcat":[29.96408,-90.05763], "fritzels":[29.95929,-90.06514], "dewdrop":[30.35564,-90.06242], "bourbono":[29.95911,-90.06511], "razzoo":[29.95722,-90.06698], "bourbonheat":[29.95889,-90.06552], "republic":[29.94413,-90.06570], "soileddove":[29.95747,-90.07092], "stl1":[29.95898,-90.07117], "anansi":[29.96125,-90.06862], "voodoo":[29.95982,-90.06379], "death":[29.95587,-90.06972], "hnoc":[29.95669,-90.06571], "garden":[29.92868,-90.08441], "chalmette":[29.94460,-89.98406], "whitney":[30.03844,-90.65043], "laura":[30.00814,-90.72532], "destrehan":[29.94502,-90.36448], "oakalley":[30.00424,-90.77596], "bottomcup":[29.95486,-90.06635], "abitamystery":[30.47739,-90.03621], "royal":[29.95727,-90.06524], "msrau":[29.95758,-90.06500], "moss":[29.95586,-90.06675], "magazine":[29.92471,-90.08475], "ponchatoula":[30.44093,-90.43177], "cruise-eve":[29.95493,-90.06239], "cruise-day":[29.95493,-90.06239], "cruise-75":[29.95493,-90.06239], "cq-eve":[29.94827,-90.06349], "cq-battle":[29.94827,-90.06349], "cq-brunch":[29.94827,-90.06349], "cq-halloween":[29.94827,-90.06349], "ferry":[29.94994,-90.06214], "barataria":[29.78393,-90.11554], "cajunpride":[30.09510,-90.43636], "honeyisland":[30.30302,-89.70646], "fontainebleau":[30.33606,-90.02553], "covington":[30.47615,-90.09178], "abitabrew":[30.48216,-90.05489], "lakefront":[30.02608,-90.07976], "gretna":[29.91761,-90.06610], "baystlouis":[30.31688,-89.34614], "superdome":[29.95105,-90.08231]
 };
+/* tattoo shops (researched Oct 2026) */
+const TATTOO_SHOPS = [{"p":{"id":"tat-downtown","n":"Downtown Tattoos & Piercings","c":["tattoo"],"a":"Marigny","d":0,"pr":"Varies","ph":"504-266-2211","ad":"501 Frenchmen St, New Orleans, LA 70116","note":"Frenchmen Street shop since 2012 (owners Terry Brown and Hayley Waldner) doing tattoos, piercings and tooth gems. Its website says walk-ins are welcome all day, every day. Booked appointments need a non-refundable deposit ($100 tattoo, $50 piercing) that goes toward the price. You must be 18+ with photo ID. Walk-ins welcome.","url":"https://www.downtowntattoosnola.com/"},"hrs":{"hours":{"mon":[["12:00","00:00"]],"tue":[],"wed":[["12:00","22:00"]],"thu":[["12:00","00:00"]],"fri":[["12:00","00:00"]],"sat":[["12:00","00:00"]],"sun":[["12:00","00:00"]]},"hoursText":"Noon-midnight Mon & Thu-Sun; noon-10pm Wed; closed Tue","reserve":"Walk-ins welcome","price":null,"detail":"Louisiana requires 18+ with photo ID.","url":"https://www.downtowntattoosnola.com/","source":"https://www.downtowntattoosnola.com/","confidence":"high"},"why":"Steps from the Frenchmen music clubs and open until midnight, so it's an easy late-night group walk-in.","coord":[29.96265,-90.05758]},{"p":{"id":"tat-hohw-frenchmen","n":"Hell or High Water Tattoo (Frenchmen)","c":["tattoo"],"a":"Marigny","d":0,"pr":"Varies","ad":"610 Frenchmen St, New Orleans, LA 70116","note":"Second location of the Black- and woman-owned Hell or High Water, in the former Electric Ladyland space. What Now (Aug 2026) reported that this shop would house the artists who like the bustle of street walk-ins. The shop's site now lists a Frenchmen artist roster, but I found no confirmed opening date. You must be 18+ with photo ID. Walk-ins when available.","url":"https://www.hellorhighwaternola.com/"},"hrs":{"hours":null,"hoursText":"The shop says it's open 7 days; daily hours aren't published. Check Instagram @hellorhighwaternola","reserve":"Walk-ins when available","price":null,"detail":"Louisiana requires 18+ with photo ID.","url":"https://www.hellorhighwaternola.com/","source":"https://whatnow.com/new-orleans/retail/tattoo-shop-bringing-hell-high-water-and-nice-girl-vibes-to-frenchmen-street/","confidence":"low"},"why":"A legacy Frenchmen tattoo address, now run by one of the city's best-reviewed woman-owned shops.","coord":[29.96384,-90.05791]},{"p":{"id":"tat-toughlove","n":"Tough Love Tattoo","c":["tattoo"],"a":"Marigny","d":0,"pr":"Varies","ph":"504-354-2839","ad":"1027 Touro St, New Orleans, LA 70116","note":"Contemporary shop with pink walls and artists of varied backgrounds, just off St. Claude. New Orleans & Co. says walk-ins are taken first-come, first-served, and you can also book ahead. It's rated about 4.5 across roughly 130 reviews. You must be 18+ with photo ID. Walk-ins when available.","url":"https://www.toughlovenola.com/"},"hrs":{"hours":{"mon":[["11:30","19:30"]],"tue":[["11:30","19:30"]],"wed":[],"thu":[["11:30","19:30"]],"fri":[["11:30","19:30"]],"sat":[["11:30","19:30"]],"sun":[["11:30","19:30"]]},"hoursText":"11:30am-7:30pm daily except Wednesday (closed)","reserve":"Walk-ins when available","price":null,"detail":"Louisiana requires 18+ with photo ID.","url":"https://www.toughlovenola.com/","source":"https://www.toughlovenola.com/","confidence":"high"},"why":"A friendly, arty Marigny studio about a five-minute walk from the Quarter, good for flash or a small piece.","coord":[29.96799,-90.05916]},{"p":{"id":"tat-bigeasy","n":"Big Easy Tattoo & Co.","c":["tattoo"],"a":"CBD","d":0,"pr":"Varies","ph":"504-345-2202","ad":"1024 Canal St, New Orleans, LA 70112","note":"Traditional street shop under a big marquee at Canal & Rampart. Its site says the doors are open for walk-ins every day, and there's an ATM on site. It's rated about 4.6. You must be 18+ with photo ID; no deposit or minimum is published. Walk-ins welcome.","url":"https://www.bigeasynola.com/"},"hrs":{"hours":{"mon":[["10:00","02:00"]],"tue":[["10:00","02:00"]],"wed":[["10:00","02:00"]],"thu":[["10:00","02:00"]],"fri":[["10:00","04:00"]],"sat":[["10:00","04:00"]],"sun":[["10:00","22:00"]]},"hoursText":"10am-2am Mon-Thu; 10am-4am Fri-Sat; 10am-10pm Sun","reserve":"Walk-ins welcome","price":null,"detail":"Louisiana requires 18+ with photo ID.","url":"https://www.bigeasynola.com/","source":"https://www.bigeasynola.com/","confidence":"high"},"why":"The closest real shop to the French Quarter and open until 4am on weekends.","coord":[29.95515,-90.07259]},{"p":{"id":"tat-hohw-magazine","n":"Hell or High Water Tattoo & Piercing","c":["tattoo"],"a":"CBD","d":0,"pr":"Varies","ph":"504-309-5411","ad":"308 Magazine St, New Orleans, LA 70130","note":"Black- and woman-owned (owner Mecca Burke) and open since 2009, known for traditional, dot-work and neo-traditional work. It's rated about 4.9 across 240+ reviews. Older listings say walk-ins are welcome, but the August 2026 expansion news says this location is moving toward appointment-only studio artists, so book ahead. You must be 18+ with photo ID. Walk-ins when available.","url":"https://www.hellorhighwaternola.com/"},"hrs":{"hours":{"mon":[["12:00","19:00"]],"tue":[["12:00","19:00"]],"wed":[["12:00","19:00"]],"thu":[["12:00","20:00"]],"fri":[["12:00","20:00"]],"sat":[["12:00","20:00"]],"sun":[["12:00","19:00"]]},"hoursText":"Noon-7pm Sun-Wed; noon-8pm Thu-Sat","reserve":"Walk-ins when available","price":null,"detail":"Louisiana requires 18+ with photo ID.","url":"https://www.hellorhighwaternola.com/","source":"https://www.bestprosintown.com/la/new-orleans/hell-or-high-water-tattoo-shop-/","confidence":"medium"},"why":"Among the city's highest-rated shops, woman-owned, and a short walk from the Quarter via Canal.","coord":[29.95027,-90.06763]},{"p":{"id":"tat-luckydagger","n":"Lucky Dagger Tattoo","c":["tattoo"],"a":"Garden District","d":9,"pr":"Varies","ph":"504-407-9208","ad":"1124 St Charles Ave, New Orleans, LA 70130","note":"Listed as LGBTQ-owned, women-owned and Asian-owned, with gender-neutral restrooms, and reviewers call it queer-safe. Walk-ins are offered for its curated flash books, subject to artist availability. It's rated about 4.9. You must be 18+ with photo ID. Walk-ins when available.","url":"https://www.luckydaggertattoo.com/"},"hrs":{"hours":{"mon":[["12:00","19:00"]],"tue":[["12:00","19:00"]],"wed":[["12:00","19:00"]],"thu":[["12:00","19:00"]],"fri":[["12:00","19:00"]],"sat":[["12:00","19:00"]],"sun":[["12:00","19:00"]]},"hoursText":"Noon-7pm daily (per listing; confirm by phone)","reserve":"Walk-ins when available","price":null,"detail":"Louisiana requires 18+ with photo ID.","url":"https://www.luckydaggertattoo.com/","source":"https://www.bestprosintown.com/la/new-orleans/lucky-dagger-tattoo-/","confidence":"medium"},"why":"A queer- and woman-owned studio with walk-in flash, right on the St. Charles streetcar line.","coord":[29.94159,-90.07335]},{"p":{"id":"tat-idlehands","n":"Idle Hands Tattoo Parlour","c":["tattoo"],"a":"Garden District","d":12,"pr":"Varies","ph":"504-581-2005","ad":"1815 Magazine St, New Orleans, LA 70130","note":"Lower Garden District parlour run by owner Flex Wenger (20+ years tattooing) that takes on all styles, big or small. It offers same-day appointments and walk-ins, and has 250+ reviews averaging about 4.8. You must be 18+ with photo ID. Walk-ins welcome.","url":"http://idlehandsnola.com/"},"hrs":{"hours":{"mon":[["12:00","20:00"]],"tue":[["12:00","20:00"]],"wed":[["12:00","20:00"]],"thu":[["12:00","20:00"]],"fri":[["12:00","20:00"]],"sat":[["12:00","20:00"]],"sun":[["12:00","20:00"]]},"hoursText":"Noon-8pm daily per the shop's site (one listing shows Sunday closing at 6pm)","reserve":"Walk-ins welcome","price":null,"detail":"Louisiana requires 18+ with photo ID.","url":"http://idlehandsnola.com/","source":"http://idlehandsnola.com/","confidence":"medium"},"why":"A friendly, dependable walk-in shop to pair with a Magazine Street shopping day.","coord":[29.93204,-90.07349]},{"p":{"id":"tat-tattooagogo","n":"Tattooagogo","c":["tattoo"],"a":"Uptown","d":20,"pr":"Varies","ph":"504-899-8229","ad":"4421 Magazine St, New Orleans, LA 70115","note":"Long-running Uptown shop (artists include Donn Davis, Scott Allen and Chris Blanchard) with hand-drawn and historical flash plus custom work up to Japanese bodysuits. Listings say walk-ins are welcome. You must be 18+ with photo ID. Walk-ins welcome.","url":"https://www.tattooagogo.com/"},"hrs":{"hours":{"mon":[["11:00","19:00"]],"tue":[["11:00","19:00"]],"wed":[["11:00","19:00"]],"thu":[["11:00","19:00"]],"fri":[["11:00","19:00"]],"sat":[["11:00","19:00"]],"sun":[["11:00","19:00"]]},"hoursText":"11am-7pm daily","reserve":"Walk-ins welcome","price":null,"detail":"Louisiana requires 18+ with photo ID.","url":"https://www.tattooagogo.com/","source":"https://www.tattooagogo.com/","confidence":"high"},"why":"Old-school flash walls and veteran tattooers on upper Magazine Street.","coord":[29.92084,-90.10191]},{"p":{"id":"tat-goodwork","n":"Good Work Tattoos (New Orleans Tattoo Museum & Studio)","c":["tattoo"],"a":"Bywater","d":12,"pr":"Varies","ph":"504-943-0409","ad":"3916 St Claude Ave, New Orleans, LA 70117","note":"A working studio at the address of the New Orleans Tattoo Museum, which archives local tattoo history. Listings say walk-ins are welcome, and artist work runs neo-traditional, new school and watercolor. The museum's own website is no longer live, and the hours sources disagree. You must be 18+ with photo ID. Walk-ins welcome.","url":"https://www.instagram.com/goodworktattoos"},"hrs":{"hours":{"mon":[["12:00","20:00"]],"tue":[["12:00","20:00"]],"wed":[["12:00","20:00"]],"thu":[["12:00","20:00"]],"fri":[["12:00","20:00"]],"sat":[["12:00","20:00"]],"sun":[["12:00","20:00"]]},"hoursText":"Noon-8pm daily per a recent listing; an older listing says Tue-Sat 1-7pm. Call first","reserve":"Walk-ins welcome","price":null,"detail":"Louisiana requires 18+ with photo ID.","url":"https://www.instagram.com/goodworktattoos","source":"https://bestprosintown.com/la/new-orleans/the-new-orleans-tattoo-archive-in-good-work-tattoos-","confidence":"low"},"why":"Get tattooed where the city's tattoo history is kept, out on the Bywater end of St. Claude.","coord":[29.96554,-90.03596]},{"p":{"id":"tat-catahoula","n":"Catahoula Tattoo & Gallery","c":["tattoo"],"a":"Mid-City","d":10,"pr":"Varies","ph":"504-655-9818","ad":"929 N Broad St, New Orleans, LA 70119","note":"Tattoo shop that doubles as an art gallery and performance venue, with a rotating lineup of local artists. New Orleans & Co. says designs are custom and hand-drawn for each client, with no flash on the walls. A listing says walk-ins are welcome, but expect a consult. It's rated about 4.9 across 180+ reviews. You must be 18+ with photo ID. Walk-ins when available.","url":"http://www.catahoulatattoo.com/"},"hrs":{"hours":{"mon":[["10:00","20:00"]],"tue":[["10:00","20:00"]],"wed":[["10:00","20:00"]],"thu":[["10:00","20:00"]],"fri":[["10:00","21:00"]],"sat":[["10:00","21:00"]],"sun":[["10:00","17:00"]]},"hoursText":"10am-8pm Mon-Thu; 10am-9pm Fri-Sat; 10am-5pm Sun","reserve":"Walk-ins when available","price":null,"detail":"Louisiana requires 18+ with photo ID.","url":"http://www.catahoulatattoo.com/","source":"https://www.bestprosintown.com/la/new-orleans/catahoula-tattoo-and-gallery-/","confidence":"medium"},"why":"The pick if you want a one-of-a-kind custom design instead of flash.","coord":[29.97282,-90.08135]}];
+TATTOO_SHOPS.forEach(s=>{ if(BY[s.p.id]) return; s.p.hrs = s.hrs; P.push(s.p); BY[s.p.id] = s.p; WHY[s.p.id] = s.why; COORD[s.p.id] = s.coord; });
 const MAP = {lon0:-90.145, lon1:-89.975, lat0:29.905, lat1:30.04, k:6000, c:Math.cos(29.95*Math.PI/180)};
 const mx = lon => (lon-MAP.lon0)*MAP.c*MAP.k, my = lat => (MAP.lat1-lat)*MAP.k;
 const pt = (lat,lon) => mx(lon).toFixed(1)+","+my(lat).toFixed(1);
@@ -1266,7 +1389,7 @@ const MAP_VIEWS = {city:["Whole city",29.905,30.04,-90.145,-89.975], fq:["French
 const GROUP_COLOR = ["var(--coral)","var(--lav)","var(--gold)","var(--accent)"];
 const groupIx = p => { const i = FG.findIndex(([,cs])=>cs.includes(GROUP_ORDER.find(c=>p.c.includes(c)))); return i<0?3:i; };
 function inBox(lat,lon,b){ return lat>=b[0]&&lat<=b[1]&&lon>=b[2]&&lon<=b[3]; }
-function vMap(){
+function vSketch(){
   if(!S.mapBox) S.mapBox = MAP_VIEWS.city.slice(1);
   const b = S.mapBox, x0=mx(b[2]), y0=my(b[1]), w=mx(b[3])-x0, hgt=my(b[0])-y0, f = w/884;
   const N = S.when || nolaNow();
@@ -1279,7 +1402,7 @@ function vMap(){
   let s = '<svg class="map" viewBox="'+x0.toFixed(1)+' '+y0.toFixed(1)+' '+w.toFixed(1)+' '+hgt.toFixed(1)+'" preserveAspectRatio="xMidYMid meet" style="aspect-ratio:'+w.toFixed(1)+' / '+hgt.toFixed(1)+'" role="img" aria-label="Map of New Orleans places">';
   s += '<rect x="0" y="0" width="884" height="810" fill="var(--surface)"/>';
   s += '<rect x="0" y="0" width="884" height="'+my(30.028).toFixed(1)+'" fill="var(--water)"/>';
-  if(S.mapSafety!==false) SAFETY.forEach(([lv,nm,poly])=>{ s += '<polygon class="zone '+lv+'" points="'+poly.map(q=>pt(q[0],q[1])).join(" ")+'"><title>'+esc(nm+': '+SAFE_TXT[lv])+'</title></polygon>'; });
+  if(S.mapSafety) SAFETY.forEach(([lv,nm,poly])=>{ s += '<polygon class="zone '+lv+'" points="'+poly.map(q=>pt(q[0],q[1])).join(" ")+'"><title>'+esc(nm+': '+SAFE_TXT[lv])+'</title></polygon>'; });
   STREETS.forEach(([nm,line])=>{ s += '<polyline points="'+line.map(q=>pt(q[0],q[1])).join(" ")+'" fill="none" stroke="var(--line)" stroke-width="'+(2.2*f).toFixed(2)+'" stroke-linecap="round"/>'; });
   s += '<polyline points="'+RIVER.map(q=>pt(q[0],q[1])).join(" ")+'" fill="none" stroke="var(--water)" stroke-width="'+(Math.max(9*f,1.2)).toFixed(2)+'" stroke-linejoin="round" stroke-linecap="round"/>';
   const fs = (11*f).toFixed(2);
@@ -1292,24 +1415,24 @@ function vMap(){
       + (f<0.3?'<text class="pin-l" x="'+(cx+r*1.6).toFixed(1)+'" y="'+(cy+r*0.5).toFixed(1)+'" font-size="'+fs+'">'+esc(p.n)+'</text>':'')+'</g>'; });
   s += '</svg>';
 
-  let h = talk("map") + '<div class="head"><span class="eyebrow">Where everything is</span><h2>Map</h2><p class="muted small">Tap a dot for details. Drag to move around, or jump to a neighborhood. Circled dots are on the kitchen table.</p></div>';
+  let h = '<div class="head"><span class="eyebrow">Where everything is</span><h2>Map</h2><p class="muted small">Tap a dot for details. Drag to move around, or jump to a neighborhood. Circled dots are on the kitchen table.</p></div>';
   h += '<div class="row" role="group" aria-label="Map area">'+Object.entries(MAP_VIEWS).map(([k,v])=>'<button class="chip" data-mapview="'+k+'" aria-pressed="'+(S.mapViewKey===k||(!S.mapViewKey&&k==="city"))+'">'+esc(v[0])+'</button>').join("")
      + '<button class="btn" data-mapzoom="in" aria-label="Zoom in">+</button><button class="btn" data-mapzoom="out" aria-label="Zoom out">−</button></div>';
-  h += '<div class="row"><button class="chip" id="mapSafety" aria-pressed="'+(S.mapSafety!==false)+'">Safety colors</button><button class="chip" data-mapcolor="type" aria-pressed="'+(S.mapColor!=="open")+'">Dots by type</button><button class="chip" data-mapcolor="open" aria-pressed="'+(S.mapColor==="open")+'">Dots by open now</button><button class="chip cake" id="nowPicks" aria-pressed="'+S.nowPicks+'">Kitchen table only</button></div>';
+  h += '<div class="row"><button class="chip" id="mapSafety" aria-pressed="'+(S.mapSafety)+'">Safety colors</button><button class="chip" data-mapcolor="type" aria-pressed="'+(S.mapColor!=="open")+'">Dots by type</button><button class="chip" data-mapcolor="open" aria-pressed="'+(S.mapColor==="open")+'">Dots by open now</button><button class="chip cake" id="nowPicks" aria-pressed="'+S.nowPicks+'">Kitchen table only</button></div>';
   h += filterBlock(cat, "data-mapcat", "");
   h += '<div class="mapwrap">'+s+'</div>';
   h += '<div class="legend">'
      + (S.mapColor==="open" ? '<span><i style="background:var(--leaf)"></i>Open '+(S.when?'then':'now')+'</span><span><i style="background:var(--gold)"></i>Opens later today</span><span><i style="background:var(--line)"></i>Closed</span><span><i style="background:var(--muted)"></i>Check hours</span>'
         : FG.map(([lab],i)=>'<span><i style="background:'+GROUP_COLOR[i]+'"></i>'+esc(lab)+'</span>').join(""))
      + '</div>';
-  if(S.mapSafety!==false){
+  if(S.mapSafety){
     h += '<div class="safety"><h3>Safety colors: walking at night</h3>'
       + ['green','yellow','red'].map(lv=>'<div class="sz"><span class="sw '+lv+'"></span><div><b>'+({green:"Green",yellow:"Yellow",red:"Red"})[lv]+'</b> '+esc(SAFE_TXT[lv])+'<span class="small muted"> '+esc(SAFETY.filter(z=>z[0]===lv).map(z=>z[1]).join(" · "))+'</span></div></div>').join("")
       + '<p class="small muted">This is general visitor advice about walking at night, drawn from common travel guidance. It isn\'t crime data and isn\'t a judgment of the people who live there. Conditions change block by block, the zone edges are approximate, and the map is a sketch, not for turn-by-turn directions. Check NOPD\'s online crime map before the trip. Emergency 911 · NOPD non-emergency <span class="mono">504-821-2222</span>.</p></div>';
   }
   const vis = list.filter(p=>inBox(COORD[p.id][0],COORD[p.id][1],b)).sort((a,c)=>a.d-c.d || a.n.localeCompare(c.n));
   h += '<details class="cat"'+(S.secs.mapl?' open':'')+'><summary data-sec="mapl"><span class="t2">Places in this view</span><span class="c">'+vis.length+'</span><span class="hint">Tap to list them with hours and why to go.</span></summary><div class="body">'+vis.map(p=>resRow(p,statusAt(p,N))).join("")+'</div></details>';
-  const far = P.filter(p=>!COORD[p.id] && (cat==="all"||p.c.includes(cat)));
+  const far = P.filter(p=>(!COORD[p.id] || !inBox(COORD[p.id][0],COORD[p.id][1],MAP_VIEWS.city.slice(1))) && (cat==="all"||p.c.includes(cat)));
   if(far.length) h += '<details class="cat"'+(S.secs.mapf?' open':'')+'><summary data-sec="mapf"><span class="t2">Beyond this map</span><span class="c">'+far.length+'</span><span class="hint">Day trips and pop-ups: '+esc(far.slice(0,3).map(p=>p.n).join(", "))+'…</span></summary><div class="body">'
      + far.sort((a,c)=>a.d-c.d).map(p=>'<div class="res"><button class="nm" data-open="'+p.id+'">'+esc(p.n)+'</button><div class="right"><span class="st open">'+driveLabel(p.d)+'</span><a class="btn" href="'+mapUrl(p)+'" target="_blank" rel="noopener">Map</a></div>'+(WHY[p.id]?'<p class="why" style="grid-column:1 / -1">'+esc(WHY[p.id])+'</p>':'')+'</div>').join("")+'</div></details>';
   return h;
@@ -1333,7 +1456,7 @@ document.addEventListener("pointerup", ()=>{ if(mapDrag){ const m = mapDrag.move
 function vInfo(){
   const B=[["Food",220],["Cocktails & bars",180],["Music & nightlife",150],["Tours & museums",120],["Transit & rideshare",90],["River cruise",60]];
   const contacts=[["Emergency","911"],["NOPD non-emergency","504-821-2222"],["Steamboat Company",SB],["Creole Queen",CQ],["Café du Monde","504-587-0833"],["Preservation Hall","504-522-2841"]];
-  return talk("info") + `<div class="head"><span class="eyebrow">Practical</span><h2>Info</h2></div>
+  return '<div class="row"><button class="btn" data-tab="now">← Back to Today</button></div>' + `<div class="head"><span class="eyebrow">Practical</span><h2>Info</h2></div>
   ${trip.hotel?`<div class="box"><h3>Home base</h3><p><b>${esc(trip.hotel)}</b>${trip.addr?'<br><span class="muted">'+esc(trip.addr)+'</span>':''}</p><p class="small muted">Everyone saves this address on their own phone.</p></div>`:''}
   <div class="box"><h3>Rough budget: about $820 per adult</h3><p class="small muted">Four days, excluding flights and hotel.</p>
   ${B.map(b=>`<div class="bar"><span>${esc(b[0])}</span><span class="track"><span class="fill" style="width:${(b[1]/220*100).toFixed(1)}%"></span></span><span class="v">$${b[1]}</span></div>`).join("")}</div>
@@ -1352,7 +1475,7 @@ function vInfo(){
 
 function vSheet(){
   if(S.sheet && typeof S.sheet==="object"){
-    const inner = S.sheet.mode==="addto" ? vAddTo(S.sheet) : vAlts(S.sheet);
+    const inner = S.sheet.mode==="addto" ? vAddTo(S.sheet) : S.sheet.mode==="ink" ? vInkSheet(S.sheet) : vAlts(S.sheet);
     return inner ? '<div class="scrim" data-scrim="1"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">'+inner+'</div></div>' : "";
   }
   const p = BY[S.sheet]; if(!p) return "";
@@ -1374,26 +1497,391 @@ function vSheet(){
       if(x.detail) s += '<p class="small">'+esc(x.detail)+'</p>';
       return s;
     })()
-   +'<dl class="kv"><dt>Area</dt><dd>'+esc(p.a)+'</dd>'+(p.ad?'<dt>Address</dt><dd>'+esc(p.ad)+'</dd>':'')+'<dt>Distance</dt><dd>'+driveLabel(p.d)+' from the Quarter</dd><dt>Price</dt><dd class="mono">'+esc((p.hrs&&p.hrs.price)||p.pr||"–")+'</dd>'+(p.hrs&&p.hrs.reserve?'<dt>Booking</dt><dd>'+esc(p.hrs.reserve)+'</dd>':'')+(p.ph?'<dt>Phone</dt><dd class="mono">'+esc(p.ph)+'</dd>':'')+'<dt>Type</dt><dd>'+esc(p.c.map(c=>CATS[c]).join(", "))+'</dd></dl>'
+   +'<dl class="kv"><dt>Area</dt><dd>'+esc(p.a)+'</dd>'+(p.ad?'<dt>Address</dt><dd>'+esc(p.ad)+'</dd>':'')+'<dt>Distance</dt><dd>'+esc(distLabel(p))+'</dd><dt>Price</dt><dd class="mono">'+esc((p.hrs&&p.hrs.price)||p.pr||"–")+'</dd>'+(p.hrs&&p.hrs.reserve?'<dt>Booking</dt><dd>'+esc(p.hrs.reserve)+'</dd>':'')+(p.ph?'<dt>Phone</dt><dd class="mono">'+esc(p.ph)+'</dd>':'')+'<dt>Type</dt><dd>'+esc(p.c.map(c=>CATS[c]).join(", "))+'</dd></dl>'
    +(p.hrs&&p.hrs.source?'<p class="srcline">Hours source: <a href="'+esc(p.hrs.source)+'" target="_blank" rel="noopener">'+esc(p.hrs.source.replace(/^https?:\/\/(www\.)?/,'').split('/')[0])+'</a>'+(p.hrs.confidence?' · confidence '+esc(p.hrs.confidence):'')+'</p>':'')
-   +'<div class="actions">'+cakeBtn(p)+(readOnly?'':'<button class="btn primary" data-addto="'+p.id+'">Add to plan</button>')+'<a class="btn" href="'+mapUrl(p)+'" target="_blank" rel="noopener">Open map</a>'+(p.ph?'<button class="btn" data-copy="'+esc(p.ph)+'">Copy phone</button>':'')+(p.url?'<a class="btn" href="'+esc(p.url)+'" target="_blank" rel="noopener">Website</a>':'')+'</div>'
+   +'<div class="actions">'+cakeBtn(p)+(readOnly?'':'<button class="btn" data-addto="'+p.id+'">Add to plan</button>')+dirBtns(p)+(p.ph?'<button class="btn" data-copy="'+esc(p.ph)+'">Copy phone</button>':'')+(p.url?'<a class="btn" href="'+esc(p.url)+'" target="_blank" rel="noopener">Website</a>':'')+'</div>'
    +(shared&&who.length?'<p class="small muted">On the kitchen table for '+who.map(id=>esc((profiles[id]&&profiles[id].name)||(id===uid?"you":"someone"))).join(", ")+'</p>':'')
    +'</div></div>';
+}
+
+/* ---------- location, distance, directions ---------- */
+let LOC = null;
+const QUARTER = [29.9584,-90.0644];
+function meters(a,b){ const r=x=>x*Math.PI/180, dLa=r(b[0]-a[0]), dLo=r(b[1]-a[1]); const s=Math.sin(dLa/2)**2+Math.cos(r(a[0]))*Math.cos(r(b[0]))*Math.sin(dLo/2)**2; return 2*6371000*Math.asin(Math.sqrt(s)); }
+const coordOf = p => COORD[p.id] ? [COORD[p.id][0], COORD[p.id][1]] : null;
+function originPt(){
+  if(LOC && meters([LOC.lat,LOC.lon], QUARTER) < 60000) return {pt:[LOC.lat,LOC.lon], from:"you"};
+  if(trip.lat && trip.lon) return {pt:[trip.lat,trip.lon], from:"your hotel"};
+  return null;
+}
+function travel(m){ if(m<=2600){ const w=Math.max(1,Math.round(m*1.25/80)); return {mode:"walk", mins:w, txt:w+" min walk"}; } const d=Math.round(m*1.3/420)+5; return {mode:"car", mins:d, txt:"~"+d+" min by car"}; }
+const miles = m => (m/1609.34<0.1?"under 0.1":(m/1609.34).toFixed(1))+" mi";
+function distInfo(p){ const o=originPt(), c=coordOf(p); if(!o||!c) return null; const m=meters(o.pt,c); return Object.assign({m, from:o.from}, travel(m)); }
+const shortDist = p => { const di=distInfo(p); return di ? di.txt : driveLabel(p.d); };
+const distLabel = p => { const di=distInfo(p); return di ? di.txt+" · "+miles(di.m)+" from "+di.from+" (estimate)" : driveLabel(p.d)+(p.d===0?" (in or by the Quarter)":" from the Quarter"); };
+function dirUrl(p, app){
+  const c = coordOf(p), q = c ? c[0].toFixed(5)+","+c[1].toFixed(5) : encodeURIComponent(p.n+" "+(p.ad||"")+" New Orleans LA");
+  const car = (distInfo(p)||{}).mode==="car" || (!distInfo(p) && p.d>=15);
+  if(app==="apple") return "https://maps.apple.com/?daddr="+q+"&dirflg="+(car?"d":"w");
+  return "https://www.google.com/maps/dir/?api=1&destination="+q+"&travelmode="+(car?"driving":"walking");
+}
+function dirBtns(p){ return '<a class="btn primary" href="'+dirUrl(p)+'" target="_blank" rel="noopener">Directions</a><a class="btn" href="'+dirUrl(p,"apple")+'" target="_blank" rel="noopener">Apple Maps</a>'; }
+function locate(after){
+  if(!navigator.geolocation){ toast("Location isn't available in this browser."); return; }
+  toast("Finding you…");
+  try{
+    navigator.geolocation.getCurrentPosition(pos=>{
+      LOC = {lat:pos.coords.latitude, lon:pos.coords.longitude, acc:pos.coords.accuracy, ts:Date.now()};
+      toast(meters([LOC.lat,LOC.lon], QUARTER) < 60000 ? "Found you. Distances are now from where you are." : "You're not in New Orleans yet, so distances use your hotel or the Quarter.");
+      if(after) after(); render();
+    }, err=>{ toast(err && err.code===1 ? "Location was declined. Distances use your hotel or the Quarter." : "Couldn't get your location here. Open the public site link to use GPS."); },
+    {enableHighAccuracy:true, timeout:12000, maximumAge:60000});
+  }catch(e){ toast("Couldn't get your location here. Open the public site link to use GPS."); }
+}
+
+/* ---------- group votes ---------- */
+let votes = {};
+try{ votes[LOCAL] = JSON.parse(localStorage.getItem("nola-votes")||"{}")||{}; }catch(e){ votes[LOCAL] = {}; }
+const myVotes = () => votes[me()] || {};
+const votersOf = (id, v) => Object.keys(votes).filter(k=>votes[k] && votes[k][id]===v);
+function persistPicks(){
+  const set = myPicks(), mv = myVotes();
+  if(shared){ const body = {places:Object.fromEntries([...set].map(x=>[x,true])), votes:Object.assign({}, mv)}; enqueue(()=>db.doc("picks/"+uid).set(body)); }
+  else { try{ localStorage.setItem("nola-picks", JSON.stringify([...set])); localStorage.setItem("nola-votes", JSON.stringify(mv)); }catch(e){} }
+}
+function setVote(id, v){
+  if(readOnly){ toast("Only Contributors and Editors can vote."); return; }
+  const mv = Object.assign({}, myVotes()); if(mv[id]===v) delete mv[id]; else mv[id]=v; votes[me()] = mv;
+  const set = new Set(myPicks()); if(mv[id]==="must"||mv[id]==="maybe") set.add(id); picks[me()] = set;
+  render(); persistPicks();
+  if(mv[id]) toast({must:"Must do. Blanche is already dressed.", maybe:"Marked interested.", skip:"Skipped. Sophia agrees."}[v]);
+}
+function vSaved(){
+  const ids = new Set(); Object.values(picks).forEach(s=>s.forEach(x=>ids.add(x))); Object.values(votes).forEach(v=>Object.keys(v||{}).forEach(x=>ids.add(x)));
+  const N = nolaNow();
+  const score = r => r.must.length*3 + r.maybe.length - r.skip.length*2 + r.saved.length*0.5;
+  const rows = [...ids].map(id=>BY[id]).filter(Boolean).map(p=>({p, must:votersOf(p.id,"must"), maybe:votersOf(p.id,"maybe"), skip:votersOf(p.id,"skip"), saved:pickersOf(p.id)}))
+    .sort((a,b)=>score(b)-score(a) || a.p.n.localeCompare(b.p.n));
+  const inPlan = id => plan.days.filter(d=>d.items.some(it=>it.p.includes(id))).map(d=>"Day "+d.n);
+  let h = '<div class="head"><span class="eyebrow">The kitchen table</span><h2>Saved</h2><p class="muted small">Everything anyone saved, ranked by the group\'s votes. '+(shared?'Everyone sees everyone\'s votes.':'Votes stay on this phone here. Use the claude.ai link to vote as a group.')+'</p></div>';
+  if(!rows.length) return h + '<div class="empty">Nothing saved yet. Tap the cheesecake on any place in Today, Explore, or the Map.</div>';
+  const tally = {must:rows.filter(r=>r.must.length).length, inplan:rows.filter(r=>inPlan(r.p.id).length).length};
+  h += '<div class="summary"><div class="sum"><b>'+rows.length+'</b><span>Saved</span></div><div class="sum soon"><b>'+tally.must+'</b><span>Someone\'s must-do</span></div><div class="sum open"><b>'+tally.inplan+'</b><span>Already in the plan</span></div></div>';
+  h += rows.map(r=>{
+    const p=r.p, mv=myVotes()[p.id], ip=inPlan(p.id);
+    return '<div class="res"><button class="nm" data-open="'+p.id+'">'+esc(p.n)+'</button><div class="right">'+pill(statusAt(p,N))+'</div>'
+      + (WHY[p.id]?'<p class="why" style="grid-column:1 / -1">'+esc(WHY[p.id])+'</p>':'')
+      + '<div class="votes" role="group" aria-label="Your vote on '+esc(p.n)+'">'+[["must","Must do"],["maybe","Interested"],["skip","Skip"]].map(([k,l])=>'<button class="vote v-'+k+'" data-vote="'+p.id+'|'+k+'" aria-pressed="'+(mv===k)+'">'+l+' <span class="cn">'+r[k].length+'</span>'+(shared?faces(r[k]):'')+'</button>').join("")+'</div>'
+      + '<div class="sub2"><span>'+esc(p.a)+' · '+esc(shortDist(p))+'</span>'+(ip.length?'<span class="st open">In plan: '+ip.join(", ")+'</span>':(readOnly?'':'<button class="btn" data-addto="'+p.id+'">Add to plan</button>'))+'<a class="btn" href="'+dirUrl(p)+'" target="_blank" rel="noopener">Directions</a></div></div>';
+  }).join("");
+  return h;
+}
+
+/* ---------- next two hours ---------- */
+function nextStopToday(W){
+  const ti = tripInfo(); if(!ti || !W.date) return null;
+  const d = plan.days.find(x=>ti.dateOf(x.n).toISOString().slice(0,10)===W.date); if(!d) return null;
+  const it = d.items.find(i=>toM(i.t) > W.mins); return it ? {d, it, inMins:toM(it.t)-W.mins} : null;
+}
+function vNext2(W){
+  const ns = nextStopToday(W), budget = ns ? Math.max(30, ns.inMins) : 120;
+  const BK = [["Eat",["eat","coffee"]],["Drink",["drink","party","queer"]],["Music",["jazz"]],["Do",["history","spooky","shop","river","nature","tattoo"]]];
+  const cand = [];
+  P.forEach(p=>{
+    if(S.walkOnly && p.d!==0) return;
+    const ev = eventsAt(p,W,Math.min(budget,120))[0];
+    if(ev){ cand.push({p, note: ev.state==="now" ? "On now, ends "+fmtM(ev.end) : "Starts "+fmtM(ev.start)+" ("+ev.inMins+" min)"}); return; }
+    if(isSailing(p)) return;
+    const st = statusAt(p,W); if(st.state==="open" && st.left>=Math.min(75,budget)) cand.push({p, note:"Open till "+st.closeLabel});
+  });
+  const rank = c => { const di=distInfo(c.p); return (di?di.m/80:c.p.d*6) - pickersOf(c.p.id).length*10 - votersOf(c.p.id,"must").length*15; };
+  let h = '<section class="next2"><div class="n2-head"><h3>Your next '+(ns?dur(budget):'2 hours')+'</h3><button class="close" data-next2="0" aria-label="Close">×</button></div>';
+  h += ns ? '<p class="small">Next on the plan: <b>'+esc(ns.it.h)+'</b> at '+fmtM(toM(ns.it.t))+', in '+dur(ns.inMins)+'. These fit before it.</p>' : '<p class="small muted">Open for at least another hour, or starting soon. Closest first'+(originPt()?' from '+originPt().from:'')+'.</p>';
+  h += '<div class="n2-grid">'+BK.map(([lab,cats])=>{
+    const g = cand.filter(c=>cats.some(x=>c.p.c.includes(x))).sort((a,b)=>rank(a)-rank(b)).slice(0,3);
+    return '<div class="n2-col"><span class="fg-l">'+lab+'</span>'+(g.length?g.map(c=>'<button class="n2-item" data-open="'+c.p.id+'"><b>'+esc(c.p.n)+'</b><span>'+esc(c.note)+' · '+esc(shortDist(c.p))+'</span></button>').join(""):'<span class="small muted">Nothing fits right now.</span>')+'</div>';
+  }).join("")+'</div></section>';
+  return h;
+}
+
+/* ---------- real map (Leaflet); falls back to the sketch map when tiles can't load ---------- */
+let LMAP=null, LCL=null, LZONES=null, LME=null, mapEl=null, tileOk=false, tileErr=0, LDARK=null;
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888";
+const mapAvailable = () => !!(window.L && window.L.map) && !S.noTiles;
+function isDark(){ const t=document.documentElement.getAttribute("data-theme"); return t==="dark" || (t!=="light" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); }
+function ensureMap(slot){
+  if(!mapEl){ mapEl = document.createElement("div"); mapEl.className = "leafmap"; mapEl.setAttribute("aria-label","Map of New Orleans places"); }
+  slot.appendChild(mapEl);
+  if(!LMAP){
+    LMAP = L.map(mapEl, {zoomControl:true, tap:true}).setView([29.9585,-90.0640], 15);
+    LDARK = isDark();
+    const tl = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom:19, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(LMAP);
+    if(LDARK) mapEl.classList.add("dark");
+    tl.on("tileload", ()=>{ tileOk = true; });
+    tl.on("tileerror", ()=>{ tileErr++; if(!tileOk && tileErr>=4){ S.noTiles = true; toast("Street tiles can't load here, so this is the sketch map. The public site link has the full map."); render(); } });
+    LCL = L.markerClusterGroup ? L.markerClusterGroup({showCoverageOnHover:false, maxClusterRadius:38, spiderfyOnMaxZoom:true,
+      iconCreateFunction:c=>L.divIcon({html:'<span>'+c.getChildCount()+'</span>', className:'clu', iconSize:[38,38]})}) : L.layerGroup();
+    LCL.addTo(LMAP);
+    LZONES = L.layerGroup(); LME = L.layerGroup().addTo(LMAP);
+    LMAP.on("moveend", updateMapList);
+  }
+  setTimeout(()=>{ LMAP.invalidateSize(); if(S.mapGo){ const g=S.mapGo; S.mapGo=null; if(g==="all") fitAll(); else LMAP.setView(g[0], g[1]); } updateMapList(); }, 30);
+}
+function mapList(){
+  const N = S.when || nolaNow(), cat = S.mapCat||"all";
+  return P.filter(p=>COORD[p.id] && (cat==="all"||p.c.includes(cat)) && (!S.mapSaved||pickersOf(p.id).length) &&
+    (!S.mapOpen || (isSailing(p) ? eventsAt(p,N,240).length>0 : statusAt(p,N).state==="open")));
+}
+function pinColor(p){
+  const N = S.when || nolaNow();
+  if(S.mapColor==="open"){ const st=statusAt(p,N); return cssVar(st.state==="open"?"--leaf":st.state==="later"?"--gold":st.state==="unknown"?"--muted":"--line"); }
+  return cssVar(["--coral","--lav","--gold","--accent"][groupIx(p)]);
+}
+function updateMarkers(){
+  if(!LMAP) return;
+  LCL.clearLayers();
+  mapList().forEach(p=>{
+    const saved = pickersOf(p.id).length>0;
+    const mk = L.circleMarker(coordOf(p), {radius:saved?10:8, color:saved?cssVar("--coral"):cssVar("--ink"), weight:saved?3:1.5, fillColor:pinColor(p), fillOpacity:.95});
+    mk.bindTooltip(p.n, {direction:"top", offset:[0,-8]});
+    mk.on("click", ()=>{ S.sheet = p.id; render(); });
+    LCL.addLayer(mk);
+  });
+  LZONES.clearLayers();
+  if(S.mapSafety){
+    const col = {green:cssVar("--safe"), yellow:cssVar("--mid"), red:cssVar("--risk")};
+    SAFETY.forEach(([lv,nm,poly])=>{ L.polygon(poly, {color:col[lv], weight:1, fillColor:col[lv], fillOpacity:.14, dashArray:"4 4", interactive:true}).bindTooltip(nm+": "+SAFE_TXT[lv], {sticky:true}).addTo(LZONES); });
+    if(!LMAP.hasLayer(LZONES)) LZONES.addTo(LMAP);
+  } else if(LMAP.hasLayer(LZONES)) LMAP.removeLayer(LZONES);
+  LME.clearLayers();
+  if(LOC){ L.circle([LOC.lat,LOC.lon], {radius:Math.min(LOC.acc||30,300), color:"#2B7BFF", weight:1, fillOpacity:.12}).addTo(LME); L.circleMarker([LOC.lat,LOC.lon], {radius:7, color:"#fff", weight:3, fillColor:"#2B7BFF", fillOpacity:1}).bindTooltip("You are here").addTo(LME); }
+  if(trip.lat && trip.lon) L.circleMarker([trip.lat,trip.lon], {radius:9, color:cssVar("--ink"), weight:2, fillColor:cssVar("--surface"), fillOpacity:1}).bindTooltip("Hotel: "+(trip.hotel||"")).addTo(LME);
+}
+function fitAll(){ const pts = mapList().map(coordOf); if(pts.length) LMAP.fitBounds(pts, {padding:[24,24], maxZoom:16}); }
+function updateMapList(){
+  const box = document.getElementById("maplist"); if(!box || !LMAP) return;
+  const b = LMAP.getBounds(), N = S.when || nolaNow();
+  const vis = mapList().filter(p=>b.contains(coordOf(p))).sort((a,c)=>{ const da=distInfo(a), dc=distInfo(c); return (da&&dc) ? da.m-dc.m : a.d-c.d || a.n.localeCompare(c.n); });
+  const cnt = document.getElementById("maplistcount"); if(cnt) cnt.textContent = vis.length;
+  box.innerHTML = vis.length ? vis.slice(0,40).map(p=>resRow(p,statusAt(p,N))).join("") + (vis.length>40?'<p class="small muted">Zoom in to see the rest.</p>':'') : '<div class="empty">No places in this part of the map. Zoom out or change the filters.</div>';
+}
+const LVIEWS = {all:["Everything","all"], fq:["French Quarter",[[29.9584,-90.0645],16]], fren:["Frenchmen St",[[29.9645,-90.0578],17]], by:["Bywater",[[29.9660,-90.0420],15]], gd:["Garden District",[[29.9290,-90.0840],15]], up:["Uptown",[[29.9330,-90.1150],14]]};
+function vMap(){
+  if(!mapAvailable()) return vSketch();
+  const cat = S.mapCat||"all";
+  const nf = (cat!=="all"?1:0)+(S.mapOpen?1:0)+(S.mapSaved?1:0);
+  let h = '<div class="row hscroll"><button class="btn primary" data-locate="1">◎ Locate me</button>'+Object.entries(LVIEWS).map(([k,v])=>'<button class="chip" data-lview="'+k+'">'+esc(v[0])+'</button>').join("")+'</div>';
+  h += '<div class="mapwrap"><div id="mapSlot" class="mapslot"></div></div>';
+  h += '<div class="row hscroll"><button class="chip" id="mapOpen" aria-pressed="'+!!S.mapOpen+'">Open now only</button><button class="chip cake" id="mapSaved" aria-pressed="'+!!S.mapSaved+'">Saved only</button><button class="chip" data-mapcolor="'+(S.mapColor==="open"?"type":"open")+'" aria-pressed="'+(S.mapColor==="open")+'">Color by open now</button><button class="chip" id="mapSafety" aria-pressed="'+!!S.mapSafety+'">Night-walking advice</button></div>';
+  h += '<div class="legend">'+(S.mapColor==="open" ? '<span><i style="background:var(--leaf)"></i>Open</span><span><i style="background:var(--gold)"></i>Opens later</span><span><i style="background:var(--line)"></i>Closed</span><span><i style="background:var(--muted)"></i>Check hours</span>'
+     : FG.map(([lab],i)=>'<span><i style="background:'+GROUP_COLOR[i]+'"></i>'+esc(lab)+'</span>').join(""))+'<span><i style="background:#2B7BFF"></i>You</span><span><i style="background:var(--surface)"></i>Hotel</span></div>';
+  h += '<details class="cat"'+(S.secs.mapf?' open':'')+'><summary data-sec="mapf"><span class="t2">Filter by type</span><span class="c">'+(cat!=="all"?esc(CATS[cat]):"Everything")+'</span><span class="hint">Coffee, food, jazz, Bourbon, history, tattoos, swamps…</span></summary><div class="body">'+filterBlock(cat, "data-mapcat", "")+'</div></details>';
+  if(S.mapSafety) h += '<div class="safety"><h3>Night-walking advice (approximate)</h3>'+["green","yellow","red"].map(lv=>'<div class="sz"><span class="sw '+lv+'"></span><div><b>'+({green:"Green",yellow:"Yellow",red:"Red"})[lv]+'</b> '+esc(SAFE_TXT[lv])+'</div></div>').join("")
+     + '<p class="small muted">General visitor advice about walking after dark, drawn from common travel guidance. It isn\x27t crime data or a judgment of the people who live there, and the edges are rough. For current information, check NOPD\x27s crime map. Emergency 911 · NOPD non-emergency <span class="mono">504-821-2222</span>.</p></div>';
+  h += '<details class="cat" open><summary data-sec="maplx"><span class="t2">Places in this view</span><span class="c" id="maplistcount"></span><span class="hint">Move the map to update the list.</span></summary><div class="body" id="maplist"></div></details>';
+  return h;
+}
+function fitInk(){
+  document.querySelectorAll("svg.inkart:not([data-fit])").forEach(s=>{ try{ const b=s.getBBox(); if(!b.width) return; const pad=Math.max(b.width,b.height)*0.09, size=Math.max(b.width,b.height)+pad*2;
+    s.setAttribute("viewBox", (b.x+b.width/2-size/2).toFixed(1)+" "+(b.y+b.height/2-size/2).toFixed(1)+" "+size.toFixed(1)+" "+size.toFixed(1)); s.setAttribute("data-fit","1"); }catch(e){} });
+}
+function afterRender(){
+  fitInk();
+  if(S.tab==="map" && mapAvailable()){ const slot=document.getElementById("mapSlot"); if(slot){ ensureMap(slot); updateMarkers(); } }
+}
+
+/* ---------- Ink: fine-line tattoo concepts, drawn as SVG ---------- */
+const INK = (()=>{
+  const F = "var(--surface)";                      /* petals are filled with the card color so overlaps read as layers */
+  const g = (inner, x=0, y=0, s=1, r=0, flip=false) => '<g transform="translate('+x+' '+y+') rotate('+r+') scale('+(flip?-s:s)+' '+s+')">'+inner+'</g>';
+  const petal = (L, W, fill=F) => '<path fill="'+fill+'" d="M0 0C'+W+' '+(-L*.35)+' '+(W*.6)+' '+(-L*.9)+' 0 '+(-L)+'C'+(-W*.6)+' '+(-L*.9)+' '+(-W)+' '+(-L*.35)+' 0 0Z"/>';
+  const vein = L => '<path d="M0 -2L0 '+(-L*.75)+'" stroke-width=".7" opacity=".7"/>';
+  function magnolia(x,y,s=1,r=0,fill=F){
+    let h = '';
+    [-64,-32,0,32,64].forEach(a=>{ h += '<g transform="rotate('+a+')">'+petal(34,13,fill)+vein(34)+'</g>'; });
+    [-18,18].forEach(a=>{ h += '<g transform="rotate('+a+')">'+petal(26,12,fill)+'</g>'; });
+    h += '<ellipse cx="0" cy="-7" rx="3.2" ry="6" fill="'+fill+'"/><path d="M-1.5 -11v3M1.5 -11v3M0 -12v3" stroke-width=".7"/>';
+    h += '<path d="M-9 2C-4 7 4 7 9 2" fill="none"/>';
+    return g(h,x,y,s,r);
+  }
+  function bud(x,y,s=1,r=0,fill=F){ return g(petal(22,8,fill)+'<g transform="rotate(14)">'+petal(18,7,fill)+'</g><path d="M-5 2C-2 5 2 5 5 2" fill="none"/>',x,y,s,r); }
+  function leaf(x,y,s=1,r=0){ return g(petal(30,9)+'<path d="M0 0L0 -27" stroke-width=".7"/>',x,y,s,r); }
+  function fleur(x,y,s=1,fill=F){
+    const side = '<path fill="'+fill+'" d="M4 8C10 -8 22 -18 34 -16C44 -14 44 -2 36 0C40 -6 36 -10 30 -8C20 -6 12 0 6 10Z"/>';
+    const tail = '<path fill="none" d="M-6 14C-8 24 -16 30 -26 28C-18 26 -14 22 -12 14"/>';
+    let h = '<path fill="'+fill+'" d="M0 -48C10 -36 15 -20 0 6C-15 -20 -10 -36 0 -48Z"/>' + side + '<g transform="scale(-1 1)">'+side+'</g>'
+      + '<rect x="-20" y="8" width="40" height="6" rx="2" fill="'+fill+'"/>' + tail + '<g transform="scale(-1 1)">'+tail+'</g><path fill="none" d="M-4 14L0 32L4 14"/>';
+    return g(h,x,y,s);
+  }
+  const crescent = (x,y,r,rot=0,fill="none") => g('<path fill="'+fill+'" d="M'+(r*.2)+' '+(-r)+'A'+r+' '+r+' 0 1 0 '+(r*.2)+' '+r+'A'+(r*.8)+' '+(r*.8)+' 0 1 1 '+(r*.2)+' '+(-r)+'Z"/>',x,y,1,rot);
+  const spark = (x,y,s=4) => '<path fill="currentColor" stroke="none" d="M'+x+' '+(y-s)+'L'+(x+s*.25)+' '+(y-s*.25)+'L'+(x+s)+' '+y+'L'+(x+s*.25)+' '+(y+s*.25)+'L'+x+' '+(y+s)+'L'+(x-s*.25)+' '+(y+s*.25)+'L'+(x-s)+' '+y+'L'+(x-s*.25)+' '+(y-s*.25)+'Z"/>';
+  const dot = (x,y,r=1.2) => '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="currentColor" stroke="none"/>';
+  function jasmine(x,y,s=1,r=0){ let h=''; for(let i=0;i<5;i++) h += '<ellipse cx="0" cy="-6" rx="2.8" ry="6" fill="'+F+'" transform="rotate('+(i*72)+')"/>'; return g(h+dot(0,0,1.4),x,y,s,r); }
+  function daisy(x,y,s=1){ let h=''; for(let i=0;i<12;i++) h += '<ellipse cx="0" cy="-7" rx="1.7" ry="5.5" fill="'+F+'" transform="rotate('+(i*30)+')"/>'; return g(h+'<circle r="3" fill="'+F+'"/>'+dot(0,0,1),x,y,s); }
+  function rose(x,y,s=1){ return g('<circle r="9" fill="'+F+'"/><path fill="none" d="M0 0C3 -3 5 1 2 4C-2 7 -7 2 -5 -3C-3 -8 5 -9 8 -4"/><path fill="none" d="M-9 2C-10 8 -3 12 3 10"/>',x,y,s); }
+  function tulip(x,y,s=1){ return g('<path fill="'+F+'" d="M-7 0C-8 -10 -4 -16 -3 -14L0 -8L3 -14C4 -16 8 -10 7 0C5 5 -5 5 -7 0Z"/>',x,y,s); }
+  function forget(x,y,s=1){ let h=''; for(let i=0;i<5;i++) h += '<circle cx="0" cy="-4.5" r="3.6" fill="'+F+'" transform="rotate('+(i*72)+')"/>'; return g(h+dot(0,0,1.1),x,y,s); }
+  function bells(x,y,s=1){ const b='<path fill="'+F+'" d="M-3 0C-3 -5 3 -5 3 0L4 2L2 1L0 3L-2 1L-4 2Z"/>'; return g('<path fill="none" d="M-14 -10C-4 -16 8 -14 14 -4"/>'+g(b,-9,-7)+g(b,0,-8)+g(b,9,-4),x,y,s); }
+  function railing(x,y,w=110,s=1){
+    let h = '<rect x="'+(-w/2)+'" y="-22" width="'+w+'" height="4" rx="1.5" fill="'+F+'"/><rect x="'+(-w/2)+'" y="20" width="'+w+'" height="3" rx="1.5" fill="'+F+'"/>';
+    for(let bx=-w/2+8; bx<w/2-4; bx+=10) h += '<path d="M'+bx+' -18V20" stroke-width="1.1"/>';
+    for(let bx=-w/2+13; bx<w/2-8; bx+=20) h += '<path fill="none" stroke-width="1" d="M'+bx+' -12c4 0 4 6 0 6c-4 0 -4 6 0 6c4 0 4 6 0 6"/>';
+    return g(h,x,y,s);
+  }
+  function banner(x,y,w,text,col="currentColor",fill=F,size=11){
+    const hw=w/2;
+    return g('<path fill="'+fill+'" stroke="'+col+'" d="M'+(-hw)+' -8H'+hw+'V8H'+(-hw)+'Z"/><path fill="'+fill+'" stroke="'+col+'" d="M'+(-hw)+' -4H'+(-hw-12)+'L'+(-hw-7)+' 3L'+(-hw-12)+' 10H'+(-hw+4)+'V8"/><path fill="'+fill+'" stroke="'+col+'" d="M'+hw+' -4H'+(hw+12)+'L'+(hw+7)+' 3L'+(hw+12)+' 10H'+(hw-4)+'V8"/>'
+      + '<text x="0" y="4" text-anchor="middle" font-family="Pacifico, cursive" font-size="'+size+'" fill="'+col+'" stroke="none">'+text+'</text>',x,y);
+  }
+  function petalArc(R, from, to, n, maxS, minS=.35){
+    let h=''; for(let i=0;i<n;i++){ const t=i/(n-1), th=(from+(to-from)*t)*Math.PI/180, s=minS+(maxS-minS)*Math.sin(Math.PI*t);
+      const x=R*Math.cos(th), y=R*Math.sin(th), tx=-Math.sin(th), ty=Math.cos(th), phi=Math.atan2(tx,-ty)*180/Math.PI;
+      h += g(petal(30,11)+vein(30), x.toFixed(1), y.toFixed(1), s.toFixed(2), phi.toFixed(1)); }
+    return h;
+  }
+  const P1 = "#B48AF0", P2 = "#6B3FB8", P3 = "#E6D8FA";  /* purples for the custom cats */
+  function cat(x,y,s=1,flip=false,fill=P1,line=P2,letter="",eyes="happy"){
+    let h = '<path fill="'+fill+'" stroke="'+line+'" d="M-12 -28L-9 -42L-2 -33C0 -34 2 -34 4 -33L11 -42L14 -28C20 -20 18 -9 11 -5C20 1 24 15 20 28L-18 28C-22 15 -18 1 -9 -5C-16 -9 -18 -20 -12 -28Z"/>'
+      + '<path fill="none" stroke="'+line+'" d="M18 24C32 24 36 10 28 2C26 0 23 2 25 5"/>'
+      + '<path fill="'+P3+'" stroke="'+line+'" stroke-width=".8" d="M-7 -38L-5 -33L-8 -32ZM9 -38L7 -33L10 -32Z"/>'
+      + (eyes==="happy" ? '<path fill="none" stroke="'+line+'" d="M-7 -22q2 -2.5 4 0M5 -22q2 -2.5 4 0"/>' : '<circle cx="-5" cy="-22" r="1.6" fill="'+line+'" stroke="none"/><circle cx="7" cy="-22" r="1.6" fill="'+line+'" stroke="none"/>')
+      + '<path fill="'+line+'" stroke="none" d="M0 -18l-2 -2h4z"/><path fill="none" stroke="'+line+'" stroke-width=".7" d="M-3 -17l-10 -1M-3 -16l-10 2M5 -17l10 -1M5 -16l10 2"/>'
+      + '<path fill="none" stroke="'+line+'" d="M-8 -6Q1 -1 10 -6"/>'
+      + (letter ? '<circle cx="1" cy="-2" r="4.2" fill="'+P3+'" stroke="'+line+'"/><text x="1" y=".6" text-anchor="middle" font-family="DM Mono, monospace" font-size="5.5" fill="'+line+'" stroke="none" transform="scale('+(flip?-1:1)+' 1)" transform-origin="1 -2">'+letter+'</text>' : '');
+    return g(h,x,y,s,0,flip);
+  }
+  const wrap = (inner, opts={}) => '<svg viewBox="-100 -100 200 200" class="inkart" role="img" aria-label="'+(opts.label||"Tattoo concept")+'" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>';
+
+  const C = [
+   {n:1, t:"Magnolia fleur-de-lis", idea:"1–3 magnolias with stems subtly forming a fleur-de-lis.", d:[
+     {k:"a", t:"Three-stem lis", desc:"Three small magnolias on stems that sweep down and cross at a slim band, so the whole piece reads as a fleur-de-lis. This is the one we recommended most.", star:true,
+      svg:()=> '<path d="M0 30C0 12 0 -4 0 -16"/><path d="M-3 30C-6 8 -18 -10 -34 -12C-46 -13 -52 -2 -46 8"/><path d="M3 30C6 8 18 -10 34 -12C46 -13 52 -2 46 8"/>'
+        +leaf(-10,8,.42,-40)+leaf(10,8,.42,40)+'<rect x="-15" y="30" width="30" height="5" rx="2" fill="var(--surface)"/>'
+        +'<path d="M-5 35C-7 44 -14 50 -23 48M5 35C7 44 14 50 23 48M-2.5 35L0 50L2.5 35"/>'+magnolia(0,-20,.62)+magnolia(-46,10,.46,-150)+magnolia(46,10,.46,150)},
+     {k:"b", t:"Bloom crown", desc:"A full fleur-de-lis outline where the tall center petal is replaced by one open magnolia.",
+      svg:()=> fleur(0,22,1.1).replace(/<path fill="var\(--surface\)" d="M0 -48C10 -36 15 -20 0 6C-15 -20 -10 -36 0 -48Z"\/>/,'')+magnolia(0,8,.78)},
+     {k:"c", t:"Minimal trio", desc:"The most delicate take: three closed magnolia buds perched on the tips of a whisper-thin fleur-de-lis line.",
+      svg:()=> '<g stroke-width="1" stroke-dasharray="0">'+fleur(0,16,1.15,"none")+'</g>'+bud(0,-38,.75)+bud(-38,-4,.55,-60)+bud(38,-4,.55,60)}
+   ]},
+   {n:2, t:"Magnolia and crescent moon", idea:"A delicate magnolia paired with a small crescent.", d:[
+     {k:"a", t:"Cradled bloom", desc:"An open magnolia resting inside the curve of a crescent, like the moon is holding it.", svg:()=> crescent(-6,0,58,0)+magnolia(8,22,.85)+leaf(-14,30,.5,-110)+spark(48,-48,5)+dot(58,-30)},
+     {k:"b", t:"Moon over the branch", desc:"A thin crescent floats above a single magnolia branch with two leaves and a pair of tiny stars.", svg:()=> crescent(30,-50,24,-20)+'<path d="M-50 60C-30 40 -10 30 10 10"/>'+leaf(-30,42,.6,-60)+leaf(-14,30,.55,30)+magnolia(12,6,.75,20)+spark(-30,-44,4)+spark(-50,-20,3)},
+     {k:"c", t:"Stem moon", desc:"The magnolia's own stem and leaves curve around into a crescent shape, with the bloom at the top tip.",
+      svg:()=> '<path d="M20 -56C-40 -60 -62 20 -10 58C-40 30 -40 -30 20 -56"/>'+leaf(-44,0,.5,-160)+leaf(-36,34,.5,-130)+leaf(-30,-36,.5,-200)+magnolia(26,-52,.6,60)+dot(40,10)+dot(30,26,1)}
+   ]},
+   {n:3, t:"Fleur-de-lis with jasmine", idea:"The Louisiana symbol intertwined with jasmine flowers.", d:[
+     {k:"a", t:"Climbing jasmine", desc:"A jasmine vine winds up through the fleur-de-lis, weaving in front of and behind the petals.", svg:()=> fleur(0,10,1.4)+'<path d="M-40 60C-10 44 -30 20 0 6C26 -8 4 -34 20 -54"/>'+jasmine(-24,36,.8)+jasmine(8,-14,.7)+jasmine(20,-54,.75)+leaf(-6,20,.35,40)+leaf(14,-36,.35,-30)},
+     {k:"b", t:"Jasmine tips", desc:"An open fleur-de-lis outline with a single jasmine star at the top and on each curled side petal.", svg:()=> fleur(0,14,1.45,"none")+jasmine(0,-58,1)+jasmine(-50,-10,.85)+jasmine(50,-10,.85)},
+     {k:"c", t:"Sprig and band", desc:"A small fleur-de-lis with a short jasmine sprig laid across the band like a ribbon.", svg:()=> fleur(0,0,1.2)+'<path d="M-46 18C-20 8 20 8 46 18"/>'+jasmine(-36,12,.65)+jasmine(-14,8,.75)+jasmine(14,8,.75)+jasmine(36,12,.65)+leaf(-50,22,.3,-100)+leaf(50,22,.3,100)}
+   ]},
+   {n:4, t:"Family birth-flower bouquet", idea:"Flowers representing different family members.", d:[
+     {k:"a", t:"Tied bouquet", desc:"Four different stems gathered and tied with a thin bow. Swap each flower for a family member's birth flower.", svg:()=> '<path d="M-24 -20C-10 10 -4 30 0 60M0 -36C0 0 0 30 0 60M26 -18C12 10 4 30 0 60M-40 0C-20 20 -6 36 0 60"/>'+'<path d="M-8 34C-16 26 -18 40 -6 38M8 34C16 26 18 40 6 38" stroke-width="1"/>'+rose(-24,-26,1.1)+daisy(0,-44,1.2)+tulip(28,-20,1.4)+forget(-42,-4,1.1)+leaf(14,10,.4,40)+leaf(-14,12,.4,-40)},
+     {k:"b", t:"One stem, many blooms", desc:"A single slim stem with one small flower per person spaced along it. Easy to add to later.", svg:()=> '<path d="M-10 70C-14 30 10 -10 4 -64"/>'+daisy(4,-64,1)+forget(-14,-34,1)+rose(14,-6,.9)+tulip(-14,26,1.2)+bells(14,46,.9)+leaf(-4,-48,.35,-60)+leaf(2,8,.35,60)},
+     {k:"c", t:"Family wreath", desc:"A small open circle of birth flowers, with a gap at the top for a tiny fleur-de-lis.", svg:()=> '<path d="M-14 -50A52 52 0 1 0 14 -50"/>'+daisy(-50,0,1)+rose(-30,40,1)+tulip(10,52,1.2)+forget(44,26,1)+bells(46,-18,.8)+leaf(-44,-30,.35,-30)+leaf(-50,22,.35,-140)+leaf(30,46,.35,120)+fleur(0,-54,.28)}
+   ]},
+   {n:5, t:"Hidden NOLA magnolia", idea:"A magnolia with tiny, subtly incorporated NOLA lettering.", d:[
+     {k:"a", t:"Lettered stem", desc:"The four letters N O L A run down the stem in tiny type, spaced like little leaf nodes.", svg:()=> '<path d="M0 -6C4 20 -4 40 2 70"/>'+magnolia(0,-10,1.15)+'<g stroke="none" fill="currentColor" font-family="DM Mono, monospace" font-size="8">'+'<text x="6" y="20">N</text><text x="-12" y="34">O</text><text x="5" y="48">L</text><text x="-11" y="62">A</text></g>'+leaf(-6,26,.3,-60)},
+     {k:"b", t:"Center secret", desc:"An open magnolia with NOLA written very small in the center where the stamens would be. Only visible up close.", svg:()=> magnolia(0,20,1.6)+'<rect x="-14" y="-6" width="28" height="12" fill="var(--surface)" stroke="none"/><text x="0" y="3" text-anchor="middle" font-family="DM Mono, monospace" font-size="7" fill="currentColor" stroke="none">NOLA</text>'},
+     {k:"c", t:"Script ribbon", desc:"A single magnolia on a short stem with a tiny ribbon wrapped around it reading 'nola' in script.", svg:()=> '<path d="M0 0C-4 30 4 50 0 70"/>'+magnolia(0,-6,1.1)+banner(0,36,34,"nola","currentColor","var(--surface)",10)}
+   ]},
+   {n:6, t:"French Quarter balcony", idea:"A miniature wrought-iron balcony railing with a flower.", d:[
+     {k:"a", t:"Draped railing", desc:"A short stretch of lacy iron railing with one magnolia resting on top and leaves trailing over the edge.", svg:()=> railing(0,20,130)+magnolia(10,-4,.75,-10)+leaf(-22,2,.5,-120)+leaf(36,4,.45,120)+'<path d="M-30 0C-40 16 -36 30 -44 40"/>'+leaf(-44,40,.35,-170)},
+     {k:"b", t:"Arched doorway", desc:"A tall shuttered French Quarter door under an arch, with the railing in front and a flower pot on the ledge.", svg:()=> '<path d="M-34 0V-50A34 34 0 0 1 34 -50V0"/><path d="M0 -84V0M-34 -50H34" stroke-width="1"/><path d="M-26 -44V-6M-18 -44V-6M18 -44V-6M26 -44V-6" stroke-width=".7"/>'+railing(0,24,96)+'<path fill="var(--surface)" d="M30 4H46L43 14H33Z"/>'+forget(34,-2,.8)+forget(42,-6,.8)+leaf(30,0,.3,-40)},
+     {k:"c", t:"Railing with jasmine", desc:"A compact railing panel with fleur-de-lis finials on each post and jasmine winding along the top rail.", svg:()=> railing(0,24,110)+fleur(-58,-4,.3)+fleur(58,-4,.3)+'<path d="M-52 2C-30 -14 -10 10 10 -4C30 -18 40 4 52 0"/>'+jasmine(-30,-6,.7)+jasmine(8,-4,.7)+jasmine(34,-10,.7)+leaf(-14,0,.3,60)+leaf(22,-10,.3,-60)}
+   ]},
+   {n:7, t:"Three flowers and fleur-de-lis", idea:"Three small flowers arranged around the Louisiana symbol.", d:[
+     {k:"a", t:"Triangle", desc:"A small fleur-de-lis in the middle with three tiny blooms at the points of an invisible triangle around it. One per sister, kid, or friend.", svg:()=> fleur(0,10,.9)+magnolia(0,-60,.45)+jasmine(-54,40,1)+forget(54,40,1.1)+dot(-30,-20)+dot(30,-20)+dot(0,56)},
+     {k:"b", t:"Bloom tips", desc:"Each of the fleur-de-lis's three tips ends in a different small flower instead of a point.", svg:()=> fleur(0,24,1.3,"none")+rose(0,-48,1)+daisy(-46,-2,.85)+tulip(46,-2,1.2)},
+     {k:"c", t:"Flower row", desc:"A fleur-de-lis on top with three little flowers lined up below the band on short stems.", svg:()=> fleur(0,-12,1)+'<path d="M-24 22V44M0 22V48M24 22V44"/>'+forget(-24,52,1)+magnolia(0,60,.4)+jasmine(24,52,.9)}
+   ]},
+   {n:8, t:"Magnolia-petal crescent", idea:"A crescent moon formed from magnolia petals.", d:[
+     {k:"a", t:"Petal moon", desc:"Single magnolia petals laid end to end along a curve, getting smaller toward each tip so they form a crescent.", svg:()=> petalArc(56,100,260,10,1)+petalArc(43,122,238,7,.7,.3)+spark(18,-14,6)+dot(30,12)+dot(10,22,1)},
+     {k:"b", t:"Moon with a bloom", desc:"The petal crescent, with one open magnolia sitting at the lower tip.", svg:()=> petalArc(56,130,272,9,.95)+magnolia(-10,58,.7,-25)+leaf(12,60,.4,80)+spark(22,-16,4.5)},
+     {k:"c", t:"Starry petals", desc:"A thinner petal crescent with a scatter of dots and tiny four-point stars inside the curve.", svg:()=> petalArc(56,96,264,12,.6,.25)+spark(-8,-20,5)+spark(14,12,3.5)+dot(-20,10)+dot(4,-38)+dot(22,-12,1)+dot(-6,34,1)+dot(30,30,1)}
+   ]},
+   {n:9, t:"Custom: Lauren and Tara's cats", idea:"A playful purple design with cats, with Lauren and Tara worked in.", custom:true, d:[
+     {k:"a", t:"Two cats, one moon", desc:"Two purple cats sitting back to back under a crescent moon, tails curling into a heart. Collar tags read L and T, with a ribbon below for Lauren and Tara.", svg:()=> '<g stroke="'+P2+'">'+crescent(0,-68,18,-35,P3)+'</g>'+cat(-24,8,1,true,P1,P2,"L")+cat(24,8,1,false,P1,P2,"T")
+        +'<path fill="'+P3+'" stroke="'+P2+'" d="M0 30C-4 24 -12 26 -10 32C-8 38 0 42 0 44C0 42 8 38 10 32C12 26 4 24 0 30Z"/>'+banner(0,58,80,"Lauren & Tara",P2,P3,10)+'<g fill="'+P2+'">'+spark(-50,-56,4).replace('currentColor',P2)+spark(48,-44,3).replace('currentColor',P2)+'</g>'},
+     {k:"b", t:"Cat in the magnolia", desc:"A purple magnolia bloom with a little cat curled up asleep in the center, and a second cat peeking from behind a petal. Their names wrap around on a tiny ribbon.", svg:()=> '<g stroke="'+P2+'">'+magnolia(0,40,1.9,0,P3)+'</g>'
+        +g('<path fill="'+P1+'" stroke="'+P2+'" d="M-18 6C-22 -10 -6 -16 6 -12C16 -9 22 0 16 8C8 14 -12 14 -18 6Z"/><path fill="'+P1+'" stroke="'+P2+'" d="M-14 -6L-12 -15L-6 -9ZM-4 -11L2 -18L4 -10Z"/><path fill="none" stroke="'+P2+'" d="M-12 -2q2 1.5 4 0M-3 -4q2 1.5 4 0M16 6C24 10 22 18 14 16"/>',0,-8,1.3)
+        +g('<path fill="'+P1+'" stroke="'+P2+'" d="M-8 0C-8 -8 -6 -12 -4 -12L-2 -6H2L4 -12C6 -12 8 -8 8 0Z"/><circle cx="-3" cy="-3" r="1" fill="'+P2+'" stroke="none"/><circle cx="3" cy="-3" r="1" fill="'+P2+'" stroke="none"/>',18,-24,1.25,12)
+        +banner(0,74,84,"Lauren · Tara",P2,P3,9.5)},
+     {k:"c", t:"Fleur-de-cat", desc:"A fleur-de-lis built from cats: the center petal is a cat's ears and face, the two side petals are curled cat tails, and the band reads L + T. Fun, purple, and unmistakably NOLA.", svg:()=> {
+        const tail = '<path fill="'+P1+'" stroke="'+P2+'" d="M6 14C12 -6 30 -22 42 -16C52 -10 46 4 36 2C42 -4 38 -10 32 -8C22 -4 14 4 12 16Z"/>';
+        return tail + '<g transform="scale(-1 1)">'+tail+'</g>'
+          + '<path fill="'+P1+'" stroke="'+P2+'" d="M-14 10C-20 -6 -18 -22 -14 -34L-16 -54L-4 -42C-1 -43 1 -43 4 -42L16 -54L14 -34C18 -22 20 -6 14 10Z"/>'
+          + '<path fill="'+P3+'" stroke="'+P2+'" stroke-width=".8" d="M-12 -46L-9 -40L-13 -39ZM12 -46L9 -40L13 -39Z"/><path fill="none" stroke="'+P2+'" d="M-8 -24q2.5 -3 5 0M3 -24q2.5 -3 5 0"/><path fill="'+P2+'" stroke="none" d="M0 -18l-2.4 -2.4h4.8z"/><path fill="none" stroke="'+P2+'" stroke-width=".7" d="M-3 -17l-12 -1M-3 -15l-12 3M3 -17l12 -1M3 -15l12 3"/>'
+          + '<rect x="-24" y="12" width="48" height="12" rx="3" fill="'+P3+'" stroke="'+P2+'"/><text x="0" y="21" text-anchor="middle" font-family="Pacifico, cursive" font-size="9" fill="'+P2+'" stroke="none">L + T</text>'
+          + '<path fill="none" stroke="'+P2+'" d="M-8 24C-10 36 -18 42 -28 40C-20 38 -16 34 -14 24M8 24C10 36 18 42 28 40C20 38 16 34 14 24M-4 24L0 42L4 24"/>'
+          + spark(-40,-40,4).replace('currentColor',P2)+spark(42,-46,3).replace('currentColor',P2);
+      }}
+   ]}
+  ];
+  return {C, wrap};
+})();
+const INK_PLACES = [
+ ["Inner forearm","Easy for you to see, low on the pain scale, and the size works well at 2–2.5 in."],
+ ["Ankle","Delicate and easy to hide. Bonier, so it stings more, and socks can rub while it heals."],
+ ["Shoulder blade","Flat, roomy, and private. Good if you want to go closer to 3 in."],
+ ["Wrist","Very visible and very fine-line friendly, but thin skin and fast fading from hand washing."],
+ ["Back of upper arm","Low pain and flattering for a vertical design like the fleur-de-lis."]
+];
+function inkBrief(c, d){
+  return "Tattoo request: "+c.t+" (option "+c.n+d.k.toUpperCase()+": "+d.t+"). "+d.desc+" "
+    + (c.custom ? "Fine line with soft purple fill, about 2.5 in. Names: Lauren and Tara." : "Black fine-line only, single needle where possible, about 2.25 in, delicate and simple.")
+    + " Placement: inner forearm (open to your advice). I can share the sketch on my phone.";
+}
+function inkCard(c, d){
+  const id = "ink-"+c.n+d.k, fav = pickersOf(id).length>0;
+  return '<article class="ink-card'+(d.star?' star':'')+(c.custom?' custom':'')+'">'
+    + '<button class="ink-art" data-ink="'+c.n+'|'+d.k+'" aria-label="View '+esc(d.t)+' larger">'+INK.wrap(d.svg(), {label:d.t})+'</button>'
+    + '<div class="ink-meta"><div class="card-top"><h3>'+c.n+d.k.toUpperCase()+' · '+esc(d.t)+'</h3>'+cakeBtn({id, n:d.t})+'</div>'
+    + (d.star?'<span class="ok Blanche">Our top pick · about 2.25 in</span>':'')
+    + '<p class="note">'+esc(d.desc)+'</p>'
+    + '<div class="actions"><button class="btn" data-copy="'+esc(inkBrief(c,d))+'">Copy artist brief</button><button class="btn" data-ink="'+c.n+'|'+d.k+'">View large</button></div></div></article>';
+}
+function vInk(){
+  const favOnly = !!S.inkFav;
+  let h = '<div class="head"><span class="eyebrow">The NOLA ink studio</span><h2>Tattoo ideas</h2><p class="muted small">Your brief: small, feminine, and floral, inspired by New Orleans and family. Under 2–3 in, simple, delicate fine-line in black ink. Below are the 8 original ideas, each drawn three ways, plus a custom purple cat design for Lauren and Tara.</p></div>';
+  h += '<div class="whybox"><span class="ok Blanche">Top pick</span><p><b>1A · Three-stem lis:</b> three tiny magnolias whose stems form a subtle fleur-de-lis, about 2.25 in, black fine-line. Best on the inner forearm, ankle, shoulder blade, wrist, or back of the upper arm.</p><div class="actions"><button class="btn primary" data-ink="1|a">See it large</button></div></div>';
+  h += '<div class="row"><button class="chip" data-inkfav="0" aria-pressed="'+!favOnly+'">All 27 designs</button><button class="chip cake" data-inkfav="1" aria-pressed="'+favOnly+'">Saved designs</button>'+INK.C.map(c=>'<a class="chip" href="#ink-'+c.n+'">'+c.n+'</a>').join("")+'</div>';
+  let any = false;
+  INK.C.forEach(c=>{
+    const ds = c.d.filter(d=>!favOnly || pickersOf("ink-"+c.n+d.k).length); if(!ds.length) return; any = true;
+    h += '<section class="ink-sec" id="ink-'+c.n+'"><div class="ink-head"><span class="ink-num'+(c.custom?' custom':'')+'">'+c.n+'</span><div><h3>'+esc(c.t)+'</h3><p class="small muted">Original idea: '+esc(c.idea)+'</p></div></div><div class="ink-grid">'+ds.map(d=>inkCard(c,d)).join("")+'</div></section>';
+  });
+  if(!any) h += '<div class="empty">No saved designs yet. Tap the cheesecake on any design to save it.</div>';
+  h += '<section class="box"><h3>Where it could go</h3><ul>'+INK_PLACES.map(([a,b])=>'<li><b>'+esc(a)+':</b> '+esc(b)+'</li>').join("")+'</ul></section>';
+  const shops = P.filter(p=>p.c.includes("tattoo")), N = nolaNow();
+  h += '<section class="sect"><h3>Where to get it in New Orleans</h3><p class="small muted">No shops inside the French Quarter itself; the closest are on Frenchmen St and at Canal and Rampart. Louisiana requires you to be 18+ with photo ID. Fine-line work goes to whoever specializes in it, so show the artist your sketch and ask to see healed fine-line photos.</p>'
+    + shops.sort((a,b)=>{ const x=distInfo(a), y=distInfo(b); return (x&&y)?x.m-y.m:a.d-b.d; }).map(p=>resRow(p, statusAt(p,N))).join("") + '</section>';
+  h += '<section class="box"><h3>Before and after</h3><ul><li>Book a consult or ask about walk-in flash early in the trip, not the last day.</li><li>Fine lines need a little space between them to age well. Let the artist adjust spacing.</li><li>New Orleans is humid: no swimming, hot tubs, or direct sun for about two weeks.</li><li>Skip the Hurricanes the night before. Alcohol thins the blood.</li></ul></section>';
+  return h;
+}
+function vInkSheet(sh){
+  const c = INK.C.find(x=>x.n===sh.n), d = c && c.d.find(x=>x.k===sh.k); if(!d) return "";
+  return '<div class="sheet-top"><div><span class="eyebrow">Concept '+c.n+' · '+esc(c.t)+'</span><h2 id="sheet-title">'+c.n+d.k.toUpperCase()+' · '+esc(d.t)+'</h2></div><button class="close" data-close="1" aria-label="Close">×</button></div>'
+    + '<div class="ink-large'+(c.custom?' custom':'')+'">'+INK.wrap(d.svg(), {label:d.t})+'</div><p>'+esc(d.desc)+'</p>'
+    + '<p class="small muted">'+(c.custom?'Shown with soft purple fill. Ask your artist about color fine-line.':'Shown as black fine-line. Final size about 2.25 in.')+' These are concept sketches to show an artist, not stencils.</p>'
+    + '<div class="actions">'+cakeBtn({id:"ink-"+c.n+d.k, n:d.t})+'<button class="btn primary" data-copy="'+esc(inkBrief(c,d))+'">Copy artist brief</button>'
+    + c.d.filter(x=>x.k!==d.k).map(x=>'<button class="btn" data-ink="'+c.n+'|'+x.k+'">See '+c.n+x.k.toUpperCase()+'</button>').join("")+'</div>';
 }
 
 /* ---------- render ---------- */
 function render(){
   const pc = totalPicked().size, ti = tripInfo();
-  document.getElementById("tabs").innerHTML = TABS.map(([k,l])=>'<button class="tab" role="tab" data-tab="'+k+'" aria-selected="'+(S.tab===k)+'">'+l+(k==="explore"&&pc?'<span class="n">'+pc+' saved</span>':'')+'</button>').join("");
+  const savedN = (()=>{ const s=new Set(); Object.values(votes).forEach(v=>Object.keys(v||{}).forEach(x=>s.add(x))); return [...new Set([...totalPicked(), ...s])].filter(x=>BY[x]).length; })();
+  document.getElementById("tabs").innerHTML = TABS.map(([k,l])=>'<button class="tab" role="tab" data-tab="'+k+'" aria-selected="'+(S.tab===k||(k==="explore"&&S.tab==="river")||(k==="now"&&S.tab==="info"))+'">'+TAB_ICON[k]+'<span>'+l+'</span>'+(k==="saved"&&savedN?'<span class="n">'+savedN+'</span>':'')+'</button>').join("");
   document.getElementById("sub").textContent = "Emily · you · niece" + (ti ? " · " + fmtD(ti.A,{month:"short",day:"numeric"}) + (ti.D?"–"+fmtD(ti.D,{month:"short",day:"numeric"}):"") : " · dates TBD") + (trip.hotel ? " · " + trip.hotel : "");
   const sync = document.getElementById("sync");
   sync.textContent = shared ? (readOnly?"Viewing the group's plan":"Shared with the group") : "Saved on this device";
   sync.className = "sync" + (shared?" on":"");
   const a = document.activeElement, fid = a && a.id && a.tagName==="INPUT" && a.type!=="time" && a.type!=="date" ? a.id : null;
   let caret = null; try{ caret = fid ? a.selectionStart : null; }catch(_){}
-  const v = {now:vNow, plan:vPlan, explore:vExplore, map:vMap, river:vRiver, info:vInfo}[S.tab] || vNow;
+  const v = {now:vNow, plan:vPlan, explore:vExplore, map:vMap, saved:vSaved, ink:vInk, river:vRiver, info:vInfo}[S.tab] || vNow;
   document.getElementById("main").innerHTML = '<section class="view">'+v()+'</section>';
   document.getElementById("sheet-root").innerHTML = S.sheet ? vSheet() : "";
+  try{ afterRender(); }catch(e){ console.error(e); }
   if(fid){ const el=document.getElementById(fid); if(el){ el.focus(); try{ if(caret!=null) el.setSelectionRange(caret,caret); }catch(_){} } }
 }
 
@@ -1409,9 +1897,9 @@ function togglePick(id){
   if(readOnly){ toast("You can see the kitchen table but can't change it."); return; }
   const set = new Set(myPicks()), had = set.has(id); had ? set.delete(id) : set.add(id);
   picks[me()] = set; render();
-  if(!had) toast(["Saved to the kitchen table.","Blanche would approve.","Pass the cheesecake.","Sophia says it's a good one."][set.size%4]);
-  if(shared){ const body={places:Object.fromEntries([...set].map(x=>[x,true]))}; enqueue(()=>db.doc("picks/"+uid).set(body)); }
-  else { try{ localStorage.setItem("nola-picks", JSON.stringify([...set])); }catch(e){} }
+  if(!had && id.startsWith("ink-")) toast("Design saved. Find it under Saved designs on the Ink tab.");
+  else if(!had) toast(["Saved to the kitchen table.","Blanche would approve.","Pass the cheesecake.","Sophia says it's a good one."][set.size%4]);
+  persistPicks();
 }
 function toggleCheck(id){
   if(readOnly) return;
@@ -1420,17 +1908,29 @@ function toggleCheck(id){
   if(shared) enqueue(()=>db.doc("checks/"+id).set({done:!cur, by:uid}));
   else { try{ localStorage.setItem("nola-checks", JSON.stringify(checks)); }catch(e){} }
 }
+function geocodeHotel(){
+  const q = (trip.addr || trip.hotel || "").trim(); if(!q) return;
+  try{
+    fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+encodeURIComponent(q+", New Orleans, LA")).then(r=>r.json()).then(j=>{
+      if(!j || !j[0]) return;
+      trip.lat = +j[0].lat; trip.lon = +j[0].lon; render(); toast("Found your hotel on the map. Distances now start there.");
+      if(shared) enqueue(()=>db.doc("trip/info").set(Object.assign({}, trip)));
+      else { try{ localStorage.setItem("nola-trip", JSON.stringify(trip)); }catch(e){} }
+    }).catch(()=>{});
+  }catch(e){}
+}
 function saveTrip(){
   const dr = S.draft || {};
   if(dr.arrive && dr.depart && parseD(dr.depart) < parseD(dr.arrive)){ toast("The leave date is before the arrive date."); return; }
   trip = {arrive:dr.arrive||"", depart:dr.depart||"", hotel:(dr.hotel||"").trim(), addr:(dr.addr||"").trim()};
   S.editing=false; S.draft=null; render(); toast("Trip details saved.");
+  geocodeHotel();
   if(shared) enqueue(()=>db.doc("trip/info").set(trip));
   else { try{ localStorage.setItem("nola-trip", JSON.stringify(trip)); }catch(e){} }
 }
 async function refreshProfiles(){
   if(!user) return;
-  const ids = new Set(Object.keys(picks).filter(k=>k!==LOCAL));
+  const ids = new Set(Object.keys(picks).concat(Object.keys(votes)).filter(k=>k!==LOCAL));
   Object.values(checks).forEach(c=>{ if(c && c.by) ids.add(c.by); });
   if(!ids.size) return;
   profiles = await user.profiles([...ids]); render();
@@ -1438,7 +1938,7 @@ async function refreshProfiles(){
 
 /* ---------- events ---------- */
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-tab],[data-day],[data-cat],[data-heart],[data-open],[data-close],[data-scrim],[data-copy],[data-check],[data-talk],[data-edit],[data-save],[data-cancel],[data-nowbtn],[data-when],[data-ncat],[data-editplan],[data-reset],[data-addday],[data-addstop],[data-planb],[data-addplace],[data-mv],[data-del],[data-rmp],[data-swap],[data-addp],[data-altsame],[data-addto],[data-doadd],[data-sec],[data-stop],[data-mapcat],[data-mapview],[data-mapzoom],[data-mapcolor],[data-clearq],[data-clearex],#mapSafety,#nowLate,#exOpen,#exWalk,#picksOnly,#walkOnly,#nowPicks");
+  const el = e.target.closest("[data-tab],[data-day],[data-cat],[data-heart],[data-open],[data-close],[data-scrim],[data-copy],[data-check],[data-talk],[data-edit],[data-save],[data-cancel],[data-nowbtn],[data-when],[data-ncat],[data-editplan],[data-reset],[data-addday],[data-addstop],[data-planb],[data-addplace],[data-mv],[data-del],[data-rmp],[data-swap],[data-addp],[data-altsame],[data-addto],[data-doadd],[data-fixed],[data-vote],[data-ink],[data-inkfav],[data-locate],[data-next2],[data-lview],#mapOpen,#mapSaved,[data-sec],[data-stop],[data-mapcat],[data-mapview],[data-mapzoom],[data-mapcolor],[data-clearq],[data-clearex],#mapSafety,#nowLate,#exOpen,#exWalk,#picksOnly,#walkOnly,#nowPicks");
   if(!el) return;
   if(el.dataset.scrim && e.target!==el) return;
   if(el.dataset.sec){ e.preventDefault(); const det=el.parentElement; S.secs[el.dataset.sec]=!det.open; render(); return; }
@@ -1459,7 +1959,9 @@ document.addEventListener("click", e=>{
   if(el.dataset.mapview){ S.mapViewKey=el.dataset.mapview; S.mapBox=MAP_VIEWS[el.dataset.mapview].slice(1); render(); return; }
   if(el.dataset.mapzoom){ const b=S.mapBox||MAP_VIEWS.city.slice(1), z=el.dataset.mapzoom==="in"?0.6:1.6, cl=(b[0]+b[1])/2, co=(b[2]+b[3])/2, hl=(b[1]-b[0])*z/2, ho=(b[3]-b[2])*z/2; S.mapBox=[cl-hl,cl+hl,co-ho,co+ho]; S.mapViewKey="custom"; render(); return; }
   if(el.dataset.mapcolor){ S.mapColor=el.dataset.mapcolor; render(); return; }
-  if(el.id==="mapSafety"){ S.mapSafety = S.mapSafety===false; render(); return; }
+  if(el.id==="mapSafety"){ S.mapSafety = !S.mapSafety; render(); return; }
+  if(el.id==="mapOpen"){ S.mapOpen=!S.mapOpen; render(); return; }
+  if(el.id==="mapSaved"){ S.mapSaved=!S.mapSaved; render(); return; }
   if(el.id==="nowLate"){ S.nowLate=!S.nowLate; render(); return; }
   if(el.id==="exOpen"){ S.exOpen=!S.exOpen; render(); return; }
   if(el.id==="exWalk"){ S.exWalk=!S.exWalk; render(); return; }
@@ -1502,6 +2004,13 @@ const findItem = k => { for(const d of plan.days){ const it=d.items.find(i=>i.k=
 function planClick(el){
   const ds = el.dataset;
   const guard = () => { if(readOnly){ toast("Only Contributors and Editors can change the plan."); return true; } return false; };
+  if(ds.fixed){ if(guard()) return true; const {it}=findItem(ds.fixed); if(it){ it.fixed = !(it.fixed!==undefined?it.fixed:!!it.key); savePlan(); } return true; }
+  if(ds.vote){ const [id,v]=ds.vote.split("|"); setVote(id,v); return true; }
+  if(ds.locate){ locate(()=>{ if(LMAP && LOC) S.mapGo=[[LOC.lat,LOC.lon],16]; }); return true; }
+  if(ds.next2!==undefined){ S.next2 = ds.next2==="1"; render(); return true; }
+  if(ds.lview){ const v=LVIEWS[ds.lview]; if(LMAP){ if(v[1]==="all") fitAll(); else LMAP.setView(v[1][0],v[1][1]); } return true; }
+  if(ds.ink){ const [n,k]=ds.ink.split("|"); S.sheet={mode:"ink", n:+n, k}; render(); const c=document.querySelector(".close"); if(c) c.focus(); return true; }
+  if(ds.inkfav!==undefined){ S.inkFav = ds.inkfav==="1"; render(); return true; }
   if(ds.editplan){ S.planEdit=!S.planEdit; S.confirmReset=false; render(); return true; }
   if(ds.reset){ if(guard()) return true; if(S.confirmReset){ plan=seedPlan(); S.confirmReset=false; S.day=1; savePlan("Back to the original plan."); } else { S.confirmReset=true; render(); } return true; }
   if(ds.addday){ if(guard()) return true; const n=Math.max(...plan.days.map(x=>x.n))+1; plan.days.push({n, h:"Free day", who:"Whole group", items:[]}); S.day=n; savePlan("Added Day "+n+"."); return true; }
@@ -1555,6 +2064,7 @@ document.addEventListener("keydown", e=>{
 });
 
 render();
+try{ if("serviceWorker" in navigator && /github\.io$/.test(location.hostname)) navigator.serviceWorker.register("sw.js"); }catch(e){}
 /* keep "right now" fresh while it's on screen */
 setInterval(()=>{
   const a = document.activeElement;
@@ -1571,13 +2081,14 @@ setInterval(()=>{
   db = d; shared = true;
   try{ if((await u.can("data.write"))===false) readOnly = true; }catch(_){}
   const localPicks = picks[LOCAL];
-  picks = {}; checks = {};
+  picks = {}; checks = {}; votes = {};
   render();
   let first = true;
   db.collection("picks").onSnapshot(snap=>{
     const next = {};
-    snap.docs.forEach(doc=>{ if(doc.exists){ const pl=(doc.data().places)||{}; next[doc.id]=new Set(Object.keys(pl).filter(k=>pl[k])); } });
-    picks = next;
+    const nv = {};
+    snap.docs.forEach(doc=>{ if(doc.exists){ const dd=doc.data(), pl=dd.places||{}; next[doc.id]=new Set(Object.keys(pl).filter(k=>pl[k])); nv[doc.id]=Object.assign({}, dd.votes||{}); } });
+    picks = next; votes = nv;
     if(first){
       first = false;
       if(!readOnly && !picks[uid] && localPicks && localPicks.size){
@@ -1596,7 +2107,7 @@ setInterval(()=>{
     if(snap.exists){ const v = snap.data(); if(Array.isArray(v.days) && v.days.length){ plan = JSON.parse(JSON.stringify({days:v.days})); render(); } }
   }, ()=>{});
   db.doc("trip/info").onSnapshot(snap=>{
-    if(snap.exists){ const t=snap.data(); trip={arrive:t.arrive||"", depart:t.depart||"", hotel:t.hotel||"", addr:t.addr||""}; render(); }
+    if(snap.exists){ const t=snap.data(); trip={arrive:t.arrive||"", depart:t.depart||"", hotel:t.hotel||"", addr:t.addr||"", lat:t.lat||null, lon:t.lon||null}; render(); }
   }, ()=>{});
 })();
 </script>
