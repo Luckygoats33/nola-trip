@@ -359,6 +359,11 @@ ol.tl li.conn{border-top:0;padding-block:0 2px;font-size:.78rem;color:var(--mute
 ol.tl li.conn.tight{color:var(--warn)}
 .fx{justify-self:start;font-family:var(--mono);font-size:.68rem;padding:1px 8px;border-radius:999px}
 .fx.fixed{background:var(--lav-soft);color:var(--lav)} .fx.flex{background:var(--sunk);color:var(--muted)}
+/* ---- version switch ---- */
+.vswitch{display:flex;justify-content:center;align-items:center;gap:6px;margin-inline:-16px;padding:6px 16px;background:var(--ink);color:var(--bg);font-size:.78rem}
+.vswitch span{font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;opacity:.7;margin-right:4px}
+.vswitch a{color:var(--bg);text-decoration:none;font-weight:800;padding:6px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.35);min-height:32px;display:inline-flex;align-items:center}
+.vswitch a[aria-current="page"]{background:var(--bg);color:var(--ink);border-color:var(--bg)}
 /* ---- ink ---- */
 .ink-sec{display:grid;gap:10px;scroll-margin-top:120px}
 .ink-head{display:flex;gap:12px;align-items:center}
@@ -408,6 +413,7 @@ ol.tl li.conn.tight{color:var(--warn)}
 
 <div class="wrap">
   <header class="top">
+    <nav class="vswitch" aria-label="App version"><span>Version</span><a id="v1link" aria-current="page">V1 · Classic</a><a id="v2link">V2 · New</a></nav>
     <div class="wicker" aria-hidden="true"></div>
     <div class="top-row">
       <svg class="leaf" viewBox="0 0 100 100" aria-hidden="true"><path d="M95 5C60 8 30 25 18 55c-5 12-6 25-3 38 4-14 10-27 19-38-6 14-9 28-8 42 10-22 28-40 50-52-18 14-32 32-40 52 30-12 52-40 59-92z"/></svg>
@@ -2063,6 +2069,10 @@ document.addEventListener("keydown", e=>{
   if(e.key==="Enter" && DRAFT_FIELDS[e.target.id]){ e.preventDefault(); saveTrip(); }
 });
 
+/* version links: GitHub Pages uses folders, claude.ai uses two artifacts */
+(function(){ const gh=/github.io$/.test(location.hostname);
+  const u = gh ? {v1:"/nola-trip/", v2:"/nola-trip/v2/"} : {v1:"https://claude.ai/artifact/8yff42c7e6u81psANnuHfQ", v2:"https://claude.ai/artifact/8RHHe6W9CEt16ZjTSmPCQg"};
+  const a=document.getElementById("v2link"); if(a){ a.href=u.v2; if(!gh){ a.target="_blank"; a.rel="noopener"; } } })();
 render();
 try{ if("serviceWorker" in navigator && /github\.io$/.test(location.hostname)) navigator.serviceWorker.register("sw.js"); }catch(e){}
 /* keep "right now" fresh while it's on screen */
