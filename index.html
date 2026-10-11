@@ -384,6 +384,10 @@ ol.tl li.conn.tight{color:var(--warn)}
 .ink-large svg{display:block;width:100%;max-width:440px;margin:0 auto;height:auto;aspect-ratio:1}
 /* ---- real map ---- */
 .mapslot{position:relative}
+.maplock{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:600;border:0;border-radius:999px;padding:10px 18px;min-height:44px;font-weight:800;font-size:.85rem;background:var(--ink);color:var(--bg);box-shadow:0 4px 14px rgba(0,0,0,.3);white-space:nowrap}
+.maplock.on{background:var(--coral);color:var(--surface)}
+@media (pointer:coarse){ svg.map{touch-action:pan-y} }
+@media (max-width:899px){ .leafmap{height:min(60vh,520px)} }
 .mapwrap{position:relative;z-index:0;isolation:isolate}
 .leafmap{height:min(68dvh,620px);width:100%;display:block}
 .leaflet-container{font-family:var(--body);background:var(--sunk)}
@@ -413,7 +417,7 @@ ol.tl li.conn.tight{color:var(--warn)}
 
 <div class="wrap">
   <header class="top">
-    <nav class="vswitch" aria-label="App version"><span>Version</span><a id="v1link" aria-current="page">V1 · Classic</a><a id="v2link">V2 · New</a></nav>
+    <nav class="vswitch" aria-label="App version"><span>Version</span><a id="vlink1">V1 · Classic</a><a id="vlink2" aria-current="page">V2</a><a id="vlink3">V3 · New</a></nav>
     <div class="wicker" aria-hidden="true"></div>
     <div class="top-row">
       <svg class="leaf" viewBox="0 0 100 100" aria-hidden="true"><path d="M95 5C60 8 30 25 18 55c-5 12-6 25-3 38 4-14 10-27 19-38-6 14-9 28-8 42 10-22 28-40 50-52-18 14-32 32-40 52 30-12 52-40 59-92z"/></svg>
@@ -1426,7 +1430,9 @@ function vSketch(){
      + '<button class="btn" data-mapzoom="in" aria-label="Zoom in">+</button><button class="btn" data-mapzoom="out" aria-label="Zoom out">−</button></div>';
   h += '<div class="row"><button class="chip" id="mapSafety" aria-pressed="'+(S.mapSafety)+'">Safety colors</button><button class="chip" data-mapcolor="type" aria-pressed="'+(S.mapColor!=="open")+'">Dots by type</button><button class="chip" data-mapcolor="open" aria-pressed="'+(S.mapColor==="open")+'">Dots by open now</button><button class="chip cake" id="nowPicks" aria-pressed="'+S.nowPicks+'">Kitchen table only</button></div>';
   h += filterBlock(cat, "data-mapcat", "");
-  h += '<div class="mapwrap">'+s+'</div>';
+  const showS = mapShown();
+  if(showS) h += '<div class="mapwrap" id="mapanchor">'+s+'</div><div class="row"><button class="btn" data-mapshow="0">Hide the map</button></div>';
+  else h += '<div class="row"><button class="btn primary big" data-mapshow="1">Show the map</button><span class="small muted">The place list is below.</span></div>';
   h += '<div class="legend">'
      + (S.mapColor==="open" ? '<span><i style="background:var(--leaf)"></i>Open '+(S.when?'then':'now')+'</span><span><i style="background:var(--gold)"></i>Opens later today</span><span><i style="background:var(--line)"></i>Closed</span><span><i style="background:var(--muted)"></i>Check hours</span>'
         : FG.map(([lab],i)=>'<span><i style="background:'+GROUP_COLOR[i]+'"></i>'+esc(lab)+'</span>').join(""))
@@ -1631,8 +1637,27 @@ function ensureMap(slot){
     LZONES = L.layerGroup(); LME = L.layerGroup().addTo(LMAP);
     LMAP.on("moveend", updateMapList);
   }
+  applyLock(slot);
   setTimeout(()=>{ LMAP.invalidateSize(); if(S.mapGo){ const g=S.mapGo; S.mapGo=null; if(g==="all") fitAll(); else LMAP.setView(g[0], g[1]); } updateMapList(); }, 30);
 }
+const isTouch = () => !!(window.matchMedia && matchMedia("(pointer:coarse)").matches);
+const isPhone = () => !!(window.matchMedia && matchMedia("(max-width:899px)").matches);
+const mapShown = () => S.mapShown!==undefined ? S.mapShown : !isPhone();
+function applyLock(slot){
+  if(!LMAP || !isTouch()) return;
+  const on = !!S.mapUnlocked;
+  [LMAP.dragging, LMAP.touchZoom].forEach(hd=>{ if(hd) on ? hd.enable() : hd.disable(); });
+  let b = slot.querySelector(".maplock");
+  if(!b){ b = document.createElement("button"); b.className = "maplock"; b.setAttribute("data-maplock","1"); slot.appendChild(b); }
+  b.textContent = on ? "Done moving the map" : "Tap here to move the map";
+  b.classList.toggle("on", on);
+}
+document.addEventListener("click", e=>{
+  const el = e.target.closest && e.target.closest("[data-maplock],[data-mapshow]"); if(!el) return;
+  if(el.hasAttribute("data-maplock")){ S.mapUnlocked = !S.mapUnlocked; const slot = el.parentElement; applyLock(slot); return; }
+  S.mapShown = el.getAttribute("data-mapshow")==="1"; S.mapUnlocked = false; render();
+  if(S.mapShown) setTimeout(()=>{ const m = document.getElementById("mapanchor"); if(m) m.scrollIntoView({block:"start", behavior:"smooth"}); }, 60);
+});
 function mapList(){
   const N = S.when || nolaNow(), cat = S.mapCat||"all";
   return P.filter(p=>COORD[p.id] && (cat==="all"||p.c.includes(cat)) && (!S.mapSaved||pickersOf(p.id).length) &&
@@ -1677,14 +1702,23 @@ function vMap(){
   const cat = S.mapCat||"all";
   const nf = (cat!=="all"?1:0)+(S.mapOpen?1:0)+(S.mapSaved?1:0);
   let h = '<div class="row hscroll"><button class="btn primary" data-locate="1">◎ Locate me</button>'+Object.entries(LVIEWS).map(([k,v])=>'<button class="chip" data-lview="'+k+'">'+esc(v[0])+'</button>').join("")+'</div>';
-  h += '<div class="mapwrap"><div id="mapSlot" class="mapslot"></div></div>';
+  const show = mapShown(), phone = isPhone();
+  if(show && !phone) h += '<div class="mapwrap" id="mapanchor"><div id="mapSlot" class="mapslot"></div></div>';
   h += '<div class="row hscroll"><button class="chip" id="mapOpen" aria-pressed="'+!!S.mapOpen+'">Open now only</button><button class="chip cake" id="mapSaved" aria-pressed="'+!!S.mapSaved+'">Saved only</button><button class="chip" data-mapcolor="'+(S.mapColor==="open"?"type":"open")+'" aria-pressed="'+(S.mapColor==="open")+'">Color by open now</button><button class="chip" id="mapSafety" aria-pressed="'+!!S.mapSafety+'">Night-walking advice</button></div>';
   h += '<div class="legend">'+(S.mapColor==="open" ? '<span><i style="background:var(--leaf)"></i>Open</span><span><i style="background:var(--gold)"></i>Opens later</span><span><i style="background:var(--line)"></i>Closed</span><span><i style="background:var(--muted)"></i>Check hours</span>'
      : FG.map(([lab],i)=>'<span><i style="background:'+GROUP_COLOR[i]+'"></i>'+esc(lab)+'</span>').join(""))+'<span><i style="background:#2B7BFF"></i>You</span><span><i style="background:var(--surface)"></i>Hotel</span></div>';
   h += '<details class="cat"'+(S.secs.mapf?' open':'')+'><summary data-sec="mapf"><span class="t2">Filter by type</span><span class="c">'+(cat!=="all"?esc(CATS[cat]):"Everything")+'</span><span class="hint">Coffee, food, jazz, Bourbon, history, tattoos, swamps…</span></summary><div class="body">'+filterBlock(cat, "data-mapcat", "")+'</div></details>';
   if(S.mapSafety) h += '<div class="safety"><h3>Night-walking advice (approximate)</h3>'+["green","yellow","red"].map(lv=>'<div class="sz"><span class="sw '+lv+'"></span><div><b>'+({green:"Green",yellow:"Yellow",red:"Red"})[lv]+'</b> '+esc(SAFE_TXT[lv])+'</div></div>').join("")
      + '<p class="small muted">General visitor advice about walking after dark, drawn from common travel guidance. It isn\x27t crime data or a judgment of the people who live there, and the edges are rough. For current information, check NOPD\x27s crime map. Emergency 911 · NOPD non-emergency <span class="mono">504-821-2222</span>.</p></div>';
-  h += '<details class="cat" open><summary data-sec="maplx"><span class="t2">Places in this view</span><span class="c" id="maplistcount"></span><span class="hint">Move the map to update the list.</span></summary><div class="body" id="maplist"></div></details>';
+  if(show){
+    h += '<details class="cat" open><summary data-sec="maplx"><span class="t2">Places in this view</span><span class="c" id="maplistcount"></span><span class="hint">Move the map to update the list.</span></summary><div class="body" id="maplist"></div></details>';
+    if(phone) h += '<div class="mapwrap" id="mapanchor"><div id="mapSlot" class="mapslot"></div></div>';
+    h += '<div class="row"><button class="btn" data-mapshow="0">Hide the map</button></div>';
+  } else {
+    const N = S.when || nolaNow(), all = mapList().sort((a,c)=>{ const x=distInfo(a), y=distInfo(c); return (x&&y) ? x.m-y.m : a.d-c.d || a.n.localeCompare(c.n); });
+    h += '<details class="cat" open><summary data-sec="maplx"><span class="t2">Places</span><span class="c">'+all.length+'</span><span class="hint">Closest first. The map is at the bottom when you want it.</span></summary><div class="body">'+all.slice(0,40).map(p=>resRow(p,statusAt(p,N))).join("")+(all.length>40?'<p class="small muted">Showing the closest 40. Use the filters to narrow it down.</p>':'')+'</div></details>';
+    h += '<div class="row"><button class="btn primary big" data-mapshow="1">Show the map</button></div>';
+  }
   return h;
 }
 function fitInk(){
@@ -2014,6 +2048,7 @@ function planClick(el){
   if(ds.vote){ const [id,v]=ds.vote.split("|"); setVote(id,v); return true; }
   if(ds.locate){ locate(()=>{ if(LMAP && LOC) S.mapGo=[[LOC.lat,LOC.lon],16]; }); return true; }
   if(ds.next2!==undefined){ S.next2 = ds.next2==="1"; render(); return true; }
+  if(ds.lview && !mapShown()){ S.mapShown = true; S.mapGo = LVIEWS[ds.lview][1]; render(); setTimeout(()=>{ const m=document.getElementById("mapanchor"); if(m) m.scrollIntoView({block:"start"}); }, 60); return true; }
   if(ds.lview){ const v=LVIEWS[ds.lview]; if(LMAP){ if(v[1]==="all") fitAll(); else LMAP.setView(v[1][0],v[1][1]); } return true; }
   if(ds.ink){ const [n,k]=ds.ink.split("|"); S.sheet={mode:"ink", n:+n, k}; render(); const c=document.querySelector(".close"); if(c) c.focus(); return true; }
   if(ds.inkfav!==undefined){ S.inkFav = ds.inkfav==="1"; render(); return true; }
@@ -2069,10 +2104,10 @@ document.addEventListener("keydown", e=>{
   if(e.key==="Enter" && DRAFT_FIELDS[e.target.id]){ e.preventDefault(); saveTrip(); }
 });
 
-/* version links: GitHub Pages uses folders, claude.ai uses two artifacts */
-(function(){ const gh=/github.io$/.test(location.hostname);
-  const u = gh ? {v1:"/nola-trip/", v2:"/nola-trip/v2/"} : {v1:"https://claude.ai/artifact/8yff42c7e6u81psANnuHfQ", v2:"https://claude.ai/artifact/8RHHe6W9CEt16ZjTSmPCQg"};
-  const a=document.getElementById("v2link"); if(a){ a.href=u.v2; if(!gh){ a.target="_blank"; a.rel="noopener"; } } })();
+/* version links: GitHub Pages uses folders, claude.ai uses three artifacts */
+(function(){ const gh=/github\.io$/.test(location.hostname);
+  const u = gh ? {1:"/nola-trip/v1/", 2:"/nola-trip/", 3:"/nola-trip/v3/"} : {1:"https://claude.ai/artifact/9NshHFg66F77sbsgAuWgJy", 2:"https://claude.ai/artifact/8yff42c7e6u81psANnuHfQ", 3:"https://claude.ai/artifact/8RHHe6W9CEt16ZjTSmPCQg"};
+  [1,2,3].forEach(n=>{ const a=document.getElementById("vlink"+n); if(!a || a.getAttribute("aria-current")) return; a.href=u[n]; if(!gh){ a.target="_blank"; a.rel="noopener"; } }); })();
 render();
 try{ if("serviceWorker" in navigator && /github\.io$/.test(location.hostname)) navigator.serviceWorker.register("sw.js"); }catch(e){}
 /* keep "right now" fresh while it's on screen */
@@ -2120,6 +2155,82 @@ setInterval(()=>{
     if(snap.exists){ const t=snap.data(); trip={arrive:t.arrive||"", depart:t.depart||"", hotel:t.hotel||"", addr:t.addr||"", lat:t.lat||null, lon:t.lon||null}; render(); }
   }, ()=>{});
 })();
+</script>
+
+<script>window.NOLA_RATINGS = {"cdm":{"r":4.5,"n":46145,"mapsQuery":"Café Du Monde, 800 Decatur St, New Orleans, LA 70116"},"cafebeignet":{"r":4.4,"n":7081,"mapsQuery":"Cafe Beignet, 311 Bourbon St, New Orleans, LA 70130"},"cdmpark":{"r":4.6,"n":5275,"mapsQuery":"Café Du Monde City Park, 56 Dreyfous Dr, New Orleans, LA 70124"},"mfth":{"r":4.5,"n":1406,"mapsQuery":"Meals From the Heart Cafe, 1100 N Peters St #13, New Orleans, LA 70116"},"killer":{"r":4.4,"n":2703,"mapsQuery":"Killer PoBoys, 811 Conti St, New Orleans, LA 70112"},"palmpine":{"r":4.4,"n":682,"mapsQuery":"Palm&Pine, 308 N Rampart St, New Orleans, LA 70112"},"jewel":{"r":4.7,"n":862,"mapsQuery":"Jewel of the South, 1026 St Louis St, New Orleans, LA 70112"},"sneaky":{"r":4.7,"n":1227,"mapsQuery":"Sneaky Pickle & Bar Brine, 3200 Burgundy St, New Orleans, LA 70117"},"breads":{"r":4.7,"n":414,"mapsQuery":"Breads on Oak, 8640 Oak St, New Orleans, LA 70118"},"elysian":{"r":4.4,"n":742,"mapsQuery":"The Elysian Bar, 2317 Burgundy St, New Orleans, LA 70117"},"bayoubar":{"r":4.6,"n":410,"mapsQuery":"Bayou Bar, Pontchartrain Hotel, 2031 St Charles Ave, New Orleans, LA 70130"},"cure":{"r":4.4,"n":862,"mapsQuery":"Cure, 4905 Freret St, New Orleans, LA 70115"},"marilou":{"r":4.4,"n":697,"mapsQuery":"Salon Salon, 544 Carondelet St, New Orleans, LA 70130"},"bacchanal":{"r":4.7,"n":3750,"mapsQuery":"Bacchanal Fine Wine & Spirits, 600 Poland Ave, New Orleans, LA 70117"},"oldpoint":{"r":4.6,"n":660,"mapsQuery":"The Old Point Bar, 545 Patterson Rd, New Orleans, LA 70114"},"patobriens":{"r":4.5,"n":11016,"mapsQuery":"Pat O'Brien's, 718 St Peter St, New Orleans, LA 70116"},"cooter":{"r":4.5,"n":2346,"mapsQuery":"Cooter Brown's Tavern, 509 S Carrollton Ave, New Orleans, LA 70118"},"preshall":{"r":4.7,"n":5237,"mapsQuery":"Preservation Hall, 726 St Peter St, New Orleans, LA 70116"},"snug":{"r":4.4,"n":1968,"mapsQuery":"Snug Harbor Jazz Bistro, 626 Frenchmen St, New Orleans, LA 70116"},"dba":{"r":4.6,"n":1541,"mapsQuery":"d.b.a., 618 Frenchmen St, New Orleans, LA 70116"},"spottedcat":{"r":4.7,"n":6688,"mapsQuery":"The Spotted Cat Music Club, 623 Frenchmen St, New Orleans, LA 70116"},"fritzels":{"r":4.7,"n":4682,"mapsQuery":"Fritzel's European Jazz Pub, 733 Bourbon St, New Orleans, LA 70116"},"dewdrop":{"r":null,"n":null,"mapsQuery":"Dew Drop Jazz & Social Hall, 430 Lamarque St, Mandeville, LA 70448"},"bourbono":{"r":4.6,"n":1005,"mapsQuery":"Bourbon O Bar, 730 Bourbon St, New Orleans, LA 70116"},"razzoo":{"r":4.5,"n":933,"mapsQuery":"Razzoo Bar & Patio, 511 Bourbon St, New Orleans, LA 70130"},"bourbonheat":{"r":4.6,"n":1467,"mapsQuery":"Bourbon Heat, 711 Bourbon St, New Orleans, LA 70116"},"republic":{"r":4.3,"n":853,"mapsQuery":"Republic NOLA, 828 S Peters St, New Orleans, LA"},"grrlspot":{"r":null,"n":null,"mapsQuery":"GrrlSpot New Orleans"},"soileddove":{"r":null,"n":null,"mapsQuery":"Palm&Pine, 308 N Rampart St, New Orleans, LA"},"stl1":{"r":4.9,"n":4304,"mapsQuery":"St. Louis Cemetery No. 1 Official Tour, 501 Basin St, New Orleans, LA"},"anansi":{"r":null,"n":null,"mapsQuery":"Anansi's Daughters, New Orleans, LA"},"voodoo":{"r":3.9,"n":4173,"mapsQuery":"New Orleans Historic Voodoo Museum, 724 Dumaine St, New Orleans, LA"},"death":{"r":4.1,"n":7562,"mapsQuery":"Museum of Death, 227 Dauphine St, New Orleans, LA"},"hnoc":{"r":4.8,"n":782,"mapsQuery":"The Historic New Orleans Collection, 520 Royal St, New Orleans, LA"},"garden":{"r":null,"n":null,"mapsQuery":"Garden District, New Orleans, LA"},"chalmette":{"r":4.6,"n":1630,"mapsQuery":"Chalmette Battlefield, 1 Battlefield Rd, Chalmette, LA"},"whitney":{"r":4.8,"n":5068,"mapsQuery":"Whitney Plantation, 5099 LA-18, Edgard, LA"},"laura":{"r":4.7,"n":3289,"mapsQuery":"Laura Plantation, 2247 LA-18, Vacherie, LA"},"destrehan":{"r":4.7,"n":2093,"mapsQuery":"Destrehan Plantation, 13034 River Rd, Destrehan, LA"},"oakalley":{"r":4.5,"n":10322,"mapsQuery":"Oak Alley Plantation, 3645 LA-18, Vacherie, LA"},"bottomcup":{"r":4.1,"n":412,"mapsQuery":"Bottom of the Cup Tea Room, 327 Chartres St, New Orleans, LA"},"abitamystery":{"r":4.6,"n":818,"mapsQuery":"Abita Mystery House, 22275 LA-36, Abita Springs, LA"},"royal":{"r":null,"n":null,"mapsQuery":"Royal Street, French Quarter, New Orleans, LA"},"msrau":{"r":4.9,"n":571,"mapsQuery":"M.S. Rau, 622 Royal St, New Orleans, LA"},"moss":{"r":4.9,"n":8,"mapsQuery":"Moss Antiques, 411 Royal St, New Orleans, LA"},"magazine":{"r":null,"n":null,"mapsQuery":"Magazine Street, New Orleans, LA"},"ponchatoula":{"r":null,"n":null,"mapsQuery":"Ponchatoula, LA antique district"},"cruise-eve":{"r":4.4,"n":4538,"mapsQuery":"Steamboat NATCHEZ, 400 Toulouse St, New Orleans, LA"},"cruise-day":{"r":4.4,"n":4538,"mapsQuery":"Steamboat NATCHEZ, 400 Toulouse St, New Orleans, LA"},"cruise-75":{"r":4.4,"n":4538,"mapsQuery":"Steamboat NATCHEZ, 400 Toulouse St, New Orleans, LA"},"cq-eve":{"r":4.4,"n":2979,"mapsQuery":"Paddlewheeler Creole Queen, 1 Poydras St, New Orleans, LA"},"cq-battle":{"r":4.4,"n":2979,"mapsQuery":"Paddlewheeler Creole Queen, 1 Poydras St, New Orleans, LA"},"cq-brunch":{"r":4.4,"n":2979,"mapsQuery":"Paddlewheeler Creole Queen, 1 Poydras St, New Orleans, LA 70130"},"cq-halloween":{"r":4.4,"n":2979,"mapsQuery":"Paddlewheeler Creole Queen, 1 Poydras St, New Orleans, LA 70130"},"ferry":{"r":4.1,"n":453,"mapsQuery":"Algiers Ferry Terminal, Algiers Point, New Orleans, LA 70114"},"barataria":{"r":4.7,"n":842,"mapsQuery":"Barataria Preserve Visitor Center, 6588 Barataria Blvd, Marrero, LA 70072"},"cajunpride":{"r":4.7,"n":4436,"mapsQuery":"Cajun Pride Swamp Tours, 110 Frenier Rd, LaPlace, LA 70068"},"honeyisland":{"r":4.9,"n":5221,"mapsQuery":"Honey Island Swamp Tours, 55345 US-90, Slidell, LA 70461"},"fontainebleau":{"r":4.7,"n":4050,"mapsQuery":"Fontainebleau State Park, 62883 LA-1089, Mandeville, LA 70448"},"covington":{"r":null,"n":null,"mapsQuery":"Downtown Covington, LA"},"abitabrew":{"r":4.7,"n":547,"mapsQuery":"Abita Brewing Company, 21084 LA-36, Covington, LA 70433"},"lakefront":{"r":null,"n":null,"mapsQuery":"Lakeshore Dr, New Orleans, LA"},"gretna":{"r":null,"n":null,"mapsQuery":"Old Gretna, Gretna, LA"},"baystlouis":{"r":null,"n":null,"mapsQuery":"Bay St. Louis, MS"},"superdome":{"r":4.6,"n":14013,"mapsQuery":"Caesars Superdome, 1500 Sugar Bowl Dr, New Orleans, LA 70112"},"tat-downtown":{"r":null,"n":null,"mapsQuery":"Downtown Tattoos & Piercings, 501 Frenchmen St, New Orleans, LA 70116"},"tat-hohw-frenchmen":{"r":null,"n":null,"mapsQuery":"Hell or High Water Tattoo, 610 Frenchmen St, New Orleans, LA 70116"},"tat-toughlove":{"r":null,"n":null,"mapsQuery":"Tough Love Tattoo, 1027 Touro St, New Orleans, LA 70116"},"tat-bigeasy":{"r":null,"n":null,"mapsQuery":"Big Easy Tattoo & Co., 1024 Canal St, New Orleans, LA 70112"},"tat-hohw-magazine":{"r":null,"n":null,"mapsQuery":"Hell or High Water Tattoo & Piercing, 308 Magazine St, New Orleans, LA 70130"},"tat-luckydagger":{"r":null,"n":null,"mapsQuery":"Lucky Dagger Tattoo, 1124 St Charles Ave, New Orleans, LA 70130"},"tat-idlehands":{"r":null,"n":null,"mapsQuery":"Idle Hands Tattoo Parlour, 1815 Magazine St, New Orleans, LA 70130"},"tat-tattooagogo":{"r":null,"n":null,"mapsQuery":"Tattooagogo, 4421 Magazine St, New Orleans, LA 70115"},"tat-goodwork":{"r":null,"n":null,"mapsQuery":"Good Work Tattoos, 3916 St Claude Ave, New Orleans, LA 70117"},"tat-catahoula":{"r":null,"n":null,"mapsQuery":"Catahoula Tattoo & Gallery, 929 N Broad St, New Orleans, LA 70119"},"backstreet-museum":{"r":4.7,"n":410,"mapsQuery":"Backstreet Cultural Museum, 1531 St Philip St, New Orleans, LA 70116"},"pharmacy-museum":{"r":4.7,"n":2796,"mapsQuery":"New Orleans Pharmacy Museum, 514 Chartres St, New Orleans, LA 70130"},"musee-fpc":{"r":4.9,"n":240,"mapsQuery":"Le Musée de f.p.c., 2336 Esplanade Ave, New Orleans, LA 70119"},"congo-square":{"r":4.6,"n":1997,"mapsQuery":"Congo Square, 701 N Rampart St, New Orleans, LA 70116"},"cabildo":{"r":4.5,"n":590,"mapsQuery":"The Cabildo Museum, 701 Chartres St, New Orleans, LA 70130"},"pitot-house":{"r":4.7,"n":125,"mapsQuery":"The Pitot House Museum, 1440 Moss St, New Orleans, LA 70119"},"couturie-forest":{"r":4.7,"n":572,"mapsQuery":"Couturie Forest, 1009 Harrison Ave, New Orleans, LA 70124"},"besthoff-sculpture-garden":{"r":4.9,"n":1521,"mapsQuery":"Sydney and Walda Besthoff Sculpture Garden, 1 Collins Diboll Cir, New Orleans, LA 70124"},"botanical-garden":{"r":4.7,"n":1608,"mapsQuery":"New Orleans Botanical Garden, 5 Victory Ave, New Orleans, LA 70119"},"bayou-st-john":{"r":null,"n":null,"mapsQuery":"Bayou St. John, Moss St & Dumaine St, New Orleans, LA 70119"},"crescent-park":{"r":4.6,"n":1513,"mapsQuery":"Crescent Park, 2300 N Peters St, New Orleans, LA 70117"},"audubon-park":{"r":4.7,"n":8957,"mapsQuery":"Audubon Park, 6500 Magazine St, New Orleans, LA 70118"},"irish-channel":{"r":null,"n":null,"mapsQuery":"Magazine St & Washington Ave, New Orleans, LA 70130"},"algiers-point":{"r":null,"n":null,"mapsQuery":"Algiers Point Ferry Terminal, New Orleans, LA 70114"},"freret-street":{"r":null,"n":null,"mapsQuery":"Freret St & Jena St, New Orleans, LA 70115"},"st-claude-arts":{"r":null,"n":null,"mapsQuery":"St Claude Ave & Press St, New Orleans, LA 70117"},"frenchmen-street":{"r":null,"n":null,"mapsQuery":"Frenchmen St, New Orleans, LA 70116"},"nola-cat-lounge":{"r":4.9,"n":55,"mapsQuery":"NOLA Cat Lounge, 1029 Oretha Castle Haley Blvd Ste A-2, New Orleans, LA 70113"},"big-easy-animal-rescue":{"r":4.7,"n":222,"mapsQuery":"Big Easy Animal Rescue & Pet Shop, 839 Spain St, New Orleans, LA 70117"},"spaymart-thrift":{"r":4.6,"n":14,"mapsQuery":"SpayMart Thrift Store and Adoption Center, 8911 Jefferson Hwy, River Ridge, LA 70123"},"la-spca":{"r":4.5,"n":1845,"mapsQuery":"Louisiana SPCA, 1700 Mardi Gras Blvd, New Orleans, LA 70114"},"jackson-square-photo":{"r":4.7,"n":28567,"mapsQuery":"Jackson Square, 700 Decatur St, New Orleans, LA 70116"},"royal-street-balconies":{"r":null,"n":null,"mapsQuery":"Royal St & Dumaine St, New Orleans, LA 70116"},"rusty-rainbow-bridge":{"r":4.7,"n":53,"mapsQuery":"Rusty Rainbow Bridge, 3230 Chartres St, New Orleans, LA 70117"},"bywater-colorful-houses":{"r":null,"n":null,"mapsQuery":"Dauphine St & Piety St, New Orleans, LA 70117"},"armstrong-park-arch":{"r":4.5,"n":7436,"mapsQuery":"Louis Armstrong Park, 701 N Rampart St, New Orleans, LA 70116"}};</script>
+<script>
+/* Five-cat ratings + Google profile links, added to every place card, row, and details panel.
+   Works in every version by watching what each page renders. Ratings are Google's, researched Oct 2026. */
+(function(){
+  var R = window.NOLA_RATINGS || {};
+  var CAT = '<path d="M3.5 10.5V3.2l5 4.1a10 10 0 0 1 7 0l5-4.1v7.3c.6 1.2.9 2.4.9 3.7 0 4.8-4.3 7.8-9.4 7.8S2.6 19 2.6 14.2c0-1.3.3-2.5.9-3.7z"/>';
+  var FACE = '<circle cx="9" cy="13.2" r="1.15"/><circle cx="15" cy="13.2" r="1.15"/><path d="M12 15.6l-1.2-1h2.4z"/>';
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function cats(r){
+    var h = '<span class="rt-cats" role="img" aria-label="'+r.toFixed(1)+' out of 5 cats">';
+    for(var i=0;i<5;i++){
+      var fill = Math.max(0, Math.min(1, r - i)); fill = fill>=0.75 ? 1 : fill>=0.25 ? 0.5 : 0;
+      h += '<span class="rt-cat"><svg viewBox="0 0 24 24" class="rt-o" aria-hidden="true">'+CAT+'</svg>'
+         + '<span class="rt-f" style="width:'+(fill*100)+'%"><svg viewBox="0 0 24 24" aria-hidden="true">'+CAT+'<g class="rt-face">'+FACE+'</g></svg></span></span>';
+    }
+    return h + '</span>';
+  }
+  function count(n){ return n>=10000 ? Math.round(n/1000)+'k' : n>=1000 ? (n/1000).toFixed(1).replace(/\.0$/,'')+'k' : String(n); }
+  function gUrl(id, name){ var x = R[id]; var q = (x && x.mapsQuery) || (name + ", New Orleans, LA"); return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q); }
+  function html(id, name){
+    var x = R[id], link = '<a class="rt-g" href="'+gUrl(id,name)+'" target="_blank" rel="noopener">';
+    if(x && typeof x.r === "number"){
+      return '<div class="rt" data-rt="'+esc(id)+'">'+cats(x.r)+'<b class="rt-num">'+x.r.toFixed(1)+'</b>'+(x.n?'<span class="rt-n">('+count(x.n)+')</span>':'')+link+'Google reviews</a></div>';
+    }
+    return '<div class="rt" data-rt="'+esc(id)+'"><span class="rt-none">No rating on file</span>'+link+'See reviews on Google</a></div>';
+  }
+  function after(el, markup){ el.insertAdjacentHTML("afterend", markup); }
+  function enhance(){
+    /* cards */
+    document.querySelectorAll(".card").forEach(function(c){
+      if(c.querySelector(".rt")) return;
+      var b = c.querySelector("h3 [data-open]"), top = c.querySelector(".card-top");
+      if(b && top) after(top, html(b.getAttribute("data-open"), b.textContent));
+    });
+    /* list rows */
+    document.querySelectorAll(".res").forEach(function(r){
+      if(r.querySelector(".rt")) return;
+      var b = r.querySelector(".nm[data-open]"); if(!b) return;
+      var right = r.querySelector(".right"); var id = b.getAttribute("data-open");
+      var m = html(id, b.textContent).replace('class="rt"', 'class="rt" style="grid-column:1 / -1"');
+      if(right) after(right, m); else after(b, m);
+    });
+    /* details panel */
+    var sh = document.querySelector("#sheet-root .sheet");
+    if(sh && !sh.querySelector(".sheet-rt")){
+      var hb = sh.querySelector(".sheet-top"), heart = sh.querySelector("[data-heart]"), t = sh.querySelector("#sheet-title");
+      var id = heart && heart.getAttribute("data-heart");
+      if(hb && id && !/^(ink|ai)-/.test(id) && t) after(hb, html(id, t.textContent).replace('class="rt"', 'class="rt sheet-rt"'));
+    }
+  }
+  var queued = false;
+  function queue(){ if(queued) return; queued = true; setTimeout(function(){ queued = false; try{ enhance(); }catch(e){} }, 16); }
+  new MutationObserver(queue).observe(document.body, {childList:true, subtree:true});
+  queue();
+  var css = document.createElement("style");
+  css.textContent = ".rt{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:.82rem;line-height:1.2}"
+    + ".rt-cats{display:inline-flex;gap:2px}"
+    + ".rt-cat{position:relative;display:inline-block;width:18px;height:18px}"
+    + ".rt-cat svg{position:absolute;left:0;top:0;width:18px;height:18px}"
+    + ".rt-o path{fill:none;stroke:var(--gold,#9C6C14);stroke-width:1.6;stroke-linejoin:round}"
+    + ".rt-f{position:absolute;left:0;top:0;height:18px;overflow:hidden}"
+    + ".rt-f svg path{fill:var(--gold,#9C6C14);stroke:var(--gold,#9C6C14);stroke-width:1.6;stroke-linejoin:round}"
+    + ".rt-f .rt-face *{fill:var(--surface,#fff);stroke:none}"
+    + ".rt-num{font-weight:800;color:var(--ink,#222)}"
+    + ".rt-n{color:var(--muted,#666)}"
+    + ".rt-none{color:var(--muted,#666);font-style:italic}"
+    + ".rt-g{font-weight:700;color:var(--coral,#7B2446);text-decoration:underline;text-underline-offset:2px}"
+    + ":root[data-mode='night'] .rt-g{color:var(--brass,#D9A441)}"
+    + ":root[data-mode='night'] .rt-o path,:root[data-mode='night'] .rt-f svg path{stroke:var(--brass,#D9A441)}:root[data-mode='night'] .rt-f svg path{fill:var(--brass,#D9A441)}"
+    + ".sheet-rt{padding:4px 0}";
+  document.head.appendChild(css);
+})();
+
 </script>
 
 </body>
