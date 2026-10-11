@@ -581,6 +581,9 @@ button,a,.chip,.tab,.plink,.btn,.mood,.tile,.colcard,summary{touch-action:manipu
 .adv{animation:advIn .35s ease-out}
 @keyframes advIn{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.adv{animation:none}}
+/* six tabs on small phones */
+@media (max-width:899px){ .tab{font-size:.68rem;padding:4px 0} .tab svg{width:21px;height:21px} }
+@media (max-width:360px){ .tab span:not(.n){font-size:.62rem} }
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
@@ -2467,9 +2470,9 @@ const ICON = {
  home:'<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>'
 };
 TAB_ICON.home = ICON.home; TAB_ICON.trip = TAB_ICON.plan;
-TABS.splice(0, TABS.length, ["home","Home"],["map","Map"],["explore","Explore"],["trip","Trip"],["saved","Saved"]);
+TABS.splice(0, TABS.length, ["home","Home"],["map","Map"],["explore","Explore"],["trip","Trip"],["saved","Saved"],["ink","Ink"]);
 VIEWKEYS.push("home","trip","col","time","birthday","all");
-const NAV_OF = {col:"explore", time:"explore", ink:"explore", birthday:"explore", river:"explore", all:"explore", now:"home", info:"home", plan:"trip"};
+const NAV_OF = {col:"explore", time:"explore", birthday:"explore", river:"explore", all:"explore", now:"home", info:"home", plan:"trip"};
 try{ const t2 = localStorage.getItem("nola2-tab"); S.tab = VIEWKEYS.includes(t2) ? t2 : "home"; }catch(e){ S.tab = "home"; }
 if(location.hash && VIEWKEYS.includes(location.hash.slice(1))) S.tab = location.hash.slice(1);
 if(S.tab==="plan") S.tab = "trip";
@@ -2644,8 +2647,8 @@ function vAiSheet(n){
     + '<div class="stickybar">'+cakeBtn({id:"ai-"+d.n, n:d.t})+'<button class="btn primary" data-copy="'+esc(aiBrief(d))+'">Copy artist brief</button><button class="btn" data-aiink="'+prev+'">← Previous</button><button class="btn" data-aiink="'+next+'">Next →</button></div>';
 }
 function vInk2(){
-  let h = '<div class="row"><button class="btn" data-go="explore">← Explore</button><button class="btn" data-go="birthday">Lauren\'s 21st</button></div>';
-  h += '<div class="head"><span class="eyebrow">Tattoo studio</span><h2>25 new designs</h2><p class="small muted">Generated with Higgsfield from your brief: small, delicate, New Orleans, family, and a few purple cats for Lauren. Save your favorites with the cheesecake, then copy the brief for your artist.</p></div>';
+  let h = '<div class="row hscroll"><button class="btn" data-go="birthday">Lauren\'s 21st</button><button class="btn" data-col="tattoo">Tattoo shops</button><button class="btn" data-go="saved" data-savedtab="designs">Saved designs</button></div>';
+  h += '<div class="head"><span class="eyebrow">Tattoo ideas</span><h2>25 new designs</h2><p class="small muted">Generated with Higgsfield from your brief: small, delicate, New Orleans, family, and a few purple cats for Lauren. Save your favorites with the cheesecake, then copy the brief for your artist.</p></div>';
   h += '<div class="ai-grid">'+AI_INK.map(aiCard).join("")+'</div>';
   h += '<div class="head" style="margin-top:12px"><span class="eyebrow">The originals</span><h2>27 hand-drawn sketches</h2></div>';
   return h + vInk().replace(/^<div class="head">[\s\S]*?<\/div>/, '');
