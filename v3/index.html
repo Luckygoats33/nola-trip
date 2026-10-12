@@ -674,6 +674,29 @@ button.holla[aria-pressed="true"] .holla-dot{background:#1E7A4C}
 .holla-off{all:unset;cursor:pointer;margin-left:4px;text-decoration:underline;font-weight:800;color:#fff}
 .holla-off:focus-visible{outline:2px solid #FFE2A8;outline-offset:2px}
 
+/* ---- no sideways scrolling on phones: rows wrap ---- */
+.hscroll{flex-wrap:wrap!important;overflow:visible!important;padding-bottom:0}
+.hscroll>*{flex-shrink:1!important}
+.mapctl{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0}
+.mapsel{display:flex;align-items:center;gap:6px;flex:1 1 180px;min-width:0}
+.mapsel span{font-size:.8rem;font-weight:700;color:var(--muted);white-space:nowrap}
+.mapsel select{flex:1;min-width:0;min-height:40px}
+.mapsel.wide{flex:1 1 100%}
+/* the map: shorter on phones, and a tap-to-use cover so the page scrolls past it */
+@media (max-width:899px){ #mapSlot, #mapSlot .leaflet-container{height:46vh!important;min-height:280px} }
+#mapSlot{position:relative}
+.mapshield{all:unset;position:absolute;inset:0;z-index:650;display:flex;align-items:flex-end;justify-content:center;padding-bottom:14px;background:transparent;touch-action:pan-y;cursor:pointer}
+.mapshield span{background:#23172C;color:#F6EBDD;font-weight:800;font-size:.85rem;padding:9px 16px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+
+/* ---- Surprise me steps ---- */
+.sstep{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px dashed var(--line)}
+.sstep:first-of-type{border-top:0}
+.snum{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--brass);color:#23172C;font-weight:800;font-size:.9rem}
+.sbody{flex:1;min-width:0;display:grid;gap:4px}
+.sbody>b{color:var(--ink);font-size:1rem}
+.shint{font-size:.78rem;color:var(--muted)}
+.sbody .seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
@@ -2529,7 +2552,7 @@ function toggleVisit(id){
 }
 
 /* ---------- surprise me ---------- */
-S.surp = {mood:"hidden", hrs:2, mode:"walk", seed:1}; S.surpRes = null;
+S.surp = {mood:null, hrs:null, mode:null, seed:1}; S.surpRes = null;
 function rng(seed){ let x = seed*9301+49297; return ()=>{ x = (x*9301+49297)%233280; return x/233280; }; }
 function dwellOf(p){ return has(p,"river") ? 120 : has(p,"eat","jazz","drink","party","queer") ? 60 : has(p,"history","spooky","cats","tattoo") ? 45 : 35; }
 function runSurprise(startW){
@@ -2563,24 +2586,30 @@ function surpriseNow(){
   for(const W of tryAt){ R = runSurprise(W); if(R.stops.length) return R; }
   return R;
 }
+function surpDefaults(){ const s = S.surp, hr = Math.floor(nolaNow().mins/60); return {mood: s.mood || (hr>=17 || hr<3 ? "jazz" : hr<11 ? "locals" : "hidden"), hrs: s.hrs || 2, mode: s.mode || "walk"}; }
+const surpriseNowBase = surpriseNow;
+surpriseNow = function(){ const s = S.surp, keep = {mood:s.mood, hrs:s.hrs, mode:s.mode}, d = surpDefaults(); Object.assign(s, d); let r; try{ r = surpriseNowBase.apply(this, arguments); } finally { Object.assign(s, keep); } if(r){ r.used = d; r.auto = {mood:!keep.mood, hrs:!keep.hrs, mode:!keep.mode}; } return r; };
 function surpriseCard(){
   const s = S.surp;
-  let h = '<section class="surprise" id="surprise"><div class="sh"><h3>Surprise us, New Orleans</h3></div><p class="small muted">Pick a mood, how long you have, and how you\'re getting around. We\'ll build a mini-adventure from places open right now.</p>';
-  h += '<div class="seg" role="group" aria-label="Mood">'+MOODS.map(([k,l])=>'<button class="chip" data-surp="mood:'+k+'" aria-pressed="'+(s.mood===k)+'">'+esc(l)+'</button>').join("")+'</div>';
-  h += '<div class="seg" role="group" aria-label="Time">'+[1,2,3,4].map(n=>'<button class="chip" data-surp="hrs:'+n+'" aria-pressed="'+(s.hrs===n)+'">'+n+' hr'+(n>1?'s':'')+'</button>').join("")+'<span style="width:8px"></span>'+[["walk","Walking"],["ride","Rideshare"]].map(([k,l])=>'<button class="chip" data-surp="mode:'+k+'" aria-pressed="'+(s.mode===k)+'">'+l+'</button>').join("")+'</div>';
-  h += '<div class="row"><button class="btn primary big" data-surprun="go">Find our adventure</button>'+(S.surpRes?'<button class="btn" data-surprun="again">Spin again</button>':'')+'</div>';
+  const d0 = surpDefaults();
+  let h = '<section class="surprise" id="surprise"><div class="sh"><h3>Surprise us, New Orleans</h3></div><p class="small muted">A mini-adventure from places open right now. Answer any of these, or skip them all and we\'ll pick for the hour.</p>';
+  h += '<div class="sstep"><span class="snum">1</span><div class="sbody"><b>What\'s the vibe?</b><span class="shint">'+(s.mood?'Tap again to clear':'Optional · we\'d pick '+esc((MOODS.find(m=>m[0]===d0.mood)||[,""])[1])+' right now')+'</span><div class="seg" role="group" aria-label="Vibe">'+MOODS.map(([k,l])=>'<button class="chip" data-surp="mood:'+k+'" aria-pressed="'+(s.mood===k)+'">'+esc(l)+'</button>').join("")+'</div></div></div>';
+  h += '<div class="sstep"><span class="snum">2</span><div class="sbody"><b>How long have you got?</b><span class="shint">'+(s.hrs?'Tap again to clear':'Optional · 2 hours if you skip')+'</span><div class="seg" role="group" aria-label="Time">'+[1,2,3,4].map(n=>'<button class="chip" data-surp="hrs:'+n+'" aria-pressed="'+(s.hrs===n)+'">'+n+' hr'+(n>1?'s':'')+'</button>').join("")+'</div></div></div>';
+  h += '<div class="sstep"><span class="snum">3</span><div class="sbody"><b>How are you getting around?</b><span class="shint">'+(s.mode?'Tap again to clear':'Optional · walking if you skip')+'</span><div class="seg" role="group" aria-label="Getting around">'+[["walk","Walking"],["ride","Rideshare"]].map(([k,l])=>'<button class="chip" data-surp="mode:'+k+'" aria-pressed="'+(s.mode===k)+'">'+l+'</button>').join("")+'</div></div></div>';
+  h += '<div class="row"><button class="btn primary big" data-surprun="go">Find our adventure</button>'+(S.surpRes?'<button class="btn" data-surprun="again">Spin again</button>':'')+((s.mood||s.hrs||s.mode)?'<button class="btn" data-surpclear="1">Clear choices</button>':'')+'</div>';
   const R = S.surpRes;
   if(R){
     if(!R.stops.length) h += '<div class="empty">Nothing in that mood fits in the next day. Try another mood, more time, or Rideshare.</div>';
     else {
-      const lab = (MOODS.find(m=>m[0]===s.mood)||[,"Your mood"])[1]+" · "+s.hrs+" hr"+(s.hrs>1?"s":"")+" · "+(s.mode==="walk"?"walking":"rideshare");
-      const vg = MOOD_GIRL[s.mood] || ["Sophia","Trust me. I'm old, I've seen everything, and this is a good plan."];
+      const u = R.used || surpDefaults();
+      const lab = (MOODS.find(m=>m[0]===u.mood)||[,"Your mood"])[1]+(R.auto&&R.auto.mood?" (our pick)":"")+" · "+u.hrs+" hr"+(u.hrs>1?"s":"")+" · "+(u.mode==="walk"?"walking":"rideshare");
+      const vg = MOOD_GIRL[u.mood] || ["Sophia","Trust me. I'm old, I've seen everything, and this is a good plan."];
       h += '<div class="adv" id="adv">' + quip(vg[0], vg[1]) + '<p class="adv-head"><b>'+esc(lab)+'</b></p>'
         + (R.later ? '<p class="small">Nothing in this mood is open right now, so here\x27s the next good window: starting at '+fmtM(R.startMins)+(R.startMins<nolaNow().mins?' tomorrow':' today')+'.</p>' : '')
         + '<p class="small muted">Starting from '+esc(R.from)+' · back by about '+fmtM(R.end)+'</p>';
       R.stops.forEach((st,i)=>{ h += '<div class="adv-leg">↓ '+esc(st.leg.txt)+'</div><div class="adv-stop"><span class="t">'+fmtM(st.at)+'</span><div class="what"><button class="plink" data-open="'+st.p.id+'">'+esc(st.p.n)+'</button>'+(WHY[st.p.id]?'<span class="why">'+esc(WHY[st.p.id])+'</span>':'')+'<span class="small muted">About '+dur(st.dw)+' · '+esc(st.p.a)+'</span></div></div>'; });
       const pts = R.stops.map(st=>coordOf(st.p)), o = originPt(), seq = (o?[o.pt]:[]).concat(pts), sp = q=>q[0].toFixed(5)+","+q[1].toFixed(5);
-      const url = seq.length>=2 ? "https://www.google.com/maps/dir/?api=1&origin="+sp(seq[0])+"&destination="+sp(seq[seq.length-1])+"&travelmode="+(s.mode==="walk"?"walking":"driving")+(seq.length>2?"&waypoints="+encodeURIComponent(seq.slice(1,-1).map(sp).join("|")):"") : dirUrl(R.stops[0].p);
+      const url = seq.length>=2 ? "https://www.google.com/maps/dir/?api=1&origin="+sp(seq[0])+"&destination="+sp(seq[seq.length-1])+"&travelmode="+(u.mode==="walk"?"walking":"driving")+(seq.length>2?"&waypoints="+encodeURIComponent(seq.slice(1,-1).map(sp).join("|")):"") : dirUrl(R.stops[0].p);
       h += '<div class="actions"><a class="btn primary" href="'+url+'" target="_blank" rel="noopener">Route it</a>'+(readOnly?'':'<button class="btn" data-surpadd="1">Add to the plan</button>')+'</div></div>';
     }
   }
@@ -3081,9 +3110,9 @@ updateMarkers = function(){ _updateMarkers(); const o = originPt(); if(LMAP && S
 function vMap2(){
   if(!mapAvailable()) return vSketch();
   const o = originPt();
-  let h = '<div class="row hscroll"><button class="btn primary" data-nearme="map">◎ Near me</button>'+Object.entries(LVIEWS).map(([k,v])=>'<button class="chip" data-lview="'+k+'">'+esc(v[0])+'</button>').join("")+'</div>';
+  let h = '<div class="mapctl"><button class="btn primary" data-nearme="map">◎ Near me</button><label class="mapsel"><span>Jump to</span><select class="field" id="lviewsel" aria-label="Jump to an area"><option value="">Pick an area…</option>'+Object.entries(LVIEWS).map(([k,v])=>'<option value="'+k+'">'+esc(v[0])+'</option>').join("")+'</select></label></div>';
   h += '<div class="mapwrap"><div id="mapSlot" class="mapslot"></div></div>';
-  h += '<div class="row hscroll" role="group" aria-label="Layers"><button class="chip" data-mapcol="all" aria-pressed="'+(!S.mapCol||S.mapCol==="all")+'">All places</button>'+COLS.filter(c=>!c.special).map(c=>'<button class="chip" data-mapcol="'+c.k+'" aria-pressed="'+(S.mapCol===c.k)+'">'+esc(c.t)+'</button>').join("")+'</div>';
+  h += '<div class="mapctl"><label class="mapsel wide"><span>Show</span><select class="field" id="mapcolsel" aria-label="Which places to show on the map"><option value="all"'+(!S.mapCol||S.mapCol==="all"?' selected':'')+'>All places</option>'+COLS.filter(c=>!c.special).map(c=>'<option value="'+c.k+'"'+(S.mapCol===c.k?' selected':'')+'>'+esc(c.t)+'</option>').join("")+'</select></label></div>';
   h += '<div class="row hscroll" role="group" aria-label="Walking radius"><span class="small muted">Within</span>'+[0,5,10,15,30].map(m=>'<button class="chip" data-radius="'+m+'" aria-pressed="'+((S.radius||0)===m)+'">'+(m?m+' min walk':'Any distance')+'</button>').join("")+(S.radius&&!o?'<span class="small muted">Tap Near me first</span>':'')+'</div>';
   h += '<div class="row hscroll"><button class="chip" id="mapOpen" aria-pressed="'+!!S.mapOpen+'">Open now</button><button class="chip cake" id="mapSaved" aria-pressed="'+!!S.mapSaved+'">Saved</button><button class="chip" data-mapcolor="'+(S.mapColor==="open"?"type":"open")+'" aria-pressed="'+(S.mapColor==="open")+'">Color by open now</button><button class="chip" id="mapSafety" aria-pressed="'+!!S.mapSafety+'">Night travel tips</button></div>';
   if(S.mapSafety) h += '<div class="safety"><h3>Getting around after dark</h3><ul class="tips"><li>Stick to busy, lit streets: Bourbon, Royal, Decatur, Frenchmen, Canal, and St. Charles.</li><li>Order rideshares from inside the bar and meet the car at the door.</li><li>Take a car for Bywater, Uptown, Tremé, and anything after midnight.</li><li>Shaded zones on the map are rough visitor advice, not crime data.</li></ul><p class="small muted">Emergency 911 · NOPD non-emergency <span class="mono">504-821-2222</span></p></div>';
@@ -3244,9 +3273,10 @@ render = function(){
 /* ---------- v2 events ---------- */
 window.addEventListener("error", e=>{ try{ toast("Something hiccuped. Pull down to refresh if a button stops working."); console.error(e.error||e.message); }catch(_){} });
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle],[data-holla],[data-hcat]");
+  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle],[data-holla],[data-hcat],[data-surpclear]");
   if(!el) return; const d = el.dataset;
-  if(d.surp){ const [k,v]=d.surp.split(":"); S.surp[k] = k==="hrs" ? +v : v; S.surpRes = surpriseNow(); if(!d.go){ render(); return; } }
+  if(d.surp){ const [k,v]=d.surp.split(":"), nv = k==="hrs" ? +v : v; S.surp[k] = S.surp[k]===nv ? null : nv; S.surpRes = (S.surp.mood||S.surp.hrs||S.surp.mode) ? surpriseNow() : null; if(!d.go){ render(); return; } }
+  if(d.surpclear){ S.surp.mood = S.surp.hrs = S.surp.mode = null; S.surpRes = null; render(); return; }
   if(d.savedtab){ S.savedTab = d.savedtab; if(!d.go){ render(); return; } }
   if(d.go){ const [v,arg] = d.go.split(":"); S.tab = v; if(v==="col") S.col = arg; if(v==="trip" && arg) S.day = +arg; S.sheet = null; window.scrollTo(0,0); render(); if(d.surp) document.getElementById("surprise")?.scrollIntoView({block:"start"}); return; }
   if(d.col){ S.tab = "col"; S.col = d.col; S.sheet = null; window.scrollTo(0,0); render(); return; }
@@ -3283,6 +3313,551 @@ setInterval(()=>{ if(S.mode==="auto"){ const was = document.documentElement.getA
 loadWX(); setInterval(loadWX, 30*60*1000);
 applyRoute(location.hash);
 render();
+
+/* ---------- mobile UX helpers ---------- */
+function pressFake(attr, val){ const b = document.createElement("button"); b.setAttribute(attr, val); b.style.display = "none"; document.body.appendChild(b); b.click(); b.remove(); }
+document.addEventListener("change", e=>{
+  const t = e.target; if(!t || !t.id) return;
+  if(t.id==="lviewsel" && t.value){ pressFake("data-lview", t.value); }
+  if(t.id==="mapcolsel"){ pressFake("data-mapcol", t.value); }
+});
+/* the map only grabs your finger after you tap it; until then the page scrolls right past it */
+(function(){
+  if(typeof applyLock !== "function") return;
+  const baseLock = applyLock;
+  function shield(slot){
+    if(!slot) return;
+    const old = slot.querySelector(".mapshield"); if(old) old.remove();
+    const lockBtn = slot.querySelector(".maplock");
+    if(!LMAP || !isTouch() || S.mapUnlocked){ if(lockBtn) lockBtn.style.display = ""; return; }
+    if(lockBtn) lockBtn.style.display = "none";
+    const d = document.createElement("button"); d.type = "button"; d.className = "mapshield"; d.setAttribute("aria-label", "Tap to use the map");
+    d.innerHTML = '<span>Tap to use the map</span>';
+    d.addEventListener("click", ev=>{ ev.preventDefault(); ev.stopPropagation(); S.mapUnlocked = true; applyLock(slot); });
+    slot.appendChild(d);
+  }
+  applyLock = function(slot){ baseLock(slot); shield(slot); };
+  const again = () => { const slot = document.getElementById("mapSlot"); if(slot && LMAP) applyLock(slot); };
+  const r0 = render; render = function(){ const out = r0.apply(this, arguments); if(S.tab==="map") setTimeout(again, 80); else S.mapUnlocked = false; return out; };
+})();
+
+/* ---------- Ask the Girls: a helper at the bottom right (type or talk) + "Design your own tattoo" ---------- */
+(function(){
+  const ART_URL = "https://claude.ai/artifact/8RHHe6W9CEt16ZjTSmPCQg";
+  let SAMPLE = null, MCP = null;
+  if(window.claude && typeof window.claude.use === "function"){
+    window.claude.use("sample").then(x=>{ SAMPLE = x; }).catch(()=>{});
+    window.claude.use("mcp").then(x=>{ MCP = x; }).catch(()=>{});
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const $ = (q, r) => (r||document).querySelector(q);
+  const nowW = () => nolaNow();
+  const isOpen = (p, W) => statusAt(p, W||nowW()).state === "open";
+
+  /* ---- the built-in answer engine (works everywhere, no internet AI needed) ---- */
+  const KW = [
+    [/beignet|coffee|caf[eé]|chicory|breakfast/, p=>p.c.includes("coffee") || /beignet/i.test(p.n)],
+    [/jazz|music|band|live music|brass/, p=>p.c.includes("jazz")],
+    [/bar|drink|cocktail|hurricane|wine|beer|nightcap/, p=>p.c.includes("drink") || p.c.includes("party")],
+    [/vegan|vegetarian|plant/, p=>/vegan|vegetarian|plant/i.test(hay(p))],
+    [/eat|food|dinner|lunch|brunch|restaurant|hungry|po.?boy|gumbo/, p=>p.c.includes("eat")],
+    [/cat|kitt/, p=>/\bcats?\b|kitt/i.test(hay(p))],
+    [/tattoo|ink/, p=>p.c.includes("tattoo")],
+    [/histor|museum|cemeter/, p=>p.c.includes("history")],
+    [/voodoo|ghost|haunt|spooky|tarot/, p=>p.c.includes("spooky")],
+    [/swamp|nature|park|garden|oak|bayou/, p=>p.c.includes("nature")],
+    [/river|cruise|boat|steamboat|ferry/, p=>p.c.includes("river")],
+    [/shop|antique|store|shopping/, p=>p.c.includes("shop")],
+    [/dance|club|party|late/, p=>p.c.includes("party") || p.c.includes("drink")],
+    [/romantic|date/, p=>p.c.includes("date")]
+  ];
+  function findPlace(q){
+    const words = q.toLowerCase().replace(/[^a-z0-9' ]/g," ").split(/\s+/).filter(w=>w.length>2 && !/^(the|and|what|when|where|how|does|is|are|for|open|hours|close|closes|time|phone|number|address|tell|about|get|there|can|we)$/.test(w));
+    if(!words.length) return null;
+    let best = null, score = 0;
+    P.forEach(p=>{ const n = p.n.toLowerCase(); let sc = 0; words.forEach(w=>{ if(n.includes(w)) sc += w.length; }); if(sc > score){ score = sc; best = p; } });
+    return score >= 4 ? best : null;
+  }
+  function placeLine(p, W){ const st = statusAt(p, W||nowW()); return p.n + " — " + (st.label || (st.state==="open" ? "open now" : "closed now")); }
+  function localAnswer(qRaw){
+    const q = qRaw.toLowerCase(), W = nowW();
+    if(/hotel|where are we staying|our address/.test(q)) return {text:"Home base is the Olivier House Hotel, 828 Toulouse St, New Orleans, LA 70112. Everyone should save it on their own phone.", ids:[]};
+    if(/safe|safety|dangerous|walk at night/.test(q)) return {text:"Stick to busy, lit streets after dark: Bourbon, Royal, Decatur, Frenchmen, Canal and St. Charles. Take a car for anything far, never leave a drink unattended, and nobody walks back alone. The Map tab shows green, yellow and red night-walking areas.", ids:[]};
+    if(/plan|today|tomorrow|day \d|itinerary|schedule/.test(q) && plan && plan.days){
+      const ts = typeof tripStatus==="function" ? tripStatus() : null;
+      let n = (q.match(/day (\d)/)||[])[1]; n = n ? +n : (ts && ts.day ? ts.day + (/tomorrow/.test(q)?1:0) : 1);
+      const d = plan.days.find(x=>x.n===n) || plan.days[0];
+      const items = (d.items||[]).slice(0,8);
+      return {text:"Day "+d.n+(d.t?" — "+d.t:"")+":\n"+items.map(i=>"• "+(i.t?i.t+" ":"")+(i.h||"")).join("\n"), ids:[...new Set(items.flatMap(i=>i.p||[]))].slice(0,6)};
+    }
+    const p = findPlace(q);
+    if(p){
+      const st = statusAt(p, W), h = p.hrs || {};
+      let t = p.n + " is " + (st.state==="open" ? "open right now" : "closed right now") + (st.label ? " ("+st.label+")" : "") + ".";
+      if(h.hoursText) t += "\nHours: " + h.hoursText;
+      if(p.ad) t += "\nAddress: " + p.ad;
+      if(p.ph) t += "\nPhone: " + p.ph + (p.phw ? " (" + p.phw + ")" : "");
+      if(WHY[p.id]) t += "\nWhy go: " + WHY[p.id];
+      return {text:t, ids:[p.id]};
+    }
+    let pool = P.slice(), label = "places";
+    const hit = KW.find(([re])=>re.test(q)); if(hit){ pool = pool.filter(hit[1]); label = (q.match(hit[0])||["places"])[0] + " spots"; }
+    const wantOpen = /open|now|right now|tonight|available|can we go|go now/.test(q) || !hit;
+    if(wantOpen) pool = pool.filter(x=>isOpen(x, W));
+    const near = /near|close|walk|nearby|around here/.test(q);
+    pool.sort((a,b)=>{ const da = distInfo(a), db = distInfo(b); return (da&&db) ? da.m-db.m : a.d-b.d; });
+    if(!pool.length) return {text:"I couldn't find "+(wantOpen?"anything open right now":"a match")+" for that. Try Holla Holla at the top, or ask another way — like \"coffee open now\" or \"jazz tonight\".", ids:[]};
+    const top = pool.slice(0, 6);
+    return {text:(wantOpen ? "Open right now" : "Here are some")+(near ? ", closest first" : "")+" — "+label+":\n"+top.map(x=>"• "+placeLine(x, W)+(distInfo(x)?" · "+distInfo(x).txt:"")).join("\n"), ids:top.map(x=>x.id)};
+  }
+
+  /* ---- Claude, when this page runs inside claude.ai ---- */
+  function context(){
+    const W = nowW();
+    const places = P.map(p=>{ const st = statusAt(p, W); return {id:p.id, n:p.n, type:p.c.join("/"), area:p.a, open:st.state==="open", status:st.label||"", hours:(p.hrs&&p.hrs.hoursText||"").slice(0,140), ad:p.ad||"", ph:p.ph||"", why:WHY[p.id]||""}; });
+    const days = (plan.days||[]).map(d=>({day:d.n, title:d.t||"", stops:(d.items||[]).map(i=>(i.t||"")+" "+(i.h||"")).slice(0,10)}));
+    return {now:"New Orleans local time: "+DOWL[W.dow]+" "+fmtM(W.mins), trip:"Wed Nov 4 to Sun Nov 8, 2026; hotel Olivier House Hotel, 828 Toulouse St", places, plan:days};
+  }
+  async function claudeAnswer(q, onText){
+    const ctx = context();
+    const prompt = "You are the friendly helper inside 'The NOLA Girls', a New Orleans trip app for Will, Emily and their niece Lauren (21). Answer the question briefly (under 120 words), warmly, with a light Golden Girls wink, using ONLY the app data below. Prefer places that are open now when the question is about now. When you mention a place from the data, append its id in double brackets right after the name, like Café du Monde [[cdm]]. Don't invent hours, prices or places.\n\nAPP DATA (JSON):\n" + JSON.stringify(ctx) + "\n\nQUESTION: " + q;
+    const r = await SAMPLE(prompt, {modelTier:"default", cache:false, onText:({text})=>onText(text)});
+    return r.text;
+  }
+
+  /* ---- the panel ---- */
+  const css = document.createElement("style");
+  css.textContent = `
+  .ask-fab{all:unset;position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:8500;width:56px;height:56px;border-radius:50%;background:#23172C;color:#E0B65A;display:grid;place-items:center;box-shadow:0 8px 24px rgba(20,12,28,.4);cursor:pointer;border:2px solid #E0B65A}
+  .ask-fab svg{width:26px;height:26px}
+  .ask-fab:focus-visible{outline:3px solid #E0B65A;outline-offset:3px}
+  .ask-fab .lbl{position:absolute;bottom:-6px;font:800 .62rem system-ui;background:#E0B65A;color:#23172C;padding:1px 6px;border-radius:999px}
+  @media (min-width:900px){ .ask-fab{bottom:24px} }
+  .ask-panel{position:fixed;right:12px;left:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:8600;max-width:420px;margin-left:auto;max-height:min(72vh,620px);display:flex;flex-direction:column;background:#FFF8F0;color:#23172C;border:2px solid #23172C;border-radius:20px;box-shadow:0 18px 50px rgba(20,12,28,.45);font:400 .95rem/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+  @media (min-width:900px){ .ask-panel{bottom:24px;right:24px;left:auto;width:400px} }
+  .ask-hd{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#23172C;color:#F6EBDD}
+  .ask-hd b{font:700 1.05rem Georgia,serif}.ask-hd small{display:block;font-size:.72rem;opacity:.8}
+  .ask-x{all:unset;cursor:pointer;margin-left:auto;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;font-size:1.3rem;color:#F6EBDD}
+  .ask-log{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px;overscroll-behavior:contain}
+  .ask-msg{max-width:88%;padding:9px 12px;border-radius:14px;white-space:pre-wrap;word-wrap:break-word}
+  .ask-msg.me{align-self:flex-end;background:#23172C;color:#F6EBDD;border-bottom-right-radius:4px}
+  .ask-msg.bot{align-self:flex-start;background:#fff;border:1px solid #E3D6C6;color:#23172C;border-bottom-left-radius:4px}
+  .ask-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .ask-chip{all:unset;cursor:pointer;font-size:.8rem;font-weight:700;padding:5px 10px;border-radius:999px;background:#F3E6D3;color:#23172C;border:1px solid #D9C6AE}
+  .ask-chip:focus-visible{outline:2px solid #23172C}
+  .ask-sugg{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 8px}
+  .ask-in{display:flex;gap:6px;padding:10px;border-top:1px solid #E3D6C6;background:#FFF8F0}
+  .ask-in input{flex:1;min-width:0;min-height:44px;border:1px solid #CDBBA6;border-radius:999px;padding:0 14px;font-size:1rem;background:#fff;color:#23172C}
+  .ask-btn{all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;border-radius:50%;background:#23172C;color:#F6EBDD}
+  .ask-btn.mic.on{background:#A8322D;animation:hollaPulse 1.4s infinite}
+  .ask-btn svg{width:20px;height:20px}
+  .ask-btn:focus-visible{outline:3px solid #E0B65A}
+  .ask-mode{font-size:.72rem;color:#5A4A66;padding:0 14px 8px}
+  .ask-speak{display:flex;align-items:center;gap:6px;font-size:.78rem;color:#5A4A66;padding:0 14px 10px}
+  `;
+  document.head.appendChild(css);
+  const ICON_CHAT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 10h.01M12 10h.01M15 10h.01"/></svg>';
+  const ICON_MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+  const ICON_SEND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  const fab = document.createElement("button"); fab.className = "ask-fab"; fab.type = "button"; fab.setAttribute("aria-label", "Ask the Girls a question"); fab.innerHTML = ICON_CHAT + '<span class="lbl">Ask</span>';
+  document.body.appendChild(fab);
+  let panel = null, speak = false; try{ speak = localStorage.getItem("nola-ask-speak")==="1"; }catch(e){}
+  const SUGG = ["What's open near me?","Beignets right now?","Live jazz tonight?","What's on our plan tomorrow?","Is Preservation Hall open?","Vegan food nearby?"];
+  function linkify(text){ return esc(text).replace(/\s*\[\[([a-z0-9-]+)\]\]/gi, (m,id)=> BY[id] ? '' : ''); }
+  function addMsg(who, text, ids){
+    const log = $(".ask-log", panel); const d = document.createElement("div"); d.className = "ask-msg " + who;
+    const found = []; const clean = String(text).replace(/\s*\[\[([a-z0-9-]+)\]\]/gi, (m,id)=>{ if(BY[id] && !found.includes(id)) found.push(id); return ""; });
+    d.textContent = clean;
+    const all = [...new Set([...(ids||[]), ...found])].filter(id=>BY[id]).slice(0,8);
+    if(all.length){ const c = document.createElement("div"); c.className = "ask-chips"; c.innerHTML = all.map(id=>'<button class="ask-chip" type="button" data-askopen="'+id+'">'+esc(BY[id].n)+'</button>').join(""); d.appendChild(c); }
+    log.appendChild(d); log.scrollTop = log.scrollHeight; return d;
+  }
+  function say(t){ if(!speak || !window.speechSynthesis) return; try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(t).replace(/\[\[[^\]]+\]\]/g,"").slice(0,600)); const v = speechSynthesis.getVoices().find(v=>/en-US/i.test(v.lang) && /female|samantha|aria|jenny|zira/i.test(v.name)); if(v) u.voice = v; speechSynthesis.speak(u); }catch(e){} }
+  async function ask(q){
+    q = (q||"").trim(); if(!q) return;
+    addMsg("me", q); const inp = $("#askq", panel); if(inp) inp.value = "";
+    if(SAMPLE){
+      const b = addMsg("bot", "Thinking…");
+      try{ const t = await claudeAnswer(q, t=>{ b.firstChild ? (b.firstChild.nodeValue = t.replace(/\s*\[\[[a-z0-9-]+\]\]/gi,"")) : (b.textContent = t); });
+        b.remove(); addMsg("bot", t); say(t); return; }
+      catch(e){ b.remove(); if(e && e.code==="not_granted"){ SAMPLE = null; } }
+    }
+    const a = localAnswer(q); addMsg("bot", a.text, a.ids); say(a.text);
+  }
+  function open(){
+    if(panel){ panel.remove(); panel = null; fab.style.display = ""; return; }
+    fab.style.display = "none";
+    panel = document.createElement("section"); panel.className = "ask-panel"; panel.setAttribute("role","dialog"); panel.setAttribute("aria-label","Ask the Girls");
+    panel.innerHTML = '<div class="ask-hd"><span class="badge-g" style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#E0B65A;color:#23172C;font:italic 700 1rem Georgia,serif">B</span><div><b>Ask the Girls</b><small>'+(SAMPLE?"Answers by Claude, from this app's places":"Instant answers from this app's places")+'</small></div><button class="ask-x" type="button" aria-label="Close">×</button></div>'
+      + '<div class="ask-log" aria-live="polite"></div>'
+      + '<div class="ask-sugg">'+SUGG.map(s=>'<button class="ask-chip" type="button" data-asksugg="'+esc(s)+'">'+esc(s)+'</button>').join("")+'</div>'
+      + '<label class="ask-speak"><input type="checkbox" id="askspeak"'+(speak?" checked":"")+'> Read answers out loud</label>'
+      + '<form class="ask-in"><input id="askq" type="text" placeholder="Ask anything about the trip…" aria-label="Your question" autocomplete="off">'+(SR?'<button class="ask-btn mic" type="button" aria-label="Ask by voice">'+ICON_MIC+'</button>':'')+'<button class="ask-btn" type="submit" aria-label="Send">'+ICON_SEND+'</button></form>';
+    document.body.appendChild(panel);
+    addMsg("bot", "Honey, ask me anything: what's open, where to eat, what's on the plan, hours, addresses. Tap the mic to just say it.");
+    $(".ask-x", panel).onclick = open;
+    $(".ask-in", panel).onsubmit = e=>{ e.preventDefault(); ask($("#askq", panel).value); };
+    $("#askspeak", panel).onchange = e=>{ speak = e.target.checked; try{ localStorage.setItem("nola-ask-speak", speak?"1":"0"); }catch(_){} if(!speak && window.speechSynthesis) speechSynthesis.cancel(); };
+    const mic = $(".mic", panel);
+    if(mic) mic.onclick = ()=>{
+      try{
+        const r = new SR(); r.lang = "en-US"; r.interimResults = true; r.maxAlternatives = 1;
+        mic.classList.add("on"); const inp = $("#askq", panel); let final = "";
+        r.onresult = ev=>{ let t = ""; for(const res of ev.results){ t += res[0].transcript; if(res.isFinal) final = t; } inp.value = t; };
+        r.onerror = ev=>{ mic.classList.remove("on"); if(ev.error==="not-allowed") addMsg("bot", "I need microphone permission to hear you. Allow it in your browser, or just type."); };
+        r.onend = ()=>{ mic.classList.remove("on"); if((final||inp.value).trim()) ask(final || inp.value); };
+        r.start();
+      }catch(e){ mic.classList.remove("on"); addMsg("bot", "Voice isn't available in this browser — type your question instead."); }
+    };
+    setTimeout(()=>$("#askq", panel).focus(), 50);
+  }
+  fab.addEventListener("click", open);
+  document.addEventListener("click", e=>{
+    const s = e.target.closest("[data-asksugg]"); if(s){ e.preventDefault(); ask(s.dataset.asksugg); return; }
+    const o = e.target.closest("[data-askopen]"); if(o){ e.preventDefault(); e.stopPropagation(); S.sheet = o.dataset.askopen; render(); if(panel) open(); }
+  }, true);
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape" && panel) open(); });
+
+  /* ---------- Design your own tattoo ---------- */
+  const STYLES = ["Fine-line","Old-school flash","Art deco","90s","Watercolor","Minimal dotwork","Y2K cute","Voodoo & mystic"];
+  let mine = []; try{ mine = JSON.parse(localStorage.getItem("nola-my-ink")||"[]"); }catch(e){}
+  const saveMine = () => { try{ localStorage.setItem("nola-my-ink", JSON.stringify(mine.slice(-12))); }catch(e){} };
+  function cleanSvg(raw){
+    const m = String(raw).match(/<svg[\s\S]*?<\/svg>/i); if(!m) return null;
+    const doc = new DOMParser().parseFromString(m[0], "image/svg+xml"); const svg = doc.documentElement;
+    if(!svg || svg.nodeName.toLowerCase()!=="svg" || doc.querySelector("parsererror")) return null;
+    svg.querySelectorAll("script,foreignObject,iframe,image,use,a,style").forEach(n=>n.remove());
+    svg.querySelectorAll("*").forEach(n=>[...n.attributes].forEach(a=>{ if(/^on/i.test(a.name) || /href/i.test(a.name)) n.removeAttribute(a.name); }));
+    svg.removeAttribute("width"); svg.removeAttribute("height"); svg.setAttribute("role","img");
+    return new XMLSerializer().serializeToString(svg);
+  }
+  const css2 = document.createElement("style");
+  css2.textContent = `
+  .myink-cta{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:8px 0 14px;padding:14px;border-radius:16px;background:linear-gradient(135deg,#23172C,#5A3D78);color:#F6EBDD}
+  .myink-cta b{font:700 1.05rem Georgia,serif;color:#fff}.myink-cta p{margin:2px 0 0;font-size:.85rem;opacity:.9}
+  .myink-cta button{all:unset;cursor:pointer;margin-left:auto;background:#E0B65A;color:#23172C;font-weight:800;padding:10px 16px;border-radius:999px}
+  .ink-modal{position:fixed;inset:0;z-index:9500;background:rgba(20,12,28,.6);display:flex;align-items:flex-end;justify-content:center}
+  @media (min-width:700px){ .ink-modal{align-items:center} }
+  .ink-box{width:100%;max-width:520px;max-height:92vh;overflow:auto;background:#FFF8F0;color:#23172C;border-radius:20px 20px 0 0;padding:18px;font:400 .95rem/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  @media (min-width:700px){ .ink-box{border-radius:20px} }
+  .ink-box h2{margin:0 0 4px;font:700 1.3rem Georgia,serif}.ink-box textarea{width:100%;min-height:96px;border:1px solid #CDBBA6;border-radius:12px;padding:10px;font:inherit;color:#23172C;background:#fff;box-sizing:border-box}
+  .ink-box select{min-height:40px;border:1px solid #CDBBA6;border-radius:10px;padding:0 10px;background:#fff;color:#23172C}
+  .ink-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .ink-acts button{all:unset;cursor:pointer;padding:10px 16px;border-radius:999px;font-weight:800;border:1px solid #23172C;color:#23172C;background:#fff}
+  .ink-acts button.go{background:#23172C;color:#F6EBDD}
+  .ink-acts button[disabled]{opacity:.5;cursor:default}
+  .ink-out{margin-top:14px;display:grid;place-items:center;min-height:40px}
+  .ink-out svg{width:100%;max-width:360px;height:auto;background:#fff;border-radius:14px;border:1px solid #E3D6C6}
+  .ink-out img{width:100%;max-width:360px;border-radius:14px;border:1px solid #E3D6C6;background:#fff}
+  .ink-note{font-size:.8rem;color:#5A4A66;margin:6px 0 0}
+  .myink-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin:8px 0 16px}
+  .myink-grid figure{margin:0;background:#fff;border:1px solid var(--line,#ddd);border-radius:12px;padding:6px}
+  .myink-grid svg,.myink-grid img{width:100%;height:auto;display:block}
+  .myink-grid figcaption{font-size:.75rem;color:#23172C;padding:4px 2px 0}
+  `;
+  document.head.appendChild(css2);
+  function myInkSection(){
+    let h = '<div class="myink-cta"><div><b>Design your own tattoo</b><p>Describe your idea and the AI draws it for you.</p></div><button type="button" data-myink="1">✨ Create a design</button></div>';
+    if(mine.length) h += '<div class="sh"><h3>Your designs</h3></div><div class="myink-grid">'+mine.slice().reverse().map(m=>'<figure>'+(m.svg ? m.svg : m.url ? '<img src="'+esc(m.url)+'" alt="'+esc(m.idea)+'" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement(\'a\'),{href:\''+esc(m.url)+'\',target:\'_blank\',rel:\'noopener\',textContent:\'Open image\'}))">' : '')+'<figcaption>'+esc(m.idea.slice(0,60))+'</figcaption></figure>').join("")+'</div>';
+    return h;
+  }
+  if(typeof vInk2 === "function"){ const base = vInk2; vInk2 = function(){ const h = base.apply(this, arguments); const i = h.indexOf('<div class="head"><span class="eyebrow">Tattoo ideas</span>'); return i >= 0 ? h.slice(0, i) + myInkSection() + h.slice(i) : myInkSection() + h; }; }
+  function inkModal(){
+    const m = document.createElement("div"); m.className = "ink-modal"; m.setAttribute("role","dialog"); m.setAttribute("aria-modal","true"); m.setAttribute("aria-label","Design your own tattoo");
+    const can = !!(SAMPLE || MCP);
+    m.innerHTML = '<div class="ink-box"><div style="display:flex;align-items:center"><h2>Design your own tattoo</h2><button class="ask-x" type="button" style="color:#23172C;margin-left:auto" aria-label="Close" data-inkclose="1">×</button></div>'
+      + '<p class="ink-note" style="margin-bottom:10px">Describe it like you would to an artist: what it shows, where it goes, how big, any colors.</p>'
+      + '<textarea id="inkidea" placeholder="e.g. a tiny purple cat curled inside a crescent moon with a fleur-de-lis tail, fine line, about 2 inches"></textarea>'
+      + '<div style="display:flex;gap:8px;align-items:center;margin-top:8px"><label for="inkstyle" class="ink-note" style="margin:0">Style</label><select id="inkstyle">'+STYLES.map(s=>'<option>'+s+'</option>').join("")+'</select></div>'
+      + (can ? '<div class="ink-acts">'+(SAMPLE?'<button class="go" type="button" data-inkgo="claude">Sketch it with Claude</button>':'')+(MCP?'<button type="button" data-inkgo="hf">Make it with Higgsfield</button>':'')+'</div><p class="ink-note">'+(SAMPLE?'Claude draws clean line art in a few seconds (free). ':'')+(MCP?'Higgsfield makes a full image in about a minute (uses about 0.25 of your Higgsfield credits).':'')+'</p>'
+             : '<p class="ink-note" style="margin-top:12px"><b>AI design works in the claude.ai version of this app.</b> The public website can\'t reach the AI without exposing a private key.</p><div class="ink-acts"><a class="go" style="all:unset;cursor:pointer;padding:10px 16px;border-radius:999px;font-weight:800;background:#23172C;color:#F6EBDD" href="'+ART_URL+'" target="_blank" rel="noopener">Open the claude.ai version</a></div>')
+      + '<div class="ink-out" id="inkout" aria-live="polite"></div></div>';
+    document.body.appendChild(m);
+    setTimeout(()=>$("#inkidea", m).focus(), 50);
+    const out = $("#inkout", m);
+    const busy = on => m.querySelectorAll("[data-inkgo]").forEach(b=>b.disabled = on);
+    m.addEventListener("click", async e=>{
+      if(e.target===m || e.target.closest("[data-inkclose]")){ m.remove(); return; }
+      const g = e.target.closest("[data-inkgo]"); if(!g || g.disabled) return;
+      const idea = $("#inkidea", m).value.trim(), style = $("#inkstyle", m).value;
+      if(idea.length < 4){ out.innerHTML = '<p class="ink-note">Tell me a little more about your idea first.</p>'; return; }
+      busy(true);
+      if(g.dataset.inkgo==="claude"){
+        out.innerHTML = '<p class="ink-note">Claude is sketching…</p>';
+        try{
+          const r = await SAMPLE("Design a tattoo as a single clean SVG. Idea: " + idea + ". Style: " + style + ". Rules: output ONLY the <svg> element, viewBox=\"0 0 400 400\", white background rect, black strokes (stroke-width 2-4, round caps), fills only where the style needs color, no text unless the idea asks for words, no external references, under 9000 characters, centered and balanced like real tattoo flash.", {modelTier:"complex", cache:false});
+          const svg = cleanSvg(r.text);
+          if(!svg){ out.innerHTML = '<p class="ink-note">That sketch didn\'t come out right. Try again or reword the idea.</p>'; }
+          else { out.innerHTML = svg + '<div class="ink-acts"><button class="go" type="button" data-inksave="1">Save to my designs</button><button type="button" data-inkgo="claude">Try another</button></div>'; out._last = {idea, style, svg}; }
+        }catch(err){ out.innerHTML = '<p class="ink-note">'+(err && err.code==="not_granted" ? "Claude access wasn't allowed for this page. You can allow it in the artifact's permissions." : err && err.code==="rate_limited" ? "Too many requests just now. Wait a minute and try again." : "Claude couldn't make that one ("+esc(err && err.code || "error")+"). Try again in a moment.")+'</p>'; }
+      } else {
+        out.innerHTML = '<p class="ink-note">Higgsfield is painting… this takes about a minute.</p>';
+        try{
+          const prompt = style + " tattoo flash design on plain white paper, centered, isolated, no background: " + idea + ". Tattoo design, square composition.";
+          const sub = await MCP.callTool("Higgsfield", "generate_image_batch", {requests:[{index:0, params:{model:"gpt_image_2_5", prompt, aspect_ratio:"1:1", use_unlim:false}}]});
+          const pay = sub && (sub.payload || sub); const job = pay && pay.jobs && pay.jobs[0];
+          if(!job || !job.job_id){ out.innerHTML = '<p class="ink-note">Higgsfield didn\'t accept that request'+(job && job.error ? ": "+esc(job.error) : "")+'. Try again in a minute.</p>'; }
+          else {
+            let url = null, tries = 0;
+            while(!url && tries < 12){ tries++;
+              const w = await MCP.callTool("Higgsfield", "jobs_wait", {jobs:[{index:0, job_id:job.job_id}], timeout_seconds:15});
+              const wp = w && (w.payload || w); const j = wp && wp.jobs && wp.jobs[0];
+              if(j && j.status==="completed" && j.result_url) url = j.result_url;
+              else if(j && /fail|error|cancel/.test(j.status||"")) break;
+            }
+            if(!url) out.innerHTML = '<p class="ink-note">The image didn\'t finish. It may still show up in your Higgsfield account.</p>';
+            else { out.innerHTML = '<img alt="'+esc(idea)+'" src="'+esc(url)+'"><p class="ink-note"><a href="'+esc(url)+'" target="_blank" rel="noopener">Open full size</a></p><div class="ink-acts"><button class="go" type="button" data-inksave="1">Save to my designs</button></div>';
+              const im = out.querySelector("img"); im.onerror = ()=>{ im.remove(); };
+              out._last = {idea, style, url}; }
+          }
+        }catch(err){
+          const c = err && err.code;
+          out.innerHTML = '<p class="ink-note">'+(c==="server_not_connected" ? "Higgsfield isn't connected for you. Add the Higgsfield connector in Claude, then try again." : c==="needs_reauth" ? "Higgsfield needs you to sign in again in Claude's connector settings." : c==="not_granted" ? "Higgsfield access wasn't allowed for this page." : "Higgsfield couldn't make it ("+esc(c||"error")+"). Try again in a moment.")+'</p>';
+        }
+      }
+      busy(false);
+      const sv = e.target.closest("[data-inksave]");
+    });
+    m.addEventListener("click", e=>{ const sv = e.target.closest("[data-inksave]"); if(!sv || !out._last) return; mine.push(Object.assign({ts:Date.now()}, out._last)); saveMine(); sv.textContent = "Saved ✓"; sv.disabled = true; if(S.tab==="ink") render(); });
+  }
+  document.addEventListener("click", e=>{ if(e.target.closest("[data-myink]")){ e.preventDefault(); inkModal(); } });
+  render();
+})();
+
+/* photo credits (Wikimedia Commons) and safety contacts */
+const PHOTO_CREDITS = {"tonight":{"file":"tonight.webp","title":"Bourbon Street at night, New Orleans French Quarter, April 2023","author":"edenpictures","source":"https://commons.wikimedia.org/wiki/File:Bourbon_Street_at_night,_New_Orleans_French_Quarter,_April_2023.jpg","license":"CC BY 2.0"},"jazz":{"file":"jazz.webp","title":"Treme Brass Band at New Orleans Jazz Fest 2014 08","author":"kowarski","source":"https://commons.wikimedia.org/wiki/File:Treme_Brass_Band_at_New_Orleans_Jazz_Fest_2014_08.jpg","license":"CC BY 2.0"},"hidden":{"file":"hidden.webp","title":"Algiers Point New Orleans June 2016 along Patterson 01","author":"Infrogmation of New Orleans","source":"https://commons.wikimedia.org/wiki/File:Algiers_Point_New_Orleans_June_2016_along_Patterson_01.jpg","license":"CC BY 2.0"},"locals":{"file":"locals.webp","title":"Shotgun House, Irish Channel, New Orleans 01","author":"Infrogmation of New Orleans","source":"https://commons.wikimedia.org/wiki/File:Shotgun_House,_Irish_Channel,_New_Orleans_01.jpg","license":"CC BY 2.0"},"history":{"file":"history.webp","title":"St. Louis Cathedral - New Orleans Jackson Square July 2015","author":"Brandon","source":"https://commons.wikimedia.org/wiki/File:St._Louis_Cathedral_-_New_Orleans_Jackson_Square_July_2015.jpg","license":"CC BY 2.0"},"cats":{"file":"cats.webp","title":"Four Cats on porch chair, New Orleans, July 2022","author":"Bart Everson","source":"https://commons.wikimedia.org/wiki/File:Four_Cats_on_porch_chair,_New_Orleans,_July_2022.jpg","license":"CC BY 4.0"},"nature":{"file":"nature.webp","title":"City Park NOLA 4 July 2010 oak with Spanish moss","author":"Infrogmation of New Orleans","source":"https://commons.wikimedia.org/wiki/File:City_Park_NOLA_4_July_2010_oak_with_Spanish_moss.JPG","license":"CC BY-SA 3.0"},"romantic":{"file":"romantic.webp","title":"QuarterFloweryBalconies23Ap07","author":"Infrogmation of New Orleans","source":"https://commons.wikimedia.org/wiki/File:QuarterFloweryBalconies23Ap07.jpg","license":"CC BY 2.0"},"veg":{"file":"veg.webp","title":"DFC 2101 Vivid purple round eggplants piled with fresh green beans and cucumbers at a market stall","author":"PattayaPatrol","source":"https://commons.wikimedia.org/wiki/File:DFC_2101_Vivid_purple_round_eggplants_piled_with_fresh_green_beans_and_cucumbers_at_a_market_stall.jpg","license":"CC BY-SA 4.0"},"birthday":{"file":"birthday.webp","title":"Lundi Gras fireworks in New Orleans 2024-02-12 - 1","author":"Miguel Discart","source":"https://commons.wikimedia.org/wiki/File:Lundi_Gras_fireworks_in_New_Orleans_2024-02-12_-_1.jpg","license":"CC BY-SA 2.0"},"photo":{"file":"photo.webp","title":"RoyalStreetBywaterColorfulHouses","author":"Infrogmation of New Orleans","source":"https://commons.wikimedia.org/wiki/File:RoyalStreetBywaterColorfulHouses.jpg","license":"CC BY-SA 3.0"},"ink":{"file":"ink.webp","title":"Tattoo Flash SAAM-1998.84.50A 1","author":"Unknown (Smithsonian American Art Museum)","source":"https://commons.wikimedia.org/wiki/File:Tattoo_Flash_SAAM-1998.84.50A_1.jpg","license":"CC0"},"river":{"file":"river.webp","title":"Steamboat Natchez. New Orleans. (48759732042)","author":"Bernard Spragg. NZ","source":"https://commons.wikimedia.org/wiki/File:Steamboat_Natchez._New_Orleans._(48759732042).jpg","license":"CC0"},"daytrips":{"file":"daytrips.webp","title":"Oak Alley Plantation, Louisiana - Big Oaks, February 2023","author":"Jeff Ruane","source":"https://commons.wikimedia.org/wiki/File:Oak_Alley_Plantation,_Louisiana_-_Big_Oaks,_February_2023.jpg","license":"CC BY 2.0"},"tattoo":{"file":"tattoo.webp","title":"Italian-tattoo-artist-at-work","author":"Technopop.tattoo","source":"https://commons.wikimedia.org/wiki/File:Italian-tattoo-artist-at-work.jpg","license":"CC BY-SA 4.0"}};
+var SAFE_CONTACTS = {"groups":[{"title":"Emergency","items":[{"name":"Police / Fire / EMS emergency","phone":"911","tel":"911","note":"Life-threatening emergencies, crimes in progress. Also reaches the NOPD Mobile Crisis Intervention Unit.","src":"nola.gov NOPD contact page + ready.nola.gov, checked Oct 11 2026"},{"name":"Poison Control","phone":"1-800-222-1222","tel":"18002221222","note":"Free, confidential, 24/7.","url":"https://www.poison.org","src":"poison.org, Oct 11 2026"}]},{"title":"Medical","items":[{"name":"University Medical Center New Orleans - Emergency Dept","phone":"504-702-3000","tel":"5047023000","note":"2000 Canal St, 70112. ER on 2nd floor, open 24/7. Main hospital line (no direct ER number is published).","url":"https://lcmchealth.org/university-medical-center-new-orleans/locations/university-medical-center-emergency-care","src":"lcmchealth.org, Oct 11 2026"},{"name":"UMC - free sexual assault forensic exams","phone":"504-702-3931","tel":"5047023931","note":"2000 Canal St. Free forensic exams for ages 15+ (under 15: Manning Family Children's).","url":"https://ready.nola.gov/mardi-gras/safety-first-aid/","src":"ready.nola.gov (City of New Orleans), Oct 11 2026"},{"name":"LCMC Health Emergency Care Downtown (former Tulane Medical Center ER)","phone":"504-988-5263","tel":"5049885263","note":"1415 Tulane Ave, 70112. Free-standing ER, open 24/7. Drop-off at emergency entrance on LaSalle St.","url":"https://lcmchealth.org/our-locations/lcmc-health-emergency-care","src":"lcmchealth.org + LA Dept of Health directory listing, Oct 11 2026"},{"name":"Ochsner Urgent Care - Warehouse District (non-emergency)","phone":"504-552-2433","tel":"5045522433","note":"900 Magazine St, 70130. Mon-Fri 8am-5pm; Sat-Sun 8am-2pm. Closest urgent care to the Quarter.","url":"https://www.ochsner.org/services/urgent-care-services","src":"ochsner.org, Oct 11 2026"},{"name":"Ochsner Urgent Care - Mid-City (later hours)","phone":"504-218-4853","tel":"5042184853","note":"4100 Canal St, 70119. Mon-Fri 8am-8pm; Sat-Sun 8am-5pm.","url":"https://www.ochsner.org/services/urgent-care-services","src":"ochsner.org, Oct 11 2026"},{"name":"Walgreens - 900 Canal St (late night, NOT 24 hours)","phone":"504-568-1271","tel":"5045681271","note":"900 Canal St, 70112. Store listed as closing at 12am. No 24-hour pharmacy could be verified near the Quarter/CBD; call to confirm pharmacy-counter hours.","url":"https://www.walgreens.com/storelocator/find.jsp","src":"walgreens.com store locator, Oct 11 2026"}]},{"title":"Police & reporting","items":[{"name":"NOPD non-emergency / file a report by phone","phone":"504-821-2222","tel":"5048212222","note":"Non-emergency police help and phone police reports.","url":"https://nola.gov/next/nopd/contact/","src":"nola.gov NOPD contact page, Oct 11 2026"},{"name":"NOPD 8th District station (French Quarter/CBD)","phone":"504-658-6080","tel":"5046586080","note":"334 Royal St, 70130. Covers French Quarter, CBD, Marigny.","url":"https://nola.gov/next/nopd/contact/","src":"nola.gov NOPD contact page (phone) + NOPD 8th District Community Policing Plan PDF on nola.gov (address), Oct 11 2026"},{"name":"NOPD online report - lost property / theft","phone":"504-658-5289","tel":"5046585289","note":"Online for lost property, theft (not auto theft), property damage. Not for emergencies, firearms, or known suspects. Phone is for questions about a filed report.","url":"https://secure.coplogic.com/dors/startreport/300011217","src":"nola.gov/file-a-police-report, Oct 11 2026"},{"name":"NOPD Central Evidence & Property (recovered items)","phone":"504-658-5550","tel":"5046585550","note":"Recovered property/evidence held by NOPD.","src":"nola.gov NOPD contact page (via search), Oct 11 2026"}]},{"title":"Crisis & support lines","items":[{"name":"988 Suicide & Crisis Lifeline","phone":"988","tel":"988","note":"Call or text 988, or chat at chat.988lifeline.org. 24/7, free, confidential.","url":"https://988lifeline.org","src":"988lifeline.org, Oct 11 2026"},{"name":"National Domestic Violence Hotline","phone":"1-800-799-7233","tel":"18007997233","note":"24/7. Or text START to 88788.","url":"https://www.thehotline.org","src":"thehotline.org, Oct 11 2026"},{"name":"RAINN National Sexual Assault Hotline","phone":"1-800-656-4673","tel":"18006564673","note":"24/7 national hotline.","url":"https://ready.nola.gov/mardi-gras/safety-first-aid/","src":"ready.nola.gov (City of New Orleans), Oct 11 2026 (rainn.org blocked fetch)"},{"name":"New Orleans Family Justice Center - 24-hour crisis line","phone":"504-866-9554","tel":"5048669554","note":"Sexual assault, domestic violence, stalking. Free; English & Spanish. 701 Loyola Ave, Suite 201.","url":"https://ready.nola.gov/mardi-gras/safety-first-aid/","src":"ready.nola.gov (City of New Orleans), Oct 11 2026"},{"name":"STAR (Sexual Trauma Awareness & Response) Hotline","phone":"1-855-435-7827","tel":"18554357827","note":"24/7 Louisiana sexual assault support (855-435-STAR).","url":"https://ready.nola.gov/mardi-gras/safety-first-aid/","src":"ready.nola.gov (City of New Orleans), Oct 11 2026"},{"name":"Louisiana 211 (VIA LINK)","phone":"211","tel":"211","note":"24/7 info & referral. Alt: 504-269-2673 or 1-800-749-2673. Text your ZIP to 898211.","url":"https://vialink.org","src":"vialink.org, Oct 11 2026"}]},{"title":"Getting around","items":[{"name":"United Cab","phone":"504-522-9771","tel":"5045229771","note":"Book a cab. 1634 Euterpe St. Also has a mobile app.","url":"https://www.unitedcabs.com","src":"unitedcabs.com, Oct 11 2026"},{"name":"RTA RideLine (bus, streetcar, ferry info)","phone":"504-248-3900","tel":"5042483900","note":"Rider info and safety concerns, daily 5am-8pm.","url":"https://www.norta.com/help-and-contacts","src":"norta.com, Oct 11 2026"}]},{"title":"Hotel & visitor help","items":[{"name":"Olivier House Hotel","phone":"504-525-8456","tel":"5045258456","note":"828 Toulouse St (at Dauphine), 70112.","url":"https://olivierhouse.com/contact/","src":"olivierhouse.com contact page, Oct 11 2026"},{"name":"New Orleans & Company (visitor info)","phone":"1-800-672-6124","tel":"18006726124","note":"Official tourism bureau, 2020 St. Charles Ave. Hours not published.","url":"https://www.neworleans.com/contact-us/","src":"neworleans.com, Oct 11 2026"},{"name":"French Quarter Visitor Center (NPS, Jean Lafitte NHP)","phone":"504-589-3882","tel":"5045893882","note":"419 Decatur St, 70130. Hours not posted on NPS site (third-party: Tue-Sat 9:30am-4:30pm); call to confirm.","url":"https://www.nps.gov/jela/planyourvisit/french-quarter-site.htm","src":"nps.gov, Oct 11 2026"}]}]}; /*SAFETY_DATA*/
+
+/* ---------- Holla Holla top picks (Meh → Meow approved), Dorothy's nudge, new Help page ---------- */
+(function(){
+  const MEOW = ["", "Meh", "It'll do", "Purr-fectly fine", "Purr-worthy", "Meow approved"];
+  const CAT = f => '<svg class="mcat'+(f?' on':'')+'" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 2.5l4.2 4.3h7.6L20 2.5v9.2a8 8 0 0 1-16 0z"/><circle cx="9" cy="12" r="1.1"/><circle cx="15" cy="12" r="1.1"/></svg>';
+  const cats = n => '<span class="mcats" role="img" aria-label="'+n+' of 5 cats, '+MEOW[n]+'">'+[1,2,3,4,5].map(i=>CAT(i<=n)).join("")+'</span>';
+  function meow(p, N){
+    const st = statusAt(p, N), why = []; let s = 0;
+    const R = (window.NOLA_RATINGS||{})[p.id];
+    if(R && R.r){ s += (R.r - 4.0) * 2.4; why.push(R.r.toFixed(1)+"★ on Google"+(R.n ? " ("+(R.n>=1000 ? (R.n/1000).toFixed(1)+"k" : R.n)+" reviews)" : "")); }
+    const di = distInfo(p);
+    if(di){ if(di.m < 600){ s += 1.1; why.push(di.txt+" from you"); } else if(di.m < 1600){ s += .5; why.push(di.txt+" from you"); } else if(di.m > 6000){ s -= .9; why.push("a ride away ("+di.txt+")"); } else why.push(di.txt+" from you"); }
+    if(st.left != null){ if(st.left < 45){ s -= 1.3; why.push("closes soon, at "+st.closeLabel); } else if(st.left > 180){ s += .4; why.push("open till "+st.closeLabel+", no rush"); } else why.push("open till "+st.closeLabel); }
+    try{ if(totalPicked().has(p.id)){ s += 1; why.push("saved to the kitchen table"); } }catch(e){}
+    try{ const must = votersOf(p.id, "must").length; if(must){ s += .6*must; why.push(must+" \"must do\" vote"+(must>1?"s":"")); } }catch(e){}
+    const hr = Math.floor(N.mins/60), has = (...c)=>c.some(x=>p.c.includes(x));
+    if(hr>=6 && hr<11 && has("coffee","eat")){ s += .8; why.push("just right for this morning"); }
+    else if(hr>=11 && hr<17 && has("eat","history","shop","nature","cats","daytrip")){ s += .5; why.push("a good afternoon pick"); }
+    else if(hr>=17 && hr<21 && has("eat","drink","jazz","river","date")){ s += .7; why.push("prime evening pick"); }
+    else if((hr>=21 || hr<2) && has("jazz","drink","party")){ s += .9; why.push("night-owl favorite"); }
+    else if(hr>=2 && hr<6 && has("party","drink")){ s += .4; why.push("still going at this hour"); }
+    const score = Math.max(1, Math.min(5, 1 + Math.round(s * 0.8)));
+    return {p, raw:s, score, why};
+  }
+  window.hollaPicks = function(){
+    const N = nolaNow(), pool = typeof hollaPool==="function" ? hollaPool() : {label:"Everywhere", list:P};
+    const list = (S.hollaTab==="map" ? P : pool.list).filter(p=>statusAt(p,N).state==="open");
+    return {label: S.hollaTab==="map" ? "Map" : pool.label, all:list.length, top:list.map(p=>meow(p,N)).sort((a,b)=>b.raw-a.raw).slice(0,5)};
+  };
+  function picksModal(){
+    const old = document.getElementById("meowpop"); if(old) old.remove();
+    const r = hollaPicks();
+    const m = document.createElement("div"); m.id = "meowpop"; m.className = "meow-modal"; m.setAttribute("role","dialog"); m.setAttribute("aria-modal","true"); m.setAttribute("aria-labelledby","meowT");
+    m.innerHTML = '<div class="meow-box"><div class="meow-hd"><div><span class="meow-eb">Holla Holla · '+esc(r.label)+'</span><h2 id="meowT">The girls\' top picks right now</h2></div><button class="meow-x" type="button" data-meowclose="1" aria-label="Close">×</button></div>'
+      + '<div class="meow-scale" aria-hidden="true"><span>Meh</span>'+cats(1).replace('mcats','mcats sm')+'<span class="arrow">→</span>'+cats(5).replace('mcats','mcats sm')+'<span>Meow approved</span></div>'
+      + (r.top.length ? '<ol class="meow-list">'+r.top.map((x,i)=>'<li><div class="meow-top"><span class="meow-rank">'+(i+1)+'</span><div class="meow-name"><b>'+esc(x.p.n)+'</b><span>'+esc(x.p.a||"")+'</span></div></div><div class="meow-score">'+cats(x.score)+'<span class="meow-lbl s'+x.score+'">'+MEOW[x.score]+'</span></div><ul class="meow-why">'+x.why.slice(0,4).map(w=>'<li>'+esc(w)+'</li>').join("")+(WHY[x.p.id]?'<li class="w">'+esc(WHY[x.p.id])+'</li>':'')+'</ul><div class="meow-acts"><button type="button" data-meowopen="'+x.p.id+'">Details</button><a href="'+mapUrl(x.p)+'" target="_blank" rel="noopener">Directions</a></div></li>').join("")+'</ol>'
+         : '<p class="meow-empty">Nothing here is open this minute, honey. Try Holla Holla from Home for the whole city.</p>')
+      + '<div class="meow-ft"><button class="go" type="button" data-meowclose="1">'+(r.all ? 'See all '+r.all+' open' : 'Close')+'</button></div><p class="meow-note">Scores weigh Google ratings, how close it is, closing time, your saves and votes, and what fits this hour.</p></div>';
+    document.body.appendChild(m);
+    m.querySelector('[data-meowclose]').focus({preventScroll:true});
+  }
+  document.addEventListener("click", e=>{
+    const c = e.target.closest("[data-meowclose]"); if(c || e.target.id==="meowpop"){ const m = document.getElementById("meowpop"); if(m) m.remove(); return; }
+    const o = e.target.closest("[data-meowopen]"); if(o){ e.preventDefault(); e.stopPropagation(); const m = document.getElementById("meowpop"); if(m) m.remove(); S.sheet = o.dataset.meowopen; render(); return; }
+    const t = e.target.closest("[data-hpicks]"); if(t){ e.preventDefault(); if(!S.holla && typeof hollaToggle==="function") hollaToggle(); else picksModal(); return; }
+  }, true);
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ const m = document.getElementById("meowpop"); if(m) m.remove(); } });
+  if(typeof hollaToggle === "function"){ const ht = hollaToggle; hollaToggle = function(){ const was = S.holla; ht.apply(this, arguments); if(!was && S.holla) setTimeout(picksModal, 250); }; }
+  if(typeof hollaHead === "function"){ const hh = hollaHead; hollaHead = function(){ return hh.apply(this, arguments).replace('</p></section>', ' <button class="holla-off" type="button" data-hpicks="1">Top picks</button></p></section>'); }; }
+
+  /* ---- Dorothy: 33 seconds on one screen ---- */
+  const DOROTHY = [
+    "What the fuck is taking you so long? Pick something. Sophia's already at the bar.",
+    "Thirty-three seconds. I've seen glaciers move faster. Tap Holla Holla and let's GO.",
+    "Honey, we are burning daylight here. Do you want the beignets or not?",
+    "I raised two children and taught high school. I know stalling when I see it. Choose."
+  ];
+  let doroOff = false; try{ doroOff = localStorage.getItem("nola-dorothy-off")==="1"; }catch(e){}
+  let doroKey = "", doroTimer = null, doroShown = {}, doroN = 0;
+  function doroArm(){
+    const key = S.tab + "|" + (location.hash||"") + "|" + (S.sheet ? (typeof S.sheet==="string" ? S.sheet : "s") : "");
+    if(key === doroKey) return;
+    doroKey = key; clearTimeout(doroTimer);
+    const old = document.getElementById("doro"); if(old) old.remove();
+    if(doroOff || doroShown[key]) return;
+    doroTimer = setTimeout(()=>doroShow(key), 33000);
+  }
+  function doroShow(key){
+    if(doroOff || key !== doroKey) return;
+    if(document.querySelector("#tour, #meowpop, .ink-modal, .ask-panel, .nola-pop")){ doroTimer = setTimeout(()=>doroShow(key), 10000); return; }
+    doroShown[key] = true;
+    const d = document.createElement("div"); d.id = "doro"; d.className = "doro"; d.setAttribute("role","alertdialog"); d.setAttribute("aria-labelledby","doroT");
+    d.innerHTML = '<span class="doro-badge" aria-hidden="true">D</span><div><p id="doroT">“'+esc(DOROTHY[doroN++ % DOROTHY.length])+'”</p><span class="doro-who">— Dorothy</span><div class="doro-acts"><button type="button" class="go" data-doro="pick">Help me pick</button><button type="button" data-doro="close">I\'m looking!</button><button type="button" class="mute" data-doro="mute">Hush, Dorothy</button></div></div>';
+    document.body.appendChild(d);
+  }
+  document.addEventListener("click", e=>{
+    const b = e.target.closest("[data-doro]"); if(!b) return; e.preventDefault();
+    const d = document.getElementById("doro"); if(d) d.remove();
+    if(b.dataset.doro==="pick"){ if(!S.holla) hollaToggle(); else picksModal(); }
+    if(b.dataset.doro==="mute"){ doroOff = true; try{ localStorage.setItem("nola-dorothy-off","1"); }catch(_){} if(typeof toast==="function") toast("Dorothy will keep her opinions to herself. Turn her back on in Help."); }
+  });
+  window.setDorothy = on => { doroOff = !on; try{ localStorage.setItem("nola-dorothy-off", on ? "0" : "1"); }catch(_){} doroKey = ""; doroArm(); };
+  window.dorothyOn = () => !doroOff;
+  const r0 = render; render = function(){ const o = r0.apply(this, arguments); setTimeout(doroArm, 0); return o; };
+  window.addEventListener("hashchange", ()=>setTimeout(doroArm, 0));
+
+  /* ---- photos on the Explore collection cards ---- */
+  if(typeof vExplore2 === "function"){ const ve = vExplore2; vExplore2 = function(){ return ve.apply(this, arguments).replace(/<button class="colcard" style="--cc:([^"]*)" (data-(?:col|go)="([a-z]+)")/g, (m, cc, attr, k)=>{ const key = k==="ink" ? "ink" : k==="birthday" ? "birthday" : k; return PHOTO_CREDITS[key] ? '<button class="colcard ph" style="--cc:'+cc+';--img:url(photos/'+key+'.webp)" '+attr : m; }); }; }
+
+  /* ---- Help, reorganized ---- */
+  const tel = n => String(n).replace(/[^0-9+]/g, "");
+  vHelp = function(){
+    let h = '<div class="head"><span class="eyebrow">How it works</span><h2>Help & safety</h2><p class="small muted">Emergency numbers first, then quick answers to everything else.</p></div>';
+    h += '<section class="sos"><h3>In an emergency, call <a href="tel:911">911</a></h3><p>Police, fire or ambulance. Tell them you\'re in the French Quarter and give the nearest cross street.</p><a class="sos-btn" href="tel:911">Call 911</a></section>';
+    if(SAFE_CONTACTS && SAFE_CONTACTS.groups) h += SAFE_CONTACTS.groups.map(g=>({title:g.title, items:g.items.filter(it=>(it.tel||it.phone)!=="911")})).filter(g=>g.items.length).map(g=>'<details class="help-acc safety"'+(/emergency|medical|police/i.test(g.title)?' open':'')+'><summary>'+esc(g.title)+'</summary><ul class="callist">'+g.items.map(it=>'<li><div><b>'+esc(it.name)+'</b>'+(it.note?'<span>'+esc(it.note)+'</span>':'')+'</div>'+(it.phone?'<a class="callbtn" href="tel:'+tel(it.tel||it.phone)+'">'+esc(it.phone)+'</a>':it.url?'<a class="callbtn" href="'+esc(it.url)+'" target="_blank" rel="noopener">Open</a>':'')+'</li>').join("")+'</ul></details>').join("");
+    h += '<div class="sh"><h3>I want to…</h3></div><div class="todo-grid">'
+      + '<button type="button" data-holla="1"><b>See what\'s open now</b><span>Holla Holla</span></button>'
+      + '<button type="button" data-hpicks="1"><b>Get the best picks</b><span>Meh to Meow approved</span></button>'
+      + '<button type="button" data-askfab="1"><b>Ask a question</b><span>Type or talk</span></button>'
+      + '<button type="button" data-tour="1"><b>Take the tour</b><span>'+TOURS.full.length+' quick steps</span></button>'
+      + '<button type="button" data-go="map"><b>Find my way</b><span>Map & directions</span></button>'
+      + '<button type="button" data-myink="1"><b>Design a tattoo</b><span>With AI</span></button>'
+      + '<button type="button" data-go="info"><b>Trip details</b><span>Dates, hotel, settings</span></button>'
+      + '<button type="button" data-installnow="1"><b>Install the app</b><span>Home screen</span></button></div>';
+    h += '<div class="sh"><h3>How everything works</h3></div><p class="small muted" style="margin:0 0 8px">Tap a topic to open it.</p>';
+    h += HELP.filter(s=>s[0]!=="safe").map(([k,t,items])=>'<details class="help-acc" id="help-'+k+'"><summary>'+esc(t)+'</summary><dl>'+items.map(([q,a])=>'<dt>'+esc(q)+'</dt><dd>'+a+'</dd>').join("")+'</dl></details>').join("");
+    h += '<details class="help-acc"><summary>Settings</summary><label class="doro-set"><input type="checkbox" data-dorotoggle="1"'+(dorothyOn()?' checked':'')+'> Dorothy nudges me after 33 seconds on one screen</label></details>';
+    h += '<details class="help-acc"><summary>Photo credits</summary><ul class="credits">'+Object.entries(PHOTO_CREDITS).map(([k,c])=>'<li><b>'+esc(c.title)+'</b> — '+esc(c.author)+', <a href="'+esc(c.source)+'" target="_blank" rel="noopener">'+esc(c.license)+'</a> (Wikimedia Commons)</li>').join("")+'</ul></details>';
+    h += quip("Sophia","Picture it: you read the whole guide. I'm proud of you. Now go eat a beignet.");
+    return h;
+  };
+  document.addEventListener("click", e=>{
+    if(e.target.closest("[data-askfab]")){ e.preventDefault(); const f = document.querySelector(".ask-fab"); if(f) f.click(); }
+    if(e.target.closest("[data-installnow]")){ e.preventDefault(); const b = document.querySelector(".nola-install"); if(b) b.click(); else if(typeof toast==="function") toast("Already installed, or open this in your phone's browser to install."); }
+  });
+  document.addEventListener("change", e=>{ if(e.target && e.target.dataset && e.target.dataset.dorotoggle) setDorothy(e.target.checked); });
+
+  const css = document.createElement("style");
+  css.textContent = `
+  .mcats{display:inline-flex;gap:2px;vertical-align:middle}.mcats.sm .mcat{width:14px;height:14px}
+  .mcat{width:20px;height:20px;fill:none;stroke:#B9A88F;stroke-width:1.6}.mcat circle{fill:#B9A88F;stroke:none}
+  .mcat.on{fill:#E0B65A;stroke:#7A5410}.mcat.on circle{fill:#23172C}
+  .meow-modal{position:fixed;inset:0;z-index:9400;background:rgba(20,12,28,.6);display:flex;align-items:flex-end;justify-content:center}
+  @media (min-width:700px){ .meow-modal{align-items:center} }
+  .meow-box{width:100%;max-width:520px;max-height:90vh;overflow:auto;background:#FFF8F0;color:#23172C;border-radius:20px 20px 0 0;padding:16px 16px 12px;font:400 .95rem/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  @media (min-width:700px){ .meow-box{border-radius:20px} }
+  .meow-hd{display:flex;align-items:flex-start;gap:8px}.meow-hd h2{margin:2px 0 6px;font:700 1.25rem Georgia,serif;color:#23172C}
+  .meow-eb{font:700 .72rem ui-monospace,Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;color:#A8322D}
+  .meow-x{all:unset;cursor:pointer;margin-left:auto;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;font-size:1.4rem;color:#23172C}
+  .meow-scale{display:flex;align-items:center;gap:6px;font-size:.75rem;font-weight:700;color:#5A4A66;margin:0 0 10px;flex-wrap:wrap}.meow-scale .arrow{opacity:.6}
+  .meow-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+  .meow-list>li{background:#fff;border:1px solid #E3D6C6;border-radius:14px;padding:12px}
+  .meow-top{display:flex;align-items:center;gap:10px}.meow-rank{width:28px;height:28px;border-radius:50%;background:#23172C;color:#E0B65A;display:grid;place-items:center;font-weight:800;flex:none}
+  .meow-name b{display:block;font:700 1.02rem Georgia,serif;color:#23172C}.meow-name span{font-size:.78rem;color:#5A4A66}
+  .meow-score{display:flex;align-items:center;gap:8px;margin:8px 0 4px;flex-wrap:wrap}
+  .meow-lbl{font-weight:800;font-size:.85rem;padding:2px 10px;border-radius:999px;background:#F3E6D3;color:#23172C}.meow-lbl.s5{background:#E0B65A}.meow-lbl.s4{background:#F0D48E}.meow-lbl.s1{background:#E8E0E8}
+  .meow-why{margin:4px 0 8px;padding-left:18px;font-size:.85rem;color:#3A2C44}.meow-why li.w{list-style:none;margin-left:-18px;font-style:italic;margin-top:4px}
+  .meow-acts{display:flex;gap:8px;flex-wrap:wrap}.meow-acts button,.meow-acts a{all:unset;cursor:pointer;font-weight:800;font-size:.85rem;padding:7px 14px;border-radius:999px;border:1px solid #23172C;color:#23172C;background:#fff}
+  .meow-acts a{background:#23172C;color:#F6EBDD}
+  .meow-ft{display:flex;justify-content:center;margin-top:12px}.meow-ft .go{all:unset;cursor:pointer;background:#A8322D;color:#fff;font-weight:800;padding:10px 20px;border-radius:999px}
+  .meow-note{font-size:.72rem;color:#5A4A66;text-align:center;margin:8px 0 0}.meow-empty{padding:10px 0}
+  .doro{position:fixed;left:12px;right:12px;bottom:calc(150px + env(safe-area-inset-bottom,0px));z-index:9300;max-width:420px;margin:0 auto;display:flex;gap:12px;background:#FFF8F0;color:#23172C;border:2px solid #23172C;border-left:8px solid #B48AF0;border-radius:18px;padding:14px;box-shadow:0 18px 50px rgba(20,12,28,.45);font:400 .95rem/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;animation:nolaPop .25s ease-out}
+  .doro p{margin:0;font:italic 600 1.05rem/1.35 Georgia,serif;color:#23172C}.doro-who{font:600 .75rem ui-monospace,Consolas,monospace;color:#5A4A66}
+  .doro-badge{width:40px;height:40px;flex:none;border-radius:50%;background:#B48AF0;color:#23172C;display:grid;place-items:center;font:italic 800 1.2rem Georgia,serif}
+  .doro-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.doro-acts button{all:unset;cursor:pointer;font-weight:800;font-size:.82rem;padding:7px 12px;border-radius:999px;border:1px solid #23172C;color:#23172C;background:#fff}
+  .doro-acts .go{background:#23172C;color:#F6EBDD}.doro-acts .mute{border-color:transparent;text-decoration:underline;padding:7px 4px}
+  .colcard.ph{background:linear-gradient(180deg,rgba(20,12,28,.05) 0%,rgba(20,12,28,.55) 45%,rgba(20,12,28,.92) 100%),var(--img) center/cover no-repeat,#23172C;color:#fff;min-height:150px}
+  .colcard.ph::before{display:none}.colcard.ph b,.colcard.ph span{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}.colcard.ph .n2{color:#FFE2A8}
+  .sos{background:#A8322D;color:#fff;border-radius:18px;padding:16px;margin:4px 0 12px}.sos h3{margin:0 0 4px;color:#fff;font-size:1.2rem}.sos h3 a{color:#fff}.sos p{margin:0 0 10px;color:#fff;opacity:.95}
+  .sos-btn{display:inline-flex;align-items:center;min-height:44px;padding:0 22px;border-radius:999px;background:#fff;color:#A8322D;font-weight:900;text-decoration:none;font-size:1.05rem}
+  .help-acc{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin:8px 0;overflow:hidden}
+  .help-acc>summary{cursor:pointer;list-style:none;padding:14px 16px;font-weight:800;color:var(--ink);display:flex;justify-content:space-between;align-items:center}
+  .help-acc>summary::-webkit-details-marker{display:none}.help-acc>summary::after{content:"+";font-size:1.3rem;color:var(--muted)}.help-acc[open]>summary::after{content:"–"}
+  .help-acc dl{margin:0;padding:0 16px 14px}.help-acc dt{font-weight:800;color:var(--ink);margin-top:10px}.help-acc dd{margin:3px 0 0;color:var(--ink);opacity:.92;line-height:1.5}
+  .help-acc.safety{border-left:5px solid #A8322D}
+  .callist{list-style:none;margin:0;padding:0 12px 12px;display:grid;gap:8px}
+  .callist li{display:flex;align-items:center;gap:10px;justify-content:space-between;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .callist b{display:block;color:var(--ink)}.callist span{display:block;font-size:.8rem;color:var(--muted)}
+  .callbtn{flex:none;display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border-radius:999px;background:#23172C;color:#F6EBDD;font-weight:800;text-decoration:none;font-family:ui-monospace,Consolas,monospace;font-size:.85rem}
+  :root[data-mode="night"] .callbtn{background:#E0B65A;color:#23172C}
+  .todo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}@media (min-width:720px){ .todo-grid{grid-template-columns:repeat(4,1fr)} }
+  .todo-grid button{all:unset;cursor:pointer;display:grid;gap:2px;padding:12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+  .todo-grid button b{font-size:.92rem}.todo-grid button span{font-size:.75rem;color:var(--muted)}.todo-grid button:focus-visible{outline:3px solid #E0B65A}
+  .doro-set{display:flex;gap:8px;align-items:center;padding:0 16px 14px;color:var(--ink)}
+  .credits{margin:0;padding:0 16px 14px 32px;font-size:.82rem;color:var(--ink)}.credits a{color:var(--ink)}
+  `;
+  document.head.appendChild(css);
+  render();
+})();
+
+/* ---------- red / yellow / green safety rating for every place (night-walking guidance from the map's zones) ---------- */
+(function(){
+  if(typeof SAFETY === "undefined" || typeof coordOf !== "function") return;
+  const RANK = {green:1, yellow:2, red:3};
+  const LABEL = {green:"Safe to walk", yellow:"Use caution at night", red:"Take a car at night"};
+  function inPoly(lat, lon, poly){ let inside = false; for(let i = 0, j = poly.length - 1; i < poly.length; j = i++){ const [yi, xi] = poly[i], [yj, xj] = poly[j]; if(((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / ((yj - yi) || 1e-12) + xi)) inside = !inside; } return inside; }
+  const cache = {};
+  window.safetyOf = function(p){
+    if(!p) return null; if(cache[p.id]) return cache[p.id];
+    const c = coordOf(p); let lv = null, zone = null;
+    /* where zones overlap, the smallest (most specific) zone wins */
+    const area = poly => Math.abs(poly.reduce((acc, [y1, x1], i) => { const [y2, x2] = poly[(i + 1) % poly.length]; return acc + x1 * y2 - x2 * y1; }, 0)) / 2;
+    let best = Infinity; if(c) SAFETY.forEach(([l, nm, poly])=>{ if(inPoly(c[0], c[1], poly)){ const A = area(poly); if(A < best){ best = A; lv = l; zone = nm; } } });
+    const FIX = {palmpine:["yellow","Rampart St edge of the Quarter"], soileddove:["yellow","Rampart St edge of the Quarter"]};
+    if(FIX[p.id]){ lv = FIX[p.id][0]; zone = FIX[p.id][1]; }
+    let why;
+    if(lv) why = zone + ". " + SAFE_TXT[lv];
+    else if(p.c.includes("river")) { lv = "green"; why = "A staffed riverboat or ferry from the French Quarter riverfront. Walk to the dock along busy, well-lit Decatur St."; }
+    else if((p.d||0) >= 15 || p.c.includes("daytrip")) { lv = "green"; why = "An out-of-town daytime trip by car or tour van. Low risk; plan to be back before dark."; }
+    else { lv = "yellow"; why = "Outside the main visitor zones. Fine by day; take a rideshare after dark."; }
+    return cache[p.id] = {lv, why, label:LABEL[lv]};
+  };
+  function badge(p){ const s = safetyOf(p); return '<div class="safe-badge '+s.lv+'"><span class="sdot '+s.lv+'" aria-hidden="true"></span><div><b>'+s.label+'</b><span>'+esc(s.why)+'</span></div></div>'; }
+  function dot(p){ const s = safetyOf(p); return '<span class="sdot '+s.lv+' mini" role="img" aria-label="'+esc(s.label)+'" title="'+esc(s.label+": "+s.why)+'"></span>'; }
+  let busy = false;
+  function enhance(){
+    if(busy) return; busy = true;
+    try{
+      /* the open place panel */
+      const id = typeof S.sheet === "string" ? S.sheet : null, sh = document.querySelector("#sheet-root .sheet");
+      if(id && BY[id] && sh && !sh.querySelector(".safe-badge")){
+        const anchor = sh.querySelector(".rt") || sh.querySelector(".sheet-top") || sh.firstElementChild;
+        if(anchor) anchor.insertAdjacentHTML("afterend", badge(BY[id]));
+      }
+      /* list rows, cards and top picks get a small colored dot */
+      document.querySelectorAll(".res [data-open], .card [data-open], .meow-name, [data-meowopen]").forEach(el=>{
+        let pid = el.getAttribute("data-open") || el.getAttribute("data-meowopen");
+        let host = el;
+        if(el.classList.contains("meow-name")){ const li = el.closest("li"); const b = li && li.querySelector("[data-meowopen]"); pid = b && b.getAttribute("data-meowopen"); host = el.querySelector("b"); }
+        if(!pid || !BY[pid] || !host || host.querySelector(".sdot") || (el.hasAttribute("data-meowopen") && !el.classList.contains("meow-name"))) return;
+        if(el.closest(".sheet")) return;
+        host.insertAdjacentHTML("beforeend", " " + dot(BY[pid]));
+      });
+    }finally{ busy = false; }
+  }
+  let t = null;
+  new MutationObserver(()=>{ clearTimeout(t); t = setTimeout(enhance, 30); }).observe(document.body, {childList:true, subtree:true});
+  const css = document.createElement("style");
+  css.textContent = `
+  .sdot{display:inline-block;width:12px;height:12px;border-radius:50%;flex:none;vertical-align:middle;box-shadow:0 0 0 2px rgba(255,255,255,.85)}
+  .sdot.mini{width:10px;height:10px;margin-left:4px}
+  .sdot.green{background:#1E9E5A}.sdot.yellow{background:#E6B219}.sdot.red{background:#D23B3B}
+  .safe-badge{display:flex;gap:10px;align-items:flex-start;margin:10px 0;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface)}
+  .safe-badge .sdot{margin-top:4px;width:14px;height:14px}
+  .safe-badge b{display:block;color:var(--ink);font-size:.92rem}
+  .safe-badge span{display:block;color:var(--ink);opacity:.85;font-size:.82rem;line-height:1.4}
+  .safe-badge.green{border-left:5px solid #1E9E5A}.safe-badge.yellow{border-left:5px solid #E6B219}.safe-badge.red{border-left:5px solid #D23B3B}
+  `;
+  document.head.appendChild(css);
+  enhance();
+})();
 
 </script>
 
