@@ -660,7 +660,7 @@ button,a,.chip,.tab,.plink,.btn,.mood,.tile,.colcard,summary{touch-action:manipu
   <header class="top">
     <nav class="vswitch" aria-label="App version"><span>Version</span><a id="vlink1">V1 · Classic</a><a id="vlink2">V2</a><a id="vlink3" aria-current="page">V3 · New</a></nav>
     <div class="top-row"><div class="v2brand"><span class="kick">New Orleans · Our adventure</span><h1 class="logo2">The <b>NOLA</b> Girls</h1></div>
-      <div class="row"><button class="btn hbtn" id="modebtn" data-modebtn="1">☀ Day</button><button class="btn hbtn" data-tab="info">Trip tools</button><span class="sync" id="sync">Saved on this device</span></div></div>
+      <div class="row"><span class="sync" id="sync">Saved on this device</span></div></div>
     <div class="iron" aria-hidden="true"></div>
     <div class="tabs" role="tablist" id="tabs"></div>
   </header>
@@ -2663,8 +2663,8 @@ const HELP = [
   ["Version bar","<b>V1 · Classic</b>, <b>V2</b> and <b>V3 · New</b> are three versions of the same trip app. The gold one is where you are. Tap another to switch; your saves stay on this phone."],
   ["The logo","Tap <b>The NOLA Girls</b> any time to jump back to Home."],
   ["Install app","The round download button (or <b>Install app</b> on wider screens) puts the app on your home screen. It opens full screen and keeps working with weak signal. On iPhone: Safari → Share → Add to Home Screen."],
-  ["Day / After Dark","Switches the look between a light day theme and a dark evening theme. <b>Auto</b> flips to After Dark at sunset. Change it in Trip tools → Look and feel."],
-  ["Trip tools","Dates, hotel, the look-and-feel setting, booking info, safety tips and useful numbers."]]],
+  ["Day and evening look","The app switches to a darker evening look on its own after sunset in New Orleans. To keep it always light or always dark, open <b>Trip details & settings</b> at the top of this Help page → Look and feel."],
+  ["Trip details & settings","Dates, hotel, the look-and-feel setting, booking info, safety tips and useful numbers. Open it with the button at the top of this Help page."]]],
  ["bar","The bottom bar",[
   ["Home","Your starting point: greeting, countdown, weather, Golden Girls, quick tiles, who's leading tonight, and Surprise me."],
   ["Map","Every place on a real map, plus your location and the hotel."],
@@ -2674,7 +2674,7 @@ const HELP = [
   ["Ink","Tattoo design concepts, sketches, and shops with booking info."],
   ["? Help","This guide."]]],
  ["home","Home",[
-  ["Greeting and countdown","Shows the time in New Orleans, days until you arrive (or which trip day it is), the weather, and whether you're in Day or After Dark mode."],
+  ["Greeting and countdown","Shows the time in New Orleans, days until you arrive (or which trip day it is), and the weather."],
   ["Golden Girls banners","Dorothy, Blanche, Rose or Sophia weigh in on every screen. Tap <b>Another one</b> for a new line."],
   ["Quick tiles","<b>Today's plan</b>, <b>Near me</b> (places within about a 15-minute walk), <b>Hidden gems</b>, <b>Tonight</b>, <b>Lauren's 21st</b>, <b>NOLA Time Machine</b>, <b>Passport</b> and <b>Tattoo ideas</b>."],
   ["Who's leading tonight?","Tap a Golden Girl to see her picks: Dorothy (history and jazz), Blanche (romance and late nights), Rose (beignets, cats and swamps), Sophia (food, Voodoo and bargains). Open places come first. <b>Surprise me, [name]</b> builds an adventure in her style."],
@@ -2731,7 +2731,7 @@ const HELP = [
 function vHelp(){
   let h = '<div class="head"><span class="eyebrow">How it works</span><h2>Help & guide</h2><p class="small muted">Everything the app can do, and how to use it.</p></div>';
   h += quip("Dorothy","Read this once. Then you'll stop asking me where the map went.");
-  h += '<div class="row"><button class="btn primary" data-tour="1">Show me the 3 steps again</button></div>';
+  h += '<div class="row"><button class="btn primary" data-tour="1">Show me the 3 steps again</button><button class="btn" data-go="info">Trip details & settings</button></div>';
   h += '<nav class="help-toc" aria-label="Guide sections">'+HELP.map(([k,t])=>'<a href="#help" data-helpjump="'+k+'">'+esc(t)+'</a>').join("")+'</nav>';
   h += HELP.map(([k,t,items])=>'<section class="help-sec" id="help-'+k+'"><h3>'+esc(t)+'</h3><dl>'+items.map(([q,a])=>'<dt>'+esc(q)+'</dt><dd>'+a+'</dd>').join("")+'</dl></section>').join("");
   h += quip("Sophia","Picture it: you read the whole guide. I'm proud of you. Now go eat a beignet.");
@@ -2784,7 +2784,7 @@ function vHome(){
   const N = nolaNow(), hr = N.mins/60, greet = hr<5?"Still up":hr<12?"Good morning":hr<17?"Good afternoon":hr<22?"Good evening":"Late night";
   const ts = tripStatus(), night = document.documentElement.getAttribute("data-mode")==="night";
   let h = '<section class="hero"><span class="kick">New Orleans · Our adventure</span><h2>'+greet+', <em>NOLA Girls.</em></h2><p>A little history. A little trouble. A whole lot of New Orleans.</p>'
-    + '<div class="chips"><span class="hchip">'+esc(DOWL[N.dow])+' <b>'+fmtM(N.mins)+'</b></span>'+(ts?'<span class="hchip"><b>'+esc(ts.txt)+'</b></span>':'<button class="hchip" data-go="trip" style="background:none;cursor:pointer">Add your dates</button>')+(WX?'<span class="hchip">'+WX.temp+'° '+esc(WXL(WX.code))+'</span>':'')+'<span class="hchip">'+(night?'After Dark':'Daytime')+'</span></div></section>';
+    + '<div class="chips"><span class="hchip">'+esc(DOWL[N.dow])+' <b>'+fmtM(N.mins)+'</b></span>'+(ts?'<span class="hchip"><b>'+esc(ts.txt)+'</b></span>':'<button class="hchip" data-go="trip" style="background:none;cursor:pointer">Add your dates</button>')+(WX?'<span class="hchip">'+WX.temp+'° '+esc(WXL(WX.code))+'</span>':'')+'</div></section>';
   h += talk("home") + wxBox();
   const tiles = [["trip"+(ts&&ts.day?":"+ts.day:""),ICON.plan,"Today's plan",ts&&ts.day?"Day "+ts.day+" itinerary":"Your itinerary"],["nearme",ICON.near,"Near me","Within a 15-min walk"],["col:hidden",ICON.gem,"Hidden gems","Local discoveries"],["col:tonight",ICON.moon,"Tonight","Jazz, bars & more"]];
   h += '<div class="tiles">'+tiles.map(([go,ic,t,s])=>'<button class="tile" '+(go==="nearme"?'data-nearme="1"':'data-go="'+go+'"')+'><span class="ti">'+ic+'</span><b>'+esc(t)+'</b><span>'+esc(s)+'</span></button>').join("")+'</div>';
@@ -2837,7 +2837,7 @@ function vCol(){
 }
 
 function vTrip(){
-  return '<div class="row"><button class="btn" data-go="river">River cruise times</button><button class="btn" data-go="info">Trip tools</button><button class="btn" data-go="birthday">Lauren\'s 21st</button></div>' + vPlan();
+  return '<div class="row"><button class="btn" data-go="river">River cruise times</button><button class="btn" data-go="birthday">Lauren\'s 21st</button></div>' + vPlan();
 }
 
 /* saved: group picks, passport, journal, designs */
@@ -3019,7 +3019,7 @@ vSheet = function(){
 
 /* ---------- page addresses ----------
    #view.arg~kind.id — only letters, digits, . _ ~ - so links also work inside claude.ai. */
-const PAGE_NAMES = {help:"Help & guide", girl:"Golden Girl picks", home:"Home", map:"Map", explore:"Explore", trip:"Trip", saved:"Saved", ink:"Tattoo ideas", col:"Collection", time:"Time Machine", birthday:"Lauren's 21st", river:"River cruises", info:"Trip tools", now:"Open now", all:"All places"};
+const PAGE_NAMES = {help:"Help & guide", girl:"Golden Girl picks", home:"Home", map:"Map", explore:"Explore", trip:"Trip", saved:"Saved", ink:"Tattoo ideas", col:"Collection", time:"Time Machine", birthday:"Lauren's 21st", river:"River cruises", info:"Trip details & settings", now:"Open now", all:"All places"};
 function routeFromState(){
   let r = S.tab;
   if(S.tab==="col") r += "."+S.col;
