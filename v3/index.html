@@ -3046,6 +3046,118 @@ html body nav.vswitch.vswitch a[aria-current="page"]{background:#E0B65A;color:#2
 })();
 </script>
 
+<script>
+/* shared app kit for every version: tap the logo to go home, an "Install app" button top right, and an install pop-up */
+(function(){
+  var PUBLIC = "https://luckygoats33.github.io/nola-trip/";
+  var cur = document.querySelector('nav.vswitch a[aria-current="page"]');
+  var vn = cur ? +cur.id.replace("vlink","") : 2;
+  var web = /github\.io$|^localhost$|^127\.0\.0\.1$/.test(location.hostname);
+  var base = location.pathname.replace(/\/v[123]\/.*$/, "/").replace(/[^\/]*$/, "");
+  var standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+  var ua = navigator.userAgent || "";
+  var ios = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var android = /android/i.test(ua);
+  var KEY = "nola-install-seen-v" + vn;
+  var deferred = null;
+  function ls(k, v){ try{ if(v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }catch(e){ return null; } }
+
+  /* styles: fixed colors so it looks the same in every version and mode */
+  var css = document.createElement("style");
+  css.textContent =
+    ".nola-home{cursor:pointer;border-radius:8px}.nola-home:focus-visible{outline:3px solid #E0B65A;outline-offset:3px}" +
+    "button.nola-install{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 14px;border-radius:999px;background:#E0B65A;color:#23172C;font:800 .82rem/1.1 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;white-space:nowrap;border:1px solid #23172C;box-shadow:0 2px 0 #23172C}" +
+    "button.nola-install:hover,button.nola-install:focus-visible{background:#F0CB7A;outline:none}" +
+    "button.nola-install svg{width:16px;height:16px;flex:none}" +
+    ".nola-pop{position:fixed;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:10000;max-width:440px;margin:0 auto;background:#FFF8F0;color:#23172C;border:2px solid #23172C;border-radius:20px;box-shadow:0 18px 50px rgba(35,23,44,.35);padding:18px 18px 16px;font:400 .95rem/1.45 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;animation:nolaPop .25s ease-out}" +
+    "@keyframes nolaPop{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}" +
+    ".nola-pop h2{margin:0 0 6px;font:800 1.15rem/1.2 Georgia,'Times New Roman',serif;color:#23172C}" +
+    ".nola-pop .nola-top{display:flex;gap:12px;align-items:center;margin-bottom:6px}" +
+    ".nola-pop .nola-ico{width:48px;height:48px;border-radius:12px;background:#23172C;color:#E0B65A;display:grid;place-items:center;font:italic 800 1.2rem Georgia,serif;flex:none}" +
+    ".nola-pop p{margin:6px 0;color:#3A2C44}.nola-pop ol{margin:6px 0 4px;padding-left:22px;color:#3A2C44}.nola-pop li{margin:3px 0}" +
+    ".nola-pop b{color:#23172C}" +
+    ".nola-pop .nola-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}" +
+    ".nola-pop .nola-go{all:unset;cursor:pointer;box-sizing:border-box;min-height:44px;padding:10px 18px;border-radius:999px;background:#23172C;color:#F6EBDD;font-weight:800;text-align:center}" +
+    ".nola-pop .nola-later{all:unset;cursor:pointer;box-sizing:border-box;min-height:44px;padding:10px 16px;border-radius:999px;border:1px solid #23172C;color:#23172C;font-weight:700}" +
+    ".nola-pop .nola-go:focus-visible,.nola-pop .nola-later:focus-visible{outline:3px solid #E0B65A;outline-offset:2px}" +
+    ".nola-pop .nola-x{all:unset;cursor:pointer;position:absolute;top:8px;right:10px;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;color:#23172C;font-size:1.3rem}" +
+    "@media (max-width:420px){button.nola-install{padding:6px 11px;font-size:.78rem}}" +
+    "button.nola-install.nola-compact{padding:0;width:38px;min-height:38px;justify-content:center;font-size:0;gap:0}button.nola-install.nola-compact svg{width:18px;height:18px}";
+  document.head.appendChild(css);
+
+  /* 1. the logo takes you home in this version */
+  function goHome(){
+    try{
+      if(typeof S !== "undefined" && typeof render === "function"){
+        var h = (typeof VIEWKEYS !== "undefined" && VIEWKEYS.indexOf("home") >= 0) ? "home" : "now";
+        S.tab = h; S.sheet = null;
+        ls(vn === 3 ? "nola2-tab" : "nola-tab", h);
+        window.scrollTo(0, 0); render(); return;
+      }
+    }catch(e){}
+    location.href = web ? base + "v" + vn + "/" : location.href.split("#")[0];
+  }
+  var logo = document.querySelector("header .logo, header .logo2");
+  if(logo){
+    logo.classList.add("nola-home"); logo.setAttribute("role", "link"); logo.tabIndex = 0;
+    logo.title = "Back to the home page"; logo.setAttribute("aria-label", "The NOLA Girls, back to the home page");
+    logo.addEventListener("click", goHome);
+    logo.addEventListener("keydown", function(e){ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); goHome(); } });
+  }
+
+  /* 2. the Install app button, top right */
+  var btn = document.createElement("button");
+  btn.className = "nola-install"; btn.type = "button";
+  btn.setAttribute("aria-label", "Install app"); btn.title = "Install app";
+  btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>Install app';
+  btn.addEventListener("click", function(){ if(deferred && web){ deferred.prompt(); deferred.userChoice.finally(function(){ deferred = null; }); } else showPop(true); });
+  var row = document.querySelector("header .top-row > .row");
+  if(row && !standalone) row.insertBefore(btn, row.firstChild);
+  /* shrink to an icon when the header row runs out of room */
+  function fit(){ if(!btn.isConnected) return; btn.classList.remove("nola-compact"); var last = row.lastElementChild, r = (last && last.offsetParent ? last : row).getBoundingClientRect(); if(row.scrollWidth > row.clientWidth + 1 || r.right > document.documentElement.clientWidth - 4) btn.classList.add("nola-compact"); }
+  if(row){ fit(); addEventListener("resize", fit); setTimeout(fit, 300); }
+
+  /* 3. the install pop-up */
+  var pop = null;
+  function closePop(){ if(pop){ pop.remove(); pop = null; } ls(KEY, "1"); }
+  function showPop(fromButton){
+    if(pop || standalone) return;
+    var name = vn === 1 ? "V1 Classic" : vn === 2 ? "V2" : "V3";
+    var body, go = "";
+    if(!web){
+      body = "<p>Apps install from the public site. Open " + name + " there, then use its <b>Install app</b> button.</p>";
+      go = '<a class="nola-go" href="' + PUBLIC + "v" + vn + '/" target="_blank" rel="noopener">Open ' + name + ' to install</a>';
+    } else if(deferred){
+      body = "<p>Put the trip hub on your home screen. It opens full screen and keeps working with bad signal on the river.</p>";
+      go = '<button class="nola-go" type="button" data-nola-go="1">Install</button>';
+    } else if(ios){
+      body = "<p>Put the trip hub on your home screen:</p><ol><li>Tap <b>Share</b> (the square with an arrow) in Safari.</li><li>Scroll and tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>.</li></ol><p style=\"font-size:.85rem\">On iPhone this works in Safari. In Chrome, use the Share button at the top right.</p>";
+    } else if(android){
+      body = "<p>Put the trip hub on your home screen:</p><ol><li>Tap the <b>⋮</b> menu in Chrome.</li><li>Tap <b>Install app</b> or <b>Add to Home screen</b>.</li></ol>";
+    } else {
+      body = "<p>Install it like an app: click the <b>install icon</b> at the right end of Chrome's address bar, or open the <b>⋮</b> menu and choose <b>Cast, save and share → Install page as app</b>.</p><p style=\"font-size:.85rem\">Best on your phone: open this page there and tap Install app.</p>";
+    }
+    pop = document.createElement("div");
+    pop.className = "nola-pop"; pop.setAttribute("role", "dialog"); pop.setAttribute("aria-modal", "false"); pop.setAttribute("aria-labelledby", "nolaPopT");
+    pop.innerHTML = '<button class="nola-x" type="button" aria-label="Close">×</button><div class="nola-top"><span class="nola-ico" aria-hidden="true">GG</span><div><h2 id="nolaPopT">Get The NOLA Girls app</h2><span style="font-size:.82rem;color:#5A4A66">' + name + ' · free · no app store</span></div></div>' + body +
+      '<div class="nola-acts">' + go + '<button class="nola-later" type="button">' + (go ? "Not now" : "Got it") + '</button></div>';
+    document.body.appendChild(pop);
+    pop.querySelector(".nola-x").addEventListener("click", closePop);
+    pop.querySelector(".nola-later").addEventListener("click", closePop);
+    var g = pop.querySelector("[data-nola-go]");
+    if(g) g.addEventListener("click", function(){ var d = deferred; closePop(); if(d){ d.prompt(); d.userChoice.finally(function(){ deferred = null; }); } });
+    if(fromButton) (pop.querySelector(".nola-go") || pop.querySelector(".nola-later")).focus();
+  }
+  addEventListener("keydown", function(e){ if(e.key === "Escape" && pop) closePop(); });
+  addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); deferred = e; });
+  addEventListener("appinstalled", function(){ closePop(); btn.remove(); });
+
+  /* pop up once per version on each phone, a few seconds after opening */
+  if(web && !standalone && !ls(KEY)) setTimeout(function(){ if(!document.querySelector(".sheet.open, .sheet[open]")) showPop(false); }, 4000);
+})();
+
+</script>
+
 <script>window.NOLA_RATINGS = {"cdm":{"r":4.5,"n":46145,"mapsQuery":"Café Du Monde, 800 Decatur St, New Orleans, LA 70116"},"cafebeignet":{"r":4.4,"n":7081,"mapsQuery":"Cafe Beignet, 311 Bourbon St, New Orleans, LA 70130"},"cdmpark":{"r":4.6,"n":5275,"mapsQuery":"Café Du Monde City Park, 56 Dreyfous Dr, New Orleans, LA 70124"},"mfth":{"r":4.5,"n":1406,"mapsQuery":"Meals From the Heart Cafe, 1100 N Peters St #13, New Orleans, LA 70116"},"killer":{"r":4.4,"n":2703,"mapsQuery":"Killer PoBoys, 811 Conti St, New Orleans, LA 70112"},"palmpine":{"r":4.4,"n":682,"mapsQuery":"Palm&Pine, 308 N Rampart St, New Orleans, LA 70112"},"jewel":{"r":4.7,"n":862,"mapsQuery":"Jewel of the South, 1026 St Louis St, New Orleans, LA 70112"},"sneaky":{"r":4.7,"n":1227,"mapsQuery":"Sneaky Pickle & Bar Brine, 3200 Burgundy St, New Orleans, LA 70117"},"elysian":{"r":4.4,"n":742,"mapsQuery":"The Elysian Bar, 2317 Burgundy St, New Orleans, LA 70117"},"bayoubar":{"r":4.6,"n":410,"mapsQuery":"Bayou Bar, Pontchartrain Hotel, 2031 St Charles Ave, New Orleans, LA 70130"},"cure":{"r":4.4,"n":862,"mapsQuery":"Cure, 4905 Freret St, New Orleans, LA 70115"},"marilou":{"r":4.4,"n":697,"mapsQuery":"Salon Salon, 544 Carondelet St, New Orleans, LA 70130"},"bacchanal":{"r":4.7,"n":3750,"mapsQuery":"Bacchanal Fine Wine & Spirits, 600 Poland Ave, New Orleans, LA 70117"},"oldpoint":{"r":4.6,"n":660,"mapsQuery":"The Old Point Bar, 545 Patterson Rd, New Orleans, LA 70114"},"patobriens":{"r":4.5,"n":11016,"mapsQuery":"Pat O'Brien's, 718 St Peter St, New Orleans, LA 70116"},"cooter":{"r":4.5,"n":2346,"mapsQuery":"Cooter Brown's Tavern, 509 S Carrollton Ave, New Orleans, LA 70118"},"preshall":{"r":4.7,"n":5237,"mapsQuery":"Preservation Hall, 726 St Peter St, New Orleans, LA 70116"},"snug":{"r":4.4,"n":1968,"mapsQuery":"Snug Harbor Jazz Bistro, 626 Frenchmen St, New Orleans, LA 70116"},"dba":{"r":4.6,"n":1541,"mapsQuery":"d.b.a., 618 Frenchmen St, New Orleans, LA 70116"},"spottedcat":{"r":4.7,"n":6688,"mapsQuery":"The Spotted Cat Music Club, 623 Frenchmen St, New Orleans, LA 70116"},"fritzels":{"r":4.7,"n":4682,"mapsQuery":"Fritzel's European Jazz Pub, 733 Bourbon St, New Orleans, LA 70116"},"dewdrop":{"r":null,"n":null,"mapsQuery":"Dew Drop Jazz & Social Hall, 430 Lamarque St, Mandeville, LA 70448"},"bourbono":{"r":4.6,"n":1005,"mapsQuery":"Bourbon O Bar, 730 Bourbon St, New Orleans, LA 70116"},"razzoo":{"r":4.5,"n":933,"mapsQuery":"Razzoo Bar & Patio, 511 Bourbon St, New Orleans, LA 70130"},"bourbonheat":{"r":4.6,"n":1467,"mapsQuery":"Bourbon Heat, 711 Bourbon St, New Orleans, LA 70116"},"bearcat":{"r":null,"n":null,"mapsQuery":"Bearcat Cafe, 2521 Jena St, New Orleans, LA 70115"},"republic":{"r":4.3,"n":853,"mapsQuery":"Republic NOLA, 828 S Peters St, New Orleans, LA"},"grrlspot":{"r":null,"n":null,"mapsQuery":"GrrlSpot New Orleans"},"soileddove":{"r":null,"n":null,"mapsQuery":"Palm&Pine, 308 N Rampart St, New Orleans, LA"},"stl1":{"r":4.9,"n":4304,"mapsQuery":"St. Louis Cemetery No. 1 Official Tour, 501 Basin St, New Orleans, LA"},"anansi":{"r":null,"n":null,"mapsQuery":"Anansi's Daughters, New Orleans, LA"},"voodoo":{"r":3.9,"n":4173,"mapsQuery":"New Orleans Historic Voodoo Museum, 724 Dumaine St, New Orleans, LA"},"death":{"r":4.1,"n":7562,"mapsQuery":"Museum of Death, 227 Dauphine St, New Orleans, LA"},"hnoc":{"r":4.8,"n":782,"mapsQuery":"The Historic New Orleans Collection, 520 Royal St, New Orleans, LA"},"garden":{"r":null,"n":null,"mapsQuery":"Garden District, New Orleans, LA"},"chalmette":{"r":4.6,"n":1630,"mapsQuery":"Chalmette Battlefield, 1 Battlefield Rd, Chalmette, LA"},"whitney":{"r":4.8,"n":5068,"mapsQuery":"Whitney Plantation, 5099 LA-18, Edgard, LA"},"laura":{"r":4.7,"n":3289,"mapsQuery":"Laura Plantation, 2247 LA-18, Vacherie, LA"},"destrehan":{"r":4.7,"n":2093,"mapsQuery":"Destrehan Plantation, 13034 River Rd, Destrehan, LA"},"oakalley":{"r":4.5,"n":10322,"mapsQuery":"Oak Alley Plantation, 3645 LA-18, Vacherie, LA"},"bottomcup":{"r":4.1,"n":412,"mapsQuery":"Bottom of the Cup Tea Room, 327 Chartres St, New Orleans, LA"},"abitamystery":{"r":4.6,"n":818,"mapsQuery":"Abita Mystery House, 22275 LA-36, Abita Springs, LA"},"royal":{"r":null,"n":null,"mapsQuery":"Royal Street, French Quarter, New Orleans, LA"},"msrau":{"r":4.9,"n":571,"mapsQuery":"M.S. Rau, 622 Royal St, New Orleans, LA"},"moss":{"r":4.9,"n":8,"mapsQuery":"Moss Antiques, 411 Royal St, New Orleans, LA"},"magazine":{"r":null,"n":null,"mapsQuery":"Magazine Street, New Orleans, LA"},"ponchatoula":{"r":null,"n":null,"mapsQuery":"Ponchatoula, LA antique district"},"cruise-eve":{"r":4.4,"n":4538,"mapsQuery":"Steamboat NATCHEZ, 400 Toulouse St, New Orleans, LA"},"cruise-day":{"r":4.4,"n":4538,"mapsQuery":"Steamboat NATCHEZ, 400 Toulouse St, New Orleans, LA"},"cruise-75":{"r":4.4,"n":4538,"mapsQuery":"Steamboat NATCHEZ, 400 Toulouse St, New Orleans, LA"},"cq-eve":{"r":4.4,"n":2979,"mapsQuery":"Paddlewheeler Creole Queen, 1 Poydras St, New Orleans, LA"},"cq-battle":{"r":4.4,"n":2979,"mapsQuery":"Paddlewheeler Creole Queen, 1 Poydras St, New Orleans, LA"},"cq-brunch":{"r":4.4,"n":2979,"mapsQuery":"Paddlewheeler Creole Queen, 1 Poydras St, New Orleans, LA 70130"},"cq-halloween":{"r":4.4,"n":2979,"mapsQuery":"Paddlewheeler Creole Queen, 1 Poydras St, New Orleans, LA 70130"},"ferry":{"r":4.1,"n":453,"mapsQuery":"Algiers Ferry Terminal, Algiers Point, New Orleans, LA 70114"},"barataria":{"r":4.7,"n":842,"mapsQuery":"Barataria Preserve Visitor Center, 6588 Barataria Blvd, Marrero, LA 70072"},"cajunpride":{"r":4.7,"n":4436,"mapsQuery":"Cajun Pride Swamp Tours, 110 Frenier Rd, LaPlace, LA 70068"},"honeyisland":{"r":4.9,"n":5221,"mapsQuery":"Honey Island Swamp Tours, 55345 US-90, Slidell, LA 70461"},"fontainebleau":{"r":4.7,"n":4050,"mapsQuery":"Fontainebleau State Park, 62883 LA-1089, Mandeville, LA 70448"},"covington":{"r":null,"n":null,"mapsQuery":"Downtown Covington, LA"},"abitabrew":{"r":4.7,"n":547,"mapsQuery":"Abita Brewing Company, 21084 LA-36, Covington, LA 70433"},"lakefront":{"r":null,"n":null,"mapsQuery":"Lakeshore Dr, New Orleans, LA"},"gretna":{"r":null,"n":null,"mapsQuery":"Old Gretna, Gretna, LA"},"baystlouis":{"r":null,"n":null,"mapsQuery":"Bay St. Louis, MS"},"superdome":{"r":4.6,"n":14013,"mapsQuery":"Caesars Superdome, 1500 Sugar Bowl Dr, New Orleans, LA 70112"},"tat-downtown":{"r":null,"n":null,"mapsQuery":"Downtown Tattoos & Piercings, 501 Frenchmen St, New Orleans, LA 70116"},"tat-hohw-frenchmen":{"r":null,"n":null,"mapsQuery":"Hell or High Water Tattoo, 610 Frenchmen St, New Orleans, LA 70116"},"tat-toughlove":{"r":null,"n":null,"mapsQuery":"Tough Love Tattoo, 1027 Touro St, New Orleans, LA 70116"},"tat-bigeasy":{"r":null,"n":null,"mapsQuery":"Big Easy Tattoo & Co., 1024 Canal St, New Orleans, LA 70112"},"tat-hohw-magazine":{"r":null,"n":null,"mapsQuery":"Hell or High Water Tattoo & Piercing, 308 Magazine St, New Orleans, LA 70130"},"tat-luckydagger":{"r":null,"n":null,"mapsQuery":"Lucky Dagger Tattoo, 1124 St Charles Ave, New Orleans, LA 70130"},"tat-idlehands":{"r":null,"n":null,"mapsQuery":"Idle Hands Tattoo Parlour, 1815 Magazine St, New Orleans, LA 70130"},"tat-tattooagogo":{"r":null,"n":null,"mapsQuery":"Tattooagogo, 4421 Magazine St, New Orleans, LA 70115"},"tat-goodwork":{"r":null,"n":null,"mapsQuery":"Good Work Tattoos, 3916 St Claude Ave, New Orleans, LA 70117"},"tat-catahoula":{"r":null,"n":null,"mapsQuery":"Catahoula Tattoo & Gallery, 929 N Broad St, New Orleans, LA 70119"},"backstreet-museum":{"r":4.7,"n":410,"mapsQuery":"Backstreet Cultural Museum, 1531 St Philip St, New Orleans, LA 70116"},"pharmacy-museum":{"r":4.7,"n":2796,"mapsQuery":"New Orleans Pharmacy Museum, 514 Chartres St, New Orleans, LA 70130"},"musee-fpc":{"r":4.9,"n":240,"mapsQuery":"Le Musée de f.p.c., 2336 Esplanade Ave, New Orleans, LA 70119"},"congo-square":{"r":4.6,"n":1997,"mapsQuery":"Congo Square, 701 N Rampart St, New Orleans, LA 70116"},"cabildo":{"r":4.5,"n":590,"mapsQuery":"The Cabildo Museum, 701 Chartres St, New Orleans, LA 70130"},"pitot-house":{"r":4.7,"n":125,"mapsQuery":"The Pitot House Museum, 1440 Moss St, New Orleans, LA 70119"},"couturie-forest":{"r":4.7,"n":572,"mapsQuery":"Couturie Forest, 1009 Harrison Ave, New Orleans, LA 70124"},"besthoff-sculpture-garden":{"r":4.9,"n":1521,"mapsQuery":"Sydney and Walda Besthoff Sculpture Garden, 1 Collins Diboll Cir, New Orleans, LA 70124"},"botanical-garden":{"r":4.7,"n":1608,"mapsQuery":"New Orleans Botanical Garden, 5 Victory Ave, New Orleans, LA 70119"},"bayou-st-john":{"r":null,"n":null,"mapsQuery":"Bayou St. John, Moss St & Dumaine St, New Orleans, LA 70119"},"crescent-park":{"r":4.6,"n":1513,"mapsQuery":"Crescent Park, 2300 N Peters St, New Orleans, LA 70117"},"audubon-park":{"r":4.7,"n":8957,"mapsQuery":"Audubon Park, 6500 Magazine St, New Orleans, LA 70118"},"irish-channel":{"r":null,"n":null,"mapsQuery":"Magazine St & Washington Ave, New Orleans, LA 70130"},"algiers-point":{"r":null,"n":null,"mapsQuery":"Algiers Point Ferry Terminal, New Orleans, LA 70114"},"freret-street":{"r":null,"n":null,"mapsQuery":"Freret St & Jena St, New Orleans, LA 70115"},"st-claude-arts":{"r":null,"n":null,"mapsQuery":"St Claude Ave & Press St, New Orleans, LA 70117"},"frenchmen-street":{"r":null,"n":null,"mapsQuery":"Frenchmen St, New Orleans, LA 70116"},"nola-cat-lounge":{"r":4.9,"n":55,"mapsQuery":"NOLA Cat Lounge, 1029 Oretha Castle Haley Blvd Ste A-2, New Orleans, LA 70113"},"big-easy-animal-rescue":{"r":4.7,"n":222,"mapsQuery":"Big Easy Animal Rescue & Pet Shop, 839 Spain St, New Orleans, LA 70117"},"spaymart-thrift":{"r":4.6,"n":14,"mapsQuery":"SpayMart Thrift Store and Adoption Center, 8911 Jefferson Hwy, River Ridge, LA 70123"},"la-spca":{"r":4.5,"n":1845,"mapsQuery":"Louisiana SPCA, 1700 Mardi Gras Blvd, New Orleans, LA 70114"},"jackson-square-photo":{"r":4.7,"n":28567,"mapsQuery":"Jackson Square, 700 Decatur St, New Orleans, LA 70116"},"royal-street-balconies":{"r":null,"n":null,"mapsQuery":"Royal St & Dumaine St, New Orleans, LA 70116"},"rusty-rainbow-bridge":{"r":4.7,"n":53,"mapsQuery":"Rusty Rainbow Bridge, 3230 Chartres St, New Orleans, LA 70117"},"bywater-colorful-houses":{"r":null,"n":null,"mapsQuery":"Dauphine St & Piety St, New Orleans, LA 70117"},"armstrong-park-arch":{"r":4.5,"n":7436,"mapsQuery":"Louis Armstrong Park, 701 N Rampart St, New Orleans, LA 70116"}};</script>
 <script>
 /* Five-cat ratings + Google profile links, added to every place card, row, and details panel.
