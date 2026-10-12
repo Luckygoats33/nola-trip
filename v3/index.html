@@ -2896,7 +2896,8 @@ document.addEventListener("click", e=>{
   const g = b.dataset.tourgo; if(g==="next") tourShow(tourStep+1); else if(g==="back") tourShow(tourStep-1); else tourEnd();
 }, true);
 document.addEventListener("keydown", e=>{ if(e.key==="Escape" && tourStep>=0) tourEnd(); });
-let tourSeen = false; try{ tourSeen = !!localStorage.getItem("nola3-tour-done"); }catch(e){ tourSeen = true; }
+/* the walkthrough is for first-time visitors only: anyone who has used the app before never sees it again */
+let tourSeen = false; try{ tourSeen = !!(localStorage.getItem("nola3-tour-done") || localStorage.getItem("nola-visited") || localStorage.getItem("nola2-tab") || localStorage.getItem("nola-tab")); localStorage.setItem("nola-visited", "1"); if(!tourSeen) localStorage.setItem("nola3-tour-done", "1"); }catch(e){ tourSeen = true; }
 if(!tourSeen) setTimeout(()=>{ if(!S.sheet && tourStep<0 && S.tab==="home" && location.hash!=="#tour") tourShow(0, "quick"); }, 900);
 if(location.hash==="#tour") setTimeout(()=>tourShow(0, "full"), 700);
 else if(!tourSeen && location.hash==="") {}
@@ -4059,6 +4060,7 @@ html body nav.vswitch.vswitch{display:none!important}
     } else {
       body = "<p>Install it like an app: click the <b>install icon</b> at the right end of Chrome's address bar, or open the <b>⋮</b> menu and choose <b>Cast, save and share → Install page as app</b>.</p><p style=\"font-size:.85rem\">Best on your phone: open this page there and tap Install app.</p>";
     }
+    if(!fromButton) ls(KEY, "1");
     pop = document.createElement("div");
     pop.className = "nola-pop"; pop.setAttribute("role", "dialog"); pop.setAttribute("aria-modal", "false"); pop.setAttribute("aria-labelledby", "nolaPopT");
     pop.innerHTML = '<button class="nola-x" type="button" aria-label="Close">×</button><div class="nola-top"><span class="nola-ico" aria-hidden="true">GG</span><div><h2 id="nolaPopT">Get The NOLA Girls app</h2><span style="font-size:.82rem;color:#5A4A66">One app with V1, V2 and V3 · free · no app store</span></div></div>' + body +
@@ -4075,7 +4077,9 @@ html body nav.vswitch.vswitch{display:none!important}
   addEventListener("appinstalled", function(){ closePop(); btn.remove(); });
 
   /* pop up once per version on each phone, a few seconds after opening */
-  if(web && !standalone && !ls(KEY)) setTimeout(function(){ if(!document.querySelector(".sheet.open, .sheet[open], #tour")) showPop(false); }, 4000);
+  /* the install pop-up is for first-time visitors only, and counts as seen as soon as it shows */
+  const firstVisit = !ls("nola-seen-once") && !ls(KEY); ls("nola-seen-once", "1");
+  if(web && !standalone && firstVisit) setTimeout(function(){ if(!document.querySelector(".sheet.open, .sheet[open], #tour")) showPop(false); }, 4000);
 })();
 
 </script>

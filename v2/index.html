@@ -2280,6 +2280,7 @@ html body nav.vswitch.vswitch{display:none!important}
     } else {
       body = "<p>Install it like an app: click the <b>install icon</b> at the right end of Chrome's address bar, or open the <b>⋮</b> menu and choose <b>Cast, save and share → Install page as app</b>.</p><p style=\"font-size:.85rem\">Best on your phone: open this page there and tap Install app.</p>";
     }
+    if(!fromButton) ls(KEY, "1");
     pop = document.createElement("div");
     pop.className = "nola-pop"; pop.setAttribute("role", "dialog"); pop.setAttribute("aria-modal", "false"); pop.setAttribute("aria-labelledby", "nolaPopT");
     pop.innerHTML = '<button class="nola-x" type="button" aria-label="Close">×</button><div class="nola-top"><span class="nola-ico" aria-hidden="true">GG</span><div><h2 id="nolaPopT">Get The NOLA Girls app</h2><span style="font-size:.82rem;color:#5A4A66">One app with V1, V2 and V3 · free · no app store</span></div></div>' + body +
@@ -2296,7 +2297,9 @@ html body nav.vswitch.vswitch{display:none!important}
   addEventListener("appinstalled", function(){ closePop(); btn.remove(); });
 
   /* pop up once per version on each phone, a few seconds after opening */
-  if(web && !standalone && !ls(KEY)) setTimeout(function(){ if(!document.querySelector(".sheet.open, .sheet[open], #tour")) showPop(false); }, 4000);
+  /* the install pop-up is for first-time visitors only, and counts as seen as soon as it shows */
+  const firstVisit = !ls("nola-seen-once") && !ls(KEY); ls("nola-seen-once", "1");
+  if(web && !standalone && firstVisit) setTimeout(function(){ if(!document.querySelector(".sheet.open, .sheet[open], #tour")) showPop(false); }, 4000);
 })();
 
 </script>
