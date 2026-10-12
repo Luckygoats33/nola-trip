@@ -1282,7 +1282,9 @@ function faces(ids){
     return '<img alt="" src="'+esc(pr.avatarUrl)+'" title="'+esc(pr.name||"Someone")+'">';
   }).join("") + '</span>';
 }
-function cakeBtn(p){
+function cakeBtn(p){ return cakeBtnBase(p) + (p && typeof BY !== "undefined" && BY[p.id] ? placeMenuBtn(p) : ""); }
+function placeMenuBtn(p){ return '<button type="button" class="pmenu-btn" data-pmenu="'+p.id+'" aria-haspopup="menu" aria-expanded="false" aria-label="More options: '+esc(p.n)+'" title="More options"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>'; }
+function cakeBtnBase(p){
   const mine = myPicks().has(p.id), who = pickersOf(p.id);
   return '<button class="cakebtn" data-heart="'+p.id+'" aria-pressed="'+mine+'" aria-label="'+(mine?"Remove from":"Save to")+' the kitchen table: '+esc(p.n)+'" title="'+(mine?"On the kitchen table":"Save to the kitchen table")+'">'+CAKE+'<span>'+(who.length||"Save")+'</span>'+(shared?faces(who):"")+'</button>';
 }
@@ -1906,6 +1908,7 @@ function vNext2(W){
 }
 
 /* ---------- real map (Leaflet); falls back to the sketch map when tiles can't load ---------- */
+const RADAR = {green:"#12C94B", yellow:"#FFD000", red:"#FF2A2A"};
 let LMAP=null, LCL=null, LZONES=null, LME=null, mapEl=null, tileOk=false, tileErr=0, LDARK=null;
 const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888";
 const mapAvailable = () => !!(window.L && window.L.map) && !S.noTiles;
@@ -1969,8 +1972,9 @@ function updateMarkers(){
   });
   LZONES.clearLayers();
   if(S.mapSafety){
-    const col = {green:cssVar("--safe"), yellow:cssVar("--mid"), red:cssVar("--risk")};
-    SAFETY.forEach(([lv,nm,poly])=>{ L.polygon(poly, {color:col[lv], weight:1, fillColor:col[lv], fillOpacity:.14, dashArray:"4 4", interactive:true}).bindTooltip(nm+": "+SAFE_TXT[lv], {sticky:true}).addTo(LZONES); });
+    const col = RADAR;
+    const order = {green:0, yellow:1, red:2};
+    SAFETY.slice().sort((a,b)=>order[a[0]]-order[b[0]]).forEach(([lv,nm,poly])=>{ L.polygon(poly, {stroke:true, color:col[lv], weight:14, opacity:.22, fill:false, interactive:false}).addTo(LZONES); L.polygon(poly, {color:col[lv], weight:2, opacity:.95, fillColor:col[lv], fillOpacity:.42, interactive:true, className:"radar-zone"}).bindTooltip(({green:"Safe",yellow:"Use caution",red:"Not safe at night"})[lv]+" · "+nm+": "+SAFE_TXT[lv], {sticky:true}).addTo(LZONES); });
     if(!LMAP.hasLayer(LZONES)) LZONES.addTo(LMAP);
   } else if(LMAP.hasLayer(LZONES)) LMAP.removeLayer(LZONES);
   LME.clearLayers();
@@ -2750,7 +2754,7 @@ const ICON = {
  home:'<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>'
 };
 TAB_ICON.home = ICON.home; TAB_ICON.trip = TAB_ICON.plan;
-TABS.splice(0, TABS.length, ["home","Home"],["map","Map"],["explore","Explore"],["trip","Trip"],["saved","Saved"],["ink","Ink"]);
+TABS.splice(0, TABS.length, ["home","Home"],["map","Map"],["explore","Explore"],["saved","Saved"],["ink","Ink"]);
 /* ---------- help: the ? tab with the full guide, and a 3-step walkthrough on first visit ---------- */
 TAB_ICON.help = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.8-2.5 2.3-2.5 4"/><path d="M12 17.2v.3"/></svg>';
 TABS.push(["help","Help"]);
@@ -2769,8 +2773,7 @@ const HELP = [
   ["Home","Your starting point: greeting, countdown, weather, Golden Girls, quick tiles, who's leading tonight, and Surprise me."],
   ["Map","Every place on a real map, plus your location and the hotel."],
   ["Explore","Search and fifteen hand-picked collections."],
-  ["Trip","The day-by-day plan you can edit, with river cruise times."],
-  ["Saved","The kitchen table: everyone's saves and votes, saved tattoo designs, and your passport of visited places. The number badge counts saved places."],
+  ["Saved","Your <b>Trip plan</b> (the day-by-day plan you can edit, with river cruise times) is the first tab here. Also the kitchen table: everyone's saves and votes, saved tattoo designs, and your passport of visited places. The number badge counts saved places."],
   ["Ink","Tattoo design concepts, sketches, and shops with booking info."],
   ["? Help","This guide."]]],
  ["home","Home",[
@@ -2903,7 +2906,7 @@ if(location.hash==="#tour") setTimeout(()=>tourShow(0, "full"), 700);
 else if(!tourSeen && location.hash==="") {}
 
 VIEWKEYS.push("home","trip","col","time","birthday","all","girl","help");
-const NAV_OF = {girl:"home", col:"explore", time:"explore", birthday:"explore", river:"explore", all:"explore", now:"home", info:"home", plan:"trip"};
+const NAV_OF = {girl:"home", col:"explore", time:"explore", birthday:"explore", river:"explore", all:"explore", now:"home", info:"home", plan:"saved", trip:"saved"};
 try{ const t2 = localStorage.getItem("nola2-tab"); S.tab = VIEWKEYS.includes(t2) && !["col","girl","time","all"].includes(t2) ? t2 : "home"; }catch(e){ S.tab = "home"; }
 if(location.hash && VIEWKEYS.includes(location.hash.slice(1))) S.tab = location.hash.slice(1);
 if(S.tab==="plan") S.tab = "trip";
@@ -2970,6 +2973,7 @@ function vCol(){
   return h;
 }
 
+function vTripSaved(){ S.tab = "saved"; S.savedTab = "trip"; return vSaved2(); }
 function vTrip(){
   return '<div class="row"><button class="btn" data-go="river">River cruise times</button><button class="btn" data-go="birthday">Lauren\'s 21st</button></div>' + vPlan();
 }
@@ -2977,8 +2981,9 @@ function vTrip(){
 /* saved: group picks, passport, journal, designs */
 S.savedTab = "picks"; S.person = "all";
 function vSaved2(){
-  const tabs = [["picks","Group picks"],["passport","Passport"],["journal","Journal"],["designs","Saved designs"]];
+  const tabs = [["trip","Trip plan"],["picks","Group picks"],["passport","Passport"],["journal","Journal"],["designs","Saved designs"]];
   let h = talk("saved") + '<div class="head"><span class="eyebrow">The kitchen table</span><h2>Saved</h2></div><div class="seg" role="tablist">'+tabs.map(([k,l])=>'<button class="chip" data-savedtab="'+k+'" aria-pressed="'+(S.savedTab===k)+'">'+l+'</button>').join("")+'</div>';
+  if(S.savedTab==="trip") return h + vTrip();
   if(S.savedTab==="passport") return h + vPassport();
   if(S.savedTab==="journal") return h + vJournal();
   if(S.savedTab==="designs"){
@@ -3116,7 +3121,7 @@ function vMap2(){
   h += '<div class="mapctl"><label class="mapsel wide"><span>Show</span><select class="field" id="mapcolsel" aria-label="Which places to show on the map"><option value="all"'+(!S.mapCol||S.mapCol==="all"?' selected':'')+'>All places</option>'+COLS.filter(c=>!c.special).map(c=>'<option value="'+c.k+'"'+(S.mapCol===c.k?' selected':'')+'>'+esc(c.t)+'</option>').join("")+'</select></label></div>';
   h += '<div class="row hscroll" role="group" aria-label="Walking radius"><span class="small muted">Within</span>'+[0,5,10,15,30].map(m=>'<button class="chip" data-radius="'+m+'" aria-pressed="'+((S.radius||0)===m)+'">'+(m?m+' min walk':'Any distance')+'</button>').join("")+(S.radius&&!o?'<span class="small muted">Tap Near me first</span>':'')+'</div>';
   h += '<div class="row hscroll"><button class="chip" id="mapOpen" aria-pressed="'+!!S.mapOpen+'">Open now</button><button class="chip cake" id="mapSaved" aria-pressed="'+!!S.mapSaved+'">Saved</button><button class="chip" data-mapcolor="'+(S.mapColor==="open"?"type":"open")+'" aria-pressed="'+(S.mapColor==="open")+'">Color by open now</button><button class="chip" id="mapSafety" aria-pressed="'+!!S.mapSafety+'">Night travel tips</button></div>';
-  if(S.mapSafety) h += '<div class="safety"><h3>Getting around after dark</h3><ul class="tips"><li>Stick to busy, lit streets: Bourbon, Royal, Decatur, Frenchmen, Canal, and St. Charles.</li><li>Order rideshares from inside the bar and meet the car at the door.</li><li>Take a car for Bywater, Uptown, Tremé, and anything after midnight.</li><li>Shaded zones on the map are rough visitor advice, not crime data.</li></ul><p class="small muted">Emergency 911 · NOPD non-emergency <span class="mono">504-821-2222</span></p></div>';
+  if(S.mapSafety) h += '<div class="safety"><h3>Getting around after dark</h3><div class="radar-key" role="img" aria-label="Map colors: green is safe, yellow means use caution, red is not safe at night"><span>Safe</span><i aria-hidden="true"></i><span>Not safe</span></div><ul class="tips"><li>Stick to busy, lit streets: Bourbon, Royal, Decatur, Frenchmen, Canal, and St. Charles.</li><li>Order rideshares from inside the bar and meet the car at the door.</li><li>Take a car for Bywater, Uptown, Tremé, and anything after midnight.</li><li>Shaded zones on the map are rough visitor advice, not crime data.</li></ul><p class="small muted">Emergency 911 · NOPD non-emergency <span class="mono">504-821-2222</span></p></div>';
   h += talk("map");
   h += '<details class="cat" open><summary data-sec="maplx"><span class="t2">Places in this view</span><span class="c" id="maplistcount"></span><span class="hint">Move the map to update the list.</span></summary><div class="body" id="maplist"></div></details>';
   return h;
@@ -3262,7 +3267,7 @@ render = function(){
   const a = document.activeElement, fid = a && a.id && a.tagName==="INPUT" && a.type!=="time" && a.type!=="date" ? a.id : null;
   let caret = null; try{ caret = fid ? a.selectionStart : null; }catch(_){}
   if(S.holla && S.tab !== S.hollaTab) hollaOff();
-  const V0 = {help:vHelp, girl:vGirl, home:vHome, map:vMap2, explore:vExplore2, trip:vTrip, plan:vTrip, saved:vSaved2, col:vCol, time:vTime, ink:vInk2, birthday:vBirthday, river:vRiver, info:vInfo2, now:vHolla, all:vExplore}[S.tab] || vHome;
+  const V0 = {help:vHelp, girl:vGirl, home:vHome, map:vMap2, explore:vExplore2, trip:vTripSaved, plan:vTripSaved, saved:vSaved2, col:vCol, time:vTime, ink:vInk2, birthday:vBirthday, river:vRiver, info:vInfo2, now:vHolla, all:vExplore}[S.tab] || vHome;
   const V = S.holla ? vHollaCtx : V0;
   document.getElementById("main").innerHTML = '<section class="view">'+V()+'</section>';
   document.getElementById("sheet-root").innerHTML = S.sheet ? vSheet() : "";
@@ -3584,6 +3589,17 @@ document.addEventListener("change", e=>{
     return h;
   }
   if(typeof vInk2 === "function"){ const base = vInk2; vInk2 = function(){ const h = base.apply(this, arguments); const i = h.indexOf('<div class="head"><span class="eyebrow">Tattoo ideas</span>'); return i >= 0 ? h.slice(0, i) + myInkSection() + h.slice(i) : myInkSection() + h; }; }
+  const QD_BASES = (typeof INK !== "undefined" && INK.C) ? INK.C.flatMap(c=>c.d.map(d=>({c, d}))) : [];
+  const QD_INKS = [["#1d1d1f","Black"],["#6B3FA0","Purple"],["#B3202A","Red"],["#0F6F63","Teal"],["#9C6C14","Gold"],["#C2185B","Pink"]];
+  function qdSvg(i, words, ink){
+    const b = QD_BASES[i]; if(!b) return null;
+    const art = INK.wrap(b.d.svg(), {label:b.d.t}).replace(/var\(--surface\)/g, "#ffffff").replace('<svg ', '<svg x="0" y="0" width="400" height="400" ');
+    const w = String(words||"").trim().slice(0, 28);
+    const H = w ? 470 : 400;
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 '+H+'" role="img" aria-label="'+esc(b.d.t+(w?" with "+w:""))+'" style="color:'+ink+';background:#fff"><rect width="400" height="'+H+'" fill="#fff"/>'+art
+      + (w ? '<path d="M70 430 Q200 400 330 430" fill="none" stroke="'+ink+'" stroke-width="1.5" stroke-dasharray="2 5"/><text x="200" y="452" text-anchor="middle" font-family="Pacifico, Brush Script MT, cursive" font-size="'+(w.length>18?26:32)+'" fill="'+ink+'">'+esc(w)+'</text>' : '')
+      + '</svg>';
+  }
   function inkModal(){
     const m = document.createElement("div"); m.className = "ink-modal"; m.setAttribute("role","dialog"); m.setAttribute("aria-modal","true"); m.setAttribute("aria-label","Design your own tattoo");
     const can = !!(SAMPLE || MCP);
@@ -3592,11 +3608,49 @@ document.addEventListener("change", e=>{
       + '<textarea id="inkidea" placeholder="e.g. a tiny purple cat curled inside a crescent moon with a fleur-de-lis tail, fine line, about 2 inches"></textarea>'
       + '<div style="display:flex;gap:8px;align-items:center;margin-top:8px"><label for="inkstyle" class="ink-note" style="margin:0">Style</label><select id="inkstyle">'+STYLES.map(s=>'<option>'+s+'</option>').join("")+'</select></div>'
       + (can ? '<div class="ink-acts">'+(SAMPLE?'<button class="go" type="button" data-inkgo="claude">Sketch it with Claude</button>':'')+(MCP?'<button type="button" data-inkgo="hf">Make it with Higgsfield</button>':'')+'</div><p class="ink-note">'+(SAMPLE?'Claude draws clean line art in a few seconds (free). ':'')+(MCP?'Higgsfield makes a full image in about a minute (uses about 0.25 of your Higgsfield credits).':'')+'</p>'
-             : '<p class="ink-note" style="margin-top:12px"><b>AI design works in the claude.ai version of this app.</b> The public website can\'t reach the AI without exposing a private key.</p><div class="ink-acts"><a class="go" style="all:unset;cursor:pointer;padding:10px 16px;border-radius:999px;font-weight:800;background:#23172C;color:#F6EBDD" href="'+ART_URL+'" target="_blank" rel="noopener">Open the claude.ai version</a></div>')
+             : '<div id="inkai"><p class="ink-note" style="margin-top:12px">Checking for AI drawing…</p></div>')
+      + '<details class="qd"'+(can?'':' open')+'><summary>Quick designer · works everywhere, no AI needed</summary>'
+      + '<p class="ink-note">Pick one of our 27 hand-drawn designs, add your words, choose the ink. It\'s ready instantly.</p>'
+      + '<label class="qd-l">Start from<select id="qdbase">'+QD_BASES.map((b,i)=>'<option value="'+i+'">'+esc(b.c.n+b.d.k.toUpperCase()+' · '+b.d.t)+'</option>').join("")+'</select></label>'
+      + '<label class="qd-l">Words (optional)<input id="qdwords" maxlength="28" placeholder="e.g. Lauren & Tara"></label>'
+      + '<label class="qd-l">Ink<select id="qdink">'+QD_INKS.map(([v,l])=>'<option value="'+v+'">'+l+'</option>').join("")+'</select></label>'
+      + '<div class="ink-acts"><button class="go" type="button" data-qdgo="1">Make my design</button></div></details>'
       + '<div class="ink-out" id="inkout" aria-live="polite"></div></div>';
     document.body.appendChild(m);
     setTimeout(()=>$("#inkidea", m).focus(), 50);
     const out = $("#inkout", m);
+    /* AI may still be connecting when the designer opens: wait for it here instead of showing a dead end */
+    if(!can){
+      const slot = $("#inkai", m);
+      const usable = window.claude && typeof window.claude.use === "function";
+      const fill = () => {
+        if(!slot || !slot.isConnected) return;
+        if(SAMPLE || MCP){
+          slot.outerHTML = '<div class="ink-acts">'+(SAMPLE?'<button class="go" type="button" data-inkgo="claude">Sketch it with Claude</button>':'')+(MCP?'<button type="button" data-inkgo="hf">Make it with Higgsfield</button>':'')+'</div><p class="ink-note">'+(SAMPLE?'Claude draws clean line art in a few seconds. ':'')+(MCP?'Higgsfield makes a full image in about a minute (uses a little of your Higgsfield credit).':'')+'</p>';
+          const qd = m.querySelector("details.qd"); if(qd) qd.open = false;
+        } else {
+          slot.innerHTML = '<p class="ink-note" style="margin-top:12px"><b>AI drawing isn\'t switched on here.</b> Use the <b>Quick designer</b> below: it works everywhere.'+(usable?' Or turn on AI for this page:':'')+'</p>'+(usable?'<div class="ink-acts"><button type="button" data-inkperm="1">Turn on AI drawing</button></div>':'');
+        }
+      };
+      if(usable){
+        Promise.all([window.claude.use("sample").catch(()=>null), window.claude.use("mcp").catch(()=>null)]).then(([a,b])=>{ if(a) SAMPLE = a; if(b) MCP = b; fill(); });
+        setTimeout(()=>{ if(slot && slot.isConnected && /Checking/.test(slot.textContent)) fill(); }, 6000);
+      } else fill();
+    }
+    m.addEventListener("click", async e=>{
+      if(e.target.closest("[data-inkperm]")){
+        try{ const pm = await window.claude.use("permissions"); if(pm) await pm.manage(); }catch(_){ out.innerHTML = '<p class="ink-note">Open this page\'s Permissions menu (top right) and allow Claude and Higgsfield, then try again.</p>'; return; }
+        try{ const [a,b] = await Promise.all([window.claude.use("sample").catch(()=>null), window.claude.use("mcp").catch(()=>null)]); if(a) SAMPLE = a; if(b) MCP = b; }catch(_){}
+        const slot2 = $("#inkai", m); if(slot2 && (SAMPLE || MCP)){ slot2.outerHTML = '<div class="ink-acts">'+(SAMPLE?'<button class="go" type="button" data-inkgo="claude">Sketch it with Claude</button>':'')+(MCP?'<button type="button" data-inkgo="hf">Make it with Higgsfield</button>':'')+'</div>'; }
+        return;
+      }
+      if(!e.target.closest("[data-qdgo]")) return;
+      const svg = qdSvg(+$("#qdbase", m).value, $("#qdwords", m).value, $("#qdink", m).value);
+      if(!svg){ out.innerHTML = '<p class="ink-note">Pick a design to start from.</p>'; return; }
+      const b = QD_BASES[+$("#qdbase", m).value], words = $("#qdwords", m).value.trim();
+      out.innerHTML = svg + '<div class="ink-acts"><button class="go" type="button" data-inksave="1">Save to my designs</button><button type="button" data-qdgo="1">Update</button></div>';
+      out._last = {idea: words ? b.d.t+" · "+words : b.d.t, style:"Quick designer", svg};
+    });
     const busy = on => m.querySelectorAll("[data-inkgo]").forEach(b=>b.disabled = on);
     m.addEventListener("click", async e=>{
       if(e.target===m || e.target.closest("[data-inkclose]")){ m.remove(); return; }
@@ -4067,7 +4121,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     if(n === 0) return {text:plan.days.map(d => "Day "+d.n+(ti?" ("+dayLabel(ti.dateOf(d.n))+")":"")+": "+(d.t||"")+" — "+(d.items||[]).slice(0,4).map(i => i.h).join(", ")).join("\n"), ids:[]};
     const d = plan.days.find(x => x.n === n); if(!d) return {text:"Your plan has days 1 to "+plan.days.length+".", ids:[]};
     const items = d.items||[];
-    return {text:"Day "+d.n+(ti?" · "+dayLabel(ti.dateOf(d.n)):"")+(d.t?" — "+d.t:"")+":\n"+items.map(i => "• "+(i.t?fmtM(toM(i.t))+" ":"")+(i.h||"")+(i.d?" — "+i.d:"")).join("\n")+(ts && !ts.day ? "\n(Edit it on the Trip tab.)" : ""), ids:[...new Set(items.flatMap(i => i.p||[]))].filter(id => BY[id]).slice(0,6)};
+    return {text:"Day "+d.n+(ti?" · "+dayLabel(ti.dateOf(d.n)):"")+(d.t?" — "+d.t:"")+":\n"+items.map(i => "• "+(i.t?fmtM(toM(i.t))+" ":"")+(i.h||"")+(i.d?" — "+i.d:"")).join("\n")+(ts && !ts.day ? "\n(Edit it under Saved → Trip plan.)" : ""), ids:[...new Set(items.flatMap(i => i.p||[]))].filter(id => BY[id]).slice(0,6)};
   }
 
   function placeAnswer(q, ps){
@@ -4163,7 +4217,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     const days = (plan.days||[]).map(d => ({day:d.n, date:ti ? dayLabel(ti.dateOf(d.n)) : "", title:d.t||"", stops:(d.items||[]).map(i => (i.t||"")+" "+(i.h||"")+(i.p&&i.p[0]?" ["+i.p[0]+"]":"")).slice(0,10)}));
     const sys = "You are 'Ask the Girls', the warm, witty helper in The NOLA Girls trip app (Golden Girls flavor, light touch). Travelers: Will, Emily, and their niece Lauren (21). Trip: Wed Nov 4 – Sun Nov 8, 2026, staying at the Olivier House Hotel, 828 Toulouse St in the French Quarter (504-525-8456).\n"
       + "Answer ANY question about New Orleans (history, food, music, neighborhoods, customs, getting around, safety, weather, what to do) using your own knowledge, and ANY question about this app or the places in it using the APP DATA below.\n"
-      + "Rules: For places, hours, open/closed, addresses and phone numbers, trust APP DATA over memory; if something isn't in the data, you may use general knowledge but say it's worth confirming. Never invent exact hours, prices or phone numbers. When you mention a place from APP DATA, put its id in double brackets right after the name, e.g. Café du Monde [[cdm]]. Prefer places that are OPEN when the question is about now. Mention the safety color for anything yellow or red at night. Keep answers under 140 words unless asked for detail; use short bullets for lists. If the question is about how to use the app, explain the relevant feature (Holla Holla button = what's open now in this section; Explore collections; Map with safety colors; Trip plan; Saved kitchen table; Ink tattoo ideas and AI designer; Help has emergency numbers).\n"
+      + "Rules: For places, hours, open/closed, addresses and phone numbers, trust APP DATA over memory; if something isn't in the data, you may use general knowledge but say it's worth confirming. Never invent exact hours, prices or phone numbers. When you mention a place from APP DATA, put its id in double brackets right after the name, e.g. Café du Monde [[cdm]]. Prefer places that are OPEN when the question is about now. Mention the safety color for anything yellow or red at night. Keep answers under 140 words unless asked for detail; use short bullets for lists. If the question is about how to use the app, explain the relevant feature (Holla Holla button = what's open now in this section; Explore collections; Map with safety colors; Saved (Trip plan + kitchen table); Ink tattoo ideas and AI designer; Help has emergency numbers).\n"
       + "NOW: New Orleans local time "+DOWL[N.dow]+" "+fmtM(N.mins)+(N.date?" ("+N.date+")":"")+(typeof WX!=="undefined" && WX ? "; weather "+WX.temp+"°F "+WXL(WX.code) : "")+".\n"
       + "APP DATA — places as [id, name, type, area, status now, hours, google rating, distance, night safety, address, phone, why]:\n"+JSON.stringify(places)+"\nPLAN:\n"+JSON.stringify(days);
     const msgs = [{role:"user", content:sys + "\n\nReply 'Ready.' and wait for questions."}, {role:"assistant", content:"Ready."}];
@@ -4171,6 +4225,105 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     msgs.push({role:"user", content:q});
     return msgs;
   };
+})();
+
+/* ---------- radar map colors, place menus, quick designer (patch) ---------- */
+(function(){
+  const css = document.createElement("style");
+  css.textContent = `
+  .leaflet-overlay-pane path.radar-zone{mix-blend-mode:multiply}
+  .leafmap.dark .leaflet-overlay-pane path.radar-zone{mix-blend-mode:screen}
+  svg.map .zone{fill-opacity:.42;stroke-opacity:.95}
+  svg.map .zone.green{fill:#12C94B;stroke:#12C94B} svg.map .zone.yellow{fill:#FFD000;stroke:#FFD000} svg.map .zone.red{fill:#FF2A2A;stroke:#FF2A2A}
+  .sw.green,.sdot.green{background:#12C94B!important} .sw.yellow,.sdot.yellow{background:#FFD000!important} .sw.red,.sdot.red{background:#FF2A2A!important}
+  .radar-key{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:.8rem;font-weight:800}
+  .radar-key i{display:block;height:12px;border-radius:99px;background:linear-gradient(90deg,#12C94B 0%,#9BE23A 30%,#FFD000 50%,#FF8A00 72%,#FF2A2A 100%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+  .radar-key span:first-child{color:#0E8F37} .radar-key span:last-child{color:#D11F1F}
+  .pmenu-btn{flex-shrink:0;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;width:40px;height:40px;min-height:40px;display:inline-grid;place-items:center;padding:0;cursor:pointer}
+  .pmenu-btn svg{width:18px;height:18px;fill:currentColor}
+  .pmenu-btn:hover,.pmenu-btn[aria-expanded="true"]{border-color:var(--coral);color:var(--coral)}
+  .card-top{align-items:center} .card-top > .cakebtn{margin-left:auto}
+  .pmenu{position:fixed;z-index:950;width:250px;max-width:calc(100vw - 16px);max-height:70vh;overflow:auto;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.28);padding:6px;display:grid}
+  .pmenu-title{font-family:var(--display);font-weight:700;font-size:.95rem;padding:8px 10px 6px;border-bottom:1px solid var(--line);margin-bottom:4px}
+  .pmenu [role=menuitem]{all:unset;box-sizing:border-box;cursor:pointer;display:block;width:100%;padding:11px 10px;border-radius:9px;font-weight:700;font-size:.92rem;min-height:44px;line-height:22px}
+  .pmenu [role=menuitem]:hover,.pmenu [role=menuitem]:focus-visible{background:var(--coral-soft);color:var(--coral)}
+  .qd{margin-top:14px;border:1px solid var(--line,#ddd);border-radius:12px;padding:10px 12px;background:#fff;color:#23172C}
+  .qd summary{cursor:pointer;font-weight:800}
+  .qd-l{display:grid;gap:4px;font-size:.8rem;font-weight:700;margin-top:8px}
+  .qd-l select,.qd-l input{font:inherit;font-size:16px;padding:8px 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#23172C;min-height:44px}
+  .ink-out svg{width:100%;max-width:360px;height:auto;display:block;margin:10px auto;border-radius:10px}
+  `;
+  document.head.appendChild(css);
+
+  let pop = null, opener = null;
+  function close(focusBack){
+    if(!pop) return;
+    pop.remove(); pop = null;
+    if(opener){ opener.setAttribute("aria-expanded","false"); if(focusBack && opener.isConnected) opener.focus(); }
+    opener = null;
+  }
+  function place(btn){
+    const r = btn.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight;
+    const bottomBar = innerWidth < 900 ? 96 : 8;
+    let left = Math.min(Math.max(8, r.right - w), innerWidth - w - 8);
+    let top = r.bottom + 6;
+    if(top + h > innerHeight - bottomBar) top = Math.max(8, r.top - h - 6);
+    pop.style.left = left + "px"; pop.style.top = top + "px";
+  }
+  function open(btn){
+    close(false);
+    const p = BY[btn.dataset.pmenu]; if(!p) return;
+    opener = btn; btn.setAttribute("aria-expanded","true");
+    const saved = myPicks().has(p.id);
+    let visited = false; try{ visited = !!myVisited()[p.id]; }catch(_){}
+    const ro = typeof readOnly !== "undefined" && readOnly;
+    const it = [];
+    it.push('<button role="menuitem" data-open="'+p.id+'">See details</button>');
+    it.push('<button role="menuitem" data-heart="'+p.id+'">'+(saved?'Remove from Saved':'Save it')+'</button>');
+    it.push('<a role="menuitem" href="'+dirUrl(p)+'" target="_blank" rel="noopener">Directions</a>');
+    it.push('<a role="menuitem" href="'+dirUrl(p,"apple")+'" target="_blank" rel="noopener">Open in Apple Maps</a>');
+    if(!ro){
+      it.push('<button role="menuitem" data-addto="'+p.id+'">Add to a trip day</button>');
+      it.push('<button role="menuitem" data-visit="'+p.id+'">'+(visited?'Visited ✓ (undo)':'Mark visited')+'</button>');
+    }
+    if(p.ph) it.push('<a role="menuitem" href="tel:'+esc(String(p.ph).replace(/[^0-9+]/g,""))+'">Call '+esc(p.ph)+'</a>');
+    if(p.url) it.push('<a role="menuitem" href="'+esc(p.url)+'" target="_blank" rel="noopener">Website</a>');
+    it.push('<button role="menuitem" data-pshare="'+p.id+'">Share</button>');
+    pop = document.createElement("div");
+    pop.className = "pmenu"; pop.setAttribute("role","menu"); pop.setAttribute("aria-label","Options for "+p.n);
+    pop.innerHTML = '<div class="pmenu-title">'+esc(p.n)+'</div>' + it.join("");
+    document.body.appendChild(pop);
+    place(btn);
+    const first = pop.querySelector("[role=menuitem]"); if(first) first.focus();
+  }
+  async function share(p){
+    const text = p.n + (p.ad ? " · " + p.ad : p.a ? " · " + p.a : "");
+    const url = dirUrl(p);
+    try{ if(navigator.share){ await navigator.share({title:p.n, text, url}); return; } }catch(e){ if(e && e.name === "AbortError") return; }
+    try{ await navigator.clipboard.writeText(text + "\n" + url); toast("Copied. Paste it in your group chat."); }catch(_){ toast(text); }
+  }
+  document.addEventListener("click", e=>{
+    const t = e.target;
+    const b = t.closest && t.closest("[data-pmenu]");
+    if(b){ e.preventDefault(); e.stopPropagation(); if(pop && opener === b) close(true); else open(b); return; }
+    if(!pop) return;
+    if(pop.contains(t)){
+      const sh = t.closest("[data-pshare]");
+      if(sh){ const p = BY[sh.dataset.pshare]; close(false); if(p) share(p); return; }
+      setTimeout(()=>close(false), 0);   /* let the app's own handlers act on the item first */
+    } else close(false);
+  }, true);
+  document.addEventListener("keydown", e=>{
+    if(!pop) return;
+    if(e.key === "Escape"){ e.preventDefault(); close(true); return; }
+    if(e.key === "ArrowDown" || e.key === "ArrowUp"){
+      const items = [...pop.querySelectorAll("[role=menuitem]")], i = items.indexOf(document.activeElement);
+      const n = e.key === "ArrowDown" ? (i + 1) % items.length : (i - 1 + items.length) % items.length;
+      items[n].focus(); e.preventDefault();
+    }
+  });
+  addEventListener("scroll", ()=>close(false), {passive:true});
+  addEventListener("resize", ()=>close(false));
 })();
 
 </script>
