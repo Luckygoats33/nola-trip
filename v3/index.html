@@ -2407,7 +2407,6 @@ const COLS = [
  {k:"nature", t:"Nature & Quiet", s:"Shade, water, calm", cc:"#2E7D4F", intro:"An urban forest, a free sculpture garden, the bayou, and riverside parks. For when the Quarter gets loud.", f:p=>has(p,"nature")},
  {k:"romantic", t:"Romantic New Orleans", s:"For you and Emily", cc:"#7B2446", intro:"Candlelit courtyards, sunset on the river, quiet jazz, and a slow walk under the oaks.", f:p=>has(p,"date") || (p.tags||[]).includes("romantic")},
  {k:"veg", t:"Vegetarian Eats", s:"Louisiana, plant-based", cc:"#17796C", intro:"Real Louisiana flavor without the meat: vegan gumbo, tofu po-boys, and an all-vegan bakery.", f:p=>has(p,"eat","coffee")},
- {k:"birthday", t:"Lauren's 21st", s:"The big night", cc:"#D9A441", special:"birthday"},
  {k:"photo", t:"Photo Spots", s:"For the group photo", cc:"#D9A441", intro:"Colorful Bywater houses, iron balconies, the Rusty Rainbow bridge, and Jackson Square at golden hour.", f:p=>has(p,"photo") || PHOTO_IDS.includes(p.id)},
  {k:"ink", t:"Tattoos & Ink", s:"52 design ideas + shops", cc:"#B48AF0", special:"ink"},
  {k:"river", t:"On the River", s:"Riverboats & ferry", cc:"#24485A", intro:"The Mississippi by steamboat, paddlewheeler, and the little Algiers ferry.", f:p=>has(p,"river")},
@@ -2451,7 +2450,6 @@ persistPicks = function(){
   if(shared){ const body = {places:Object.fromEntries([...set].map(x=>[x,true])), votes:Object.assign({}, mv), visited:JSON.parse(JSON.stringify(vis))}; enqueue(()=>db.doc("picks/"+uid).set(body)); }
   else { try{ localStorage.setItem("nola-picks", JSON.stringify([...set])); localStorage.setItem("nola-votes", JSON.stringify(mv)); localStorage.setItem("nola-visited", JSON.stringify(vis)); }catch(e){} }
 };
-const BDAY_IDS = ["palmpine","jewel","preshall","bourbono","patobriens","bourbonheat","razzoo","cdm"];
 const STAMPS = [
  {k:"beignet", t:"Beignet Run", g:"☕", f:p=>["cdm","cafebeignet","cdmpark","mfth"].includes(p.id)},
  {k:"jazz", t:"Jazz Night", g:"♪", f:p=>has(p,"jazz")},
@@ -2463,8 +2461,7 @@ const STAMPS = [
  {k:"nature", t:"Into the Green", g:"✿", f:p=>has(p,"nature")},
  {k:"local", t:"Like a Local", g:"★", f:p=>colHas("locals",p)},
  {k:"veg", t:"Vegetarian Feast", g:"❦", f:p=>has(p,"eat")},
- {k:"ink", t:"Inked", g:"✒", f:p=>has(p,"tattoo")},
- {k:"bday", t:"Lauren's 21st", g:"21", f:p=>BDAY_IDS.includes(p.id)}
+ {k:"ink", t:"Inked", g:"✒", f:p=>has(p,"tattoo")}
 ];
 const stampsFor = vis => STAMPS.filter(s=>Object.keys(vis).some(id=>BY[id] && s.f(BY[id])));
 function toggleVisit(id){
@@ -2564,10 +2561,6 @@ Object.assign(TALK, {
  time:[["Dorothy","History lesson. Sit down. Three hundred years, and it beats anything on television."],
        ["Sophia","Picture it: 1718. A Frenchman stands in a swamp and says, 'Here.' That's real estate."],
        ["Rose","In St. Olaf our biggest historical event was the year the herring came back early."]],
- birthday:[["Blanche","Twenty-one in New Orleans. Honey, I'm proud and a little jealous. Wear shoes you can dance in."],
-           ["Dorothy","Physical ID, cash for the band, water between drinks, and everybody rides home together. Then have fun."],
-           ["Sophia","When I turned twenty-one I got a goat and a husband. Lauren gets beignets and Preservation Hall. That's progress."],
-           ["Rose","Happy birthday, Lauren! In St. Olaf we celebrate twenty-one by counting to twenty-one. It takes some people all night."]],
  girl:[["Sophia","Pick a girl, get her picks. Pick me, get the good ones."]]
 });
 TALK.plan.push(["Blanche","Leave room after dinner, darlings. The best part of any plan is the part you didn't plan."]);
@@ -2624,8 +2617,8 @@ const ICON = {
 };
 TAB_ICON.home = ICON.home; TAB_ICON.trip = TAB_ICON.plan;
 TABS.splice(0, TABS.length, ["home","Home"],["map","Map"],["explore","Explore"],["trip","Trip"],["saved","Saved"],["ink","Ink"]);
-VIEWKEYS.push("home","trip","col","time","birthday","all","girl");
-const NAV_OF = {girl:"home", col:"explore", time:"explore", birthday:"explore", river:"explore", all:"explore", now:"home", info:"home", plan:"trip"};
+VIEWKEYS.push("home","trip","col","time","all","girl");
+const NAV_OF = {girl:"home", col:"explore", time:"explore", river:"explore", all:"explore", now:"home", info:"home", plan:"trip"};
 try{ const t2 = localStorage.getItem("nola2-tab"); S.tab = VIEWKEYS.includes(t2) && !["col","girl","time","all"].includes(t2) ? t2 : "home"; }catch(e){ S.tab = "home"; }
 if(location.hash && VIEWKEYS.includes(location.hash.slice(1))) S.tab = location.hash.slice(1);
 if(S.tab==="plan") S.tab = "trip";
@@ -2650,7 +2643,7 @@ function vHome(){
   const open = P.filter(p=>!isSailing(p) && statusAt(p,N).state==="open").sort((a,b)=>{ const x=distInfo(a),y=distInfo(b); return (x&&y)?x.m-y.m:a.d-b.d; }).slice(0,5);
   h += '<div class="sh"><h3>Open right now</h3><button class="lnk" data-go="now">See everything open</button></div>'+(open.length?open.map(p=>resRow(p,statusAt(p,N))).join(""):quip("Dorothy","Everything decent is closed at this hour. Go to bed. Tonight and Hidden gems will still be there tomorrow."));
   const got = stampsFor(myVisited()).length;
-  h += '<div class="two"><button class="tile" data-go="birthday"><span class="ti">'+ICON.gem+'</span><b>Lauren\'s 21st</b><span>The birthday night, photo spots, and tattoo ideas</span></button>'
+  h += '<div class="two"><button class="tile" data-col="photo"><span class="ti">'+ICON.gem+'</span><b>Photo spots</b><span>Balconies, bright houses and golden hour</span></button>'
      + '<button class="tile" data-go="time"><span class="ti">'+ICON.moon+'</span><b>NOLA Time Machine</b><span>1718 to today, and where to feel it</span></button>'
      + '<button class="tile" data-go="saved" data-savedtab="passport"><span class="ti">'+ICON.gem+'</span><b>Passport</b><span>'+got+' of '+STAMPS.length+' stamps collected</span></button>'
      + '<button class="tile" data-go="ink"><span class="ti">'+ICON.gem+'</span><b>Tattoo ideas</b><span>'+AI_INK.length+' design concepts + 27 sketches</span></button></div>';
@@ -2670,15 +2663,15 @@ function vExplore2(){
     if(designs.length) h += '<div class="sh"><h3>Tattoo designs</h3></div><div class="ai-grid">'+designs.map(aiCard).join("")+'</div>';
     return h;
   }
-  h += '<div class="cols">'+COLS.map(c=>{ const n = c.special==="ink" ? 52 : c.special==="birthday" ? BDAY_IDS.length : colPlaces(c.k).length;
-    return '<button class="colcard" style="--cc:'+c.cc+'" '+(c.special==="ink"?'data-go="ink"':c.special==="birthday"?'data-go="birthday"':'data-col="'+c.k+'"')+'><span class="n2">'+n+(c.special==="ink"?' designs':' places')+'</span><b>'+esc(c.t)+'</b><span>'+esc(c.s)+'</span></button>'; }).join("")+'</div>';
+  h += '<div class="cols">'+COLS.map(c=>{ const n = c.special==="ink" ? 52 : colPlaces(c.k).length;
+    return '<button class="colcard" style="--cc:'+c.cc+'" '+(c.special==="ink"?'data-go="ink"':'data-col="'+c.k+'"')+'><span class="n2">'+n+(c.special==="ink"?' designs':' places')+'</span><b>'+esc(c.t)+'</b><span>'+esc(c.s)+'</span></button>'; }).join("")+'</div>';
   h += '<div class="row"><button class="btn" data-go="all">All places with filters</button><button class="btn" data-go="now">Everything open now</button><button class="btn" data-go="time">NOLA Time Machine</button><button class="btn" data-go="river">River cruise times</button></div>';
   return h;
 }
 
 function vCol(){
   const c = COL[S.col] || COLS[0];
-  if(c.special==="birthday") return vBirthday(); if(c.special==="ink") return vInk2();
+  if(c.special==="ink") return vInk2();
   if(c.k==="tattoo") return '<div class="row"><button class="btn" data-go="explore">← Explore</button><button class="btn" data-go="ink">Tattoo ideas</button></div><section class="colhead" style="border-bottom:6px solid '+c.cc+'"><span class="eyebrow">Collection</span><h2>'+esc(c.t)+'</h2><p>'+esc(c.intro)+'</p><div class="row"><button class="btn primary" data-mapcol="tattoo">See on the map</button></div></section>' + quip(COL_GIRL.tattoo[0], COL_GIRL.tattoo[1]) + shopsSection();
   const N = nolaNow(), list = colPlaces(c.k);
   const rank = p => { const st=statusAt(p,N), open = st.state==="open" || eventsAt(p,N,180).length; const di = distInfo(p); return (open?0:1e7) + (wxBad() && !isIndoor(p) ? 5e6 : 0) + (di?di.m:p.d*500); };
@@ -2693,7 +2686,7 @@ function vCol(){
 }
 
 function vTrip(){
-  return '<div class="row"><button class="btn" data-go="river">River cruise times</button><button class="btn" data-go="info">Trip tools</button><button class="btn" data-go="birthday">Lauren\'s 21st</button></div>' + vPlan();
+  return '<div class="row"><button class="btn" data-go="river">River cruise times</button><button class="btn" data-go="info">Trip tools</button></div>' + vPlan();
 }
 
 /* saved: group picks, passport, journal, designs */
@@ -2767,23 +2760,6 @@ function vTime(){
   return h;
 }
 
-/* Lauren's 21st */
-const BDAY_NIGHT = [["18:00","Birthday dinner",["palmpine","jewel"],"Palm&Pine and Jewel are closed Tuesdays."],["20:45","Preservation Hall, last set",["preshall"],"Book the 8:45 set online."],["21:45","First birthday drink",["bourbono"],"Candlelit, live jazz, 21+."],["22:30","Dueling pianos",["patobriens"],"Request a song; Hurricanes are strong."],["23:30","Dance it out",["bourbonheat","razzoo"],"Balcony over Bourbon."],["01:00","Birthday beignets",["cdm"],"Open until midnight Fri–Sat; check the night."]];
-S.bday = 3;
-function vBirthday(){
-  const ti = tripInfo(), nd = plan.days.length;
-  let h = '<div class="row"><button class="btn" data-go="explore">← Explore</button></div>';
-  h += '<section class="colhead" style="border-bottom:6px solid var(--brass)"><span class="eyebrow" style="color:var(--brass)">Happy 21st, Lauren</span><h2>Lauren\'s 21st in New Orleans</h2><p>The birthday night, the photo spots, a tattoo to remember it by, and a few cats for good measure.</p></section>';
-  h += talk("birthday");
-  h += '<div class="sh"><h3>The birthday night</h3></div><ol class="tl">'+BDAY_NIGHT.map(([t,lab,ids,tip])=>{ const W = dayW(S.bday, t); return '<li><span class="t">'+fmtM(toM(t))+'</span><div class="what"><b>'+esc(lab)+'</b><span class="d">'+esc(tip)+'</span><div class="links">'+ids.map(id=>'<span class="row" style="gap:4px"><button class="plink" data-open="'+id+'">'+esc(BY[id].n)+'</button>'+chipStatus(BY[id],W)+'</span>').join("")+'</div></div></li>'; }).join("")+'</ol>';
-  if(!readOnly) h += '<div class="row"><label class="small muted" for="bday">Birthday is</label><select class="field" id="bday">'+plan.days.map(d=>'<option value="'+d.n+'"'+(d.n===S.bday?' selected':'')+'>Day '+d.n+(ti?' · '+esc(dayLabel(ti.dateOf(d.n))):'')+'</option>').join("")+'</select><button class="btn primary" data-addnight="1">Add this night to the plan</button></div>';
-  h += '<div class="box"><h3>Birthday-night rules</h3><ul><li>Bring a physical photo ID. Phone photos of IDs don\'t work at most bars.</li><li>Cash for covers, tips, and the band.</li><li>Water between drinks. Hurricanes are stronger than they taste.</li><li>Rideshare home together. Nobody walks back alone.</li></ul></div>';
-  const ph = colPlaces("photo");
-  h += '<div class="sh"><h3>Photo spots</h3><button class="lnk" data-col="photo">All photo spots</button></div>'+ph.slice(0,6).map(p=>resRow(p,statusAt(p,nolaNow()))).join("");
-  h += '<div class="sh"><h3>A tattoo to remember it</h3><button class="lnk" data-go="ink">All '+(AI_INK.length+27)+' designs</button></div><div class="ai-grid">'+["06","07","24","25"].map(n=>aiCard(AI_INK.find(d=>d.n===n))).join("")+'</div>';
-  h += '<div class="row"><button class="btn" data-col="cats">Cat Adventures</button><button class="btn" data-col="tattoo">Tattoo shops &amp; booking</button></div>';
-  return h;
-}
 
 /* AI tattoo gallery: decode the embedded images once into blob URLs so re-renders stay light */
 function blobOf(d){ try{ const b=atob(d.split(",")[1]), u=new Uint8Array(b.length); for(let i=0;i<b.length;i++) u[i]=b.charCodeAt(i); return URL.createObjectURL(new Blob([u],{type:"image/webp"})); }catch(e){ return d; } }
@@ -2807,7 +2783,7 @@ function vAiSheet(n){
     + '<div class="stickybar">'+cakeBtn({id:"ai-"+d.n, n:d.t})+'<button class="btn primary" data-copy="'+esc(aiBrief(d))+'">Copy artist brief</button><button class="btn" data-aiink="'+prev+'">← Previous</button><button class="btn" data-aiink="'+next+'">Next →</button></div>';
 }
 function vInk2(){
-  let h = '<div class="row hscroll"><button class="btn" data-go="birthday">Lauren\'s 21st</button><button class="btn" data-col="tattoo">Tattoo shops</button><button class="btn" data-go="saved" data-savedtab="designs">Saved designs</button></div>';
+  let h = '<div class="row hscroll"><button class="btn" data-col="tattoo">Tattoo shops</button><button class="btn" data-go="saved" data-savedtab="designs">Saved designs</button></div>';
   h += talk("ink");
   h += '<div class="head"><span class="eyebrow">Tattoo ideas</span><h2>Design concepts</h2><p class="small muted">'+AI_INK.length+' ideas in ten styles, from delicate New Orleans fine-line to 90s flash, art deco, gangsta cats and posh Parisian cats. Save favorites with the cheesecake, then copy the brief for your artist.</p></div>';
   const shown = S.inkStyle==="all" ? AI_INK : AI_INK.filter(d=>d.s===S.inkStyle);
@@ -2874,7 +2850,7 @@ vSheet = function(){
 
 /* ---------- page addresses ----------
    #view.arg~kind.id — only letters, digits, . _ ~ - so links also work inside claude.ai. */
-const PAGE_NAMES = {girl:"Golden Girl picks", home:"Home", map:"Map", explore:"Explore", trip:"Trip", saved:"Saved", ink:"Tattoo ideas", col:"Collection", time:"Time Machine", birthday:"Lauren's 21st", river:"River cruises", info:"Trip tools", now:"Open now", all:"All places"};
+const PAGE_NAMES = {girl:"Golden Girl picks", home:"Home", map:"Map", explore:"Explore", trip:"Trip", saved:"Saved", ink:"Tattoo ideas", col:"Collection", time:"Time Machine", river:"River cruises", info:"Trip tools", now:"Open now", all:"All places"};
 function routeFromState(){
   let r = S.tab;
   if(S.tab==="col") r += "."+S.col;
@@ -2981,7 +2957,7 @@ render = function(){
   try{ localStorage.setItem("nola2-tab", S.tab); }catch(e){}
   const a = document.activeElement, fid = a && a.id && a.tagName==="INPUT" && a.type!=="time" && a.type!=="date" ? a.id : null;
   let caret = null; try{ caret = fid ? a.selectionStart : null; }catch(_){}
-  const V = {girl:vGirl, home:vHome, map:vMap2, explore:vExplore2, trip:vTrip, plan:vTrip, saved:vSaved2, col:vCol, time:vTime, ink:vInk2, birthday:vBirthday, river:vRiver, info:vInfo2, now:vNow, all:vExplore}[S.tab] || vHome;
+  const V = {girl:vGirl, home:vHome, map:vMap2, explore:vExplore2, trip:vTrip, plan:vTrip, saved:vSaved2, col:vCol, time:vTime, ink:vInk2, river:vRiver, info:vInfo2, now:vNow, all:vExplore}[S.tab] || vHome;
   document.getElementById("main").innerHTML = '<section class="view">'+V()+'</section>';
   document.getElementById("sheet-root").innerHTML = S.sheet ? vSheet() : "";
   syncURL();
@@ -3011,7 +2987,6 @@ document.addEventListener("click", e=>{
   if(d.radius!==undefined){ S.radius = +d.radius; if(S.radius && !originPt()) locate(); render(); return; }
   if(d.mapcol){ S.mapCol = d.mapcol; S.tab = "map"; S.sheet = null; render(); if(LMAP) setTimeout(()=>{ if(S.mapCol!=="all") fitAll(); }, 60); return; }
   if(d.aiink){ S.sheet = {mode:"aiink", n:d.aiink}; render(); return; }
-  if(d.addnight){ const day = plan.days.find(x=>x.n===S.bday) || plan.days[0]; BDAY_NIGHT.forEach(([t,lab,ids])=>day.items.push({k:uidk(), t, h:lab, d:"Lauren's 21st", p:ids.slice(0,1), key:true})); savePlan("The birthday night is on Day "+day.n+"."); return; }
   if(d.nearme){ S.radius = 15; S.tab = "map"; render(); locate(()=>{ if(LMAP && LOC) S.mapGo = [[LOC.lat,LOC.lon],16]; }); return; }
   if(d.clearuq){ S.uq = ""; render(); return; }
   if(d.share){ shareLink(); return; }
@@ -3022,7 +2997,6 @@ document.addEventListener("click", e=>{
 document.addEventListener("input", e=>{ if(e.target.id==="uq"){ S.uq = e.target.value; render(); } });
 document.addEventListener("change", e=>{
   const id = e.target.id||"";
-  if(id==="bday"){ S.bday = +e.target.value; render(); return; }
   if(id.startsWith("jn-")){ const pid = id.slice(3), v = Object.assign({}, myVisited()); if(!v[pid]) return; v[pid] = Object.assign({}, v[pid], {n:e.target.value.slice(0,400)}); visited[me()] = v; persistPicks(); toast("Saved to your journal."); }
 });
 setInterval(()=>{ if(S.mode==="auto"){ const was = document.documentElement.getAttribute("data-mode"); applyMode(); if(was !== document.documentElement.getAttribute("data-mode")) render(); } }, 120000);
