@@ -3435,6 +3435,12 @@ document.addEventListener("change", e=>{
   @media (min-width:900px){ .ask-fab{bottom:24px} }
   .ask-panel{position:fixed;right:12px;left:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:8600;max-width:420px;margin-left:auto;max-height:min(72vh,620px);display:flex;flex-direction:column;background:#FFF8F0;color:#23172C;border:2px solid #23172C;border-radius:20px;box-shadow:0 18px 50px rgba(20,12,28,.45);font:400 .95rem/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
   @media (min-width:900px){ .ask-panel{bottom:24px;right:24px;left:auto;width:400px} }
+  @media (max-width:899px){
+    .ask-panel{left:0;right:0;top:0;bottom:auto;max-width:none;width:100%;height:100vh;height:100dvh;max-height:none;border-radius:0;border:0;padding-top:env(safe-area-inset-top,0px)}
+    .ask-in{padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+    .ask-sugg{max-height:30vh;overflow-y:auto}
+    html.ask-open, html.ask-open body{overflow:hidden}
+  }
   .ask-hd{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#23172C;color:#F6EBDD}
   .ask-hd b{font:700 1.05rem Georgia,serif}.ask-hd small{display:block;font-size:.72rem;opacity:.8}
   .ask-x{all:unset;cursor:pointer;margin-left:auto;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;font-size:1.3rem;color:#F6EBDD}
@@ -3484,8 +3490,15 @@ document.addEventListener("change", e=>{
     }
     const a = localAnswer(q); addMsg("bot", a.text, a.ids); say(a.text);
   }
+  function fitPanel(){
+    if(!panel || !window.visualViewport) return;
+    if(window.innerWidth >= 900){ panel.style.height = ""; panel.style.top = ""; return; }
+    const vv = window.visualViewport;
+    panel.style.top = vv.offsetTop + "px"; panel.style.height = vv.height + "px";
+    const log = panel.querySelector(".ask-log"); if(log) log.scrollTop = log.scrollHeight;
+  }
   function open(){
-    if(panel){ panel.remove(); panel = null; fab.style.display = ""; return; }
+    if(panel){ panel.remove(); panel = null; fab.style.display = ""; document.documentElement.classList.remove("ask-open"); if(window.visualViewport) visualViewport.removeEventListener("resize", fitPanel); return; }
     fab.style.display = "none";
     panel = document.createElement("section"); panel.className = "ask-panel"; panel.setAttribute("role","dialog"); panel.setAttribute("aria-label","Ask the Girls");
     panel.innerHTML = '<div class="ask-hd"><span class="badge-g" style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#E0B65A;color:#23172C;font:italic 700 1rem Georgia,serif">B</span><div><b>Ask the Girls</b><small>'+(SAMPLE?"Answers by Claude, from this app's places":"Instant answers from this app's places")+'</small></div><button class="ask-x" type="button" aria-label="Close">×</button></div>'
@@ -3494,6 +3507,8 @@ document.addEventListener("change", e=>{
       + '<label class="ask-speak"><input type="checkbox" id="askspeak"'+(speak?" checked":"")+'> Read answers out loud</label>'
       + '<form class="ask-in"><input id="askq" type="text" placeholder="Ask anything about the trip…" aria-label="Your question" autocomplete="off">'+(SR?'<button class="ask-btn mic" type="button" aria-label="Ask by voice">'+ICON_MIC+'</button>':'')+'<button class="ask-btn" type="submit" aria-label="Send">'+ICON_SEND+'</button></form>';
     document.body.appendChild(panel);
+    document.documentElement.classList.add("ask-open");
+    if(window.visualViewport){ visualViewport.addEventListener("resize", fitPanel); visualViewport.addEventListener("scroll", fitPanel); fitPanel(); }
     addMsg("bot", "Honey, ask me anything: what's open, where to eat, what's on the plan, hours, addresses. Tap the mic to just say it.");
     $(".ask-x", panel).onclick = open;
     $(".ask-in", panel).onsubmit = e=>{ e.preventDefault(); ask($("#askq", panel).value); };
@@ -3509,7 +3524,10 @@ document.addEventListener("change", e=>{
         r.start();
       }catch(e){ mic.classList.remove("on"); addMsg("bot", "Voice isn't available in this browser — type your question instead."); }
     };
-    setTimeout(()=>$("#askq", panel).focus(), 50);
+    const q = $("#askq", panel), sg = $(".ask-sugg", panel), sk = $(".ask-speak", panel);
+    q.addEventListener("focus", ()=>{ if(window.innerWidth < 900){ sg.style.display = "none"; sk.style.display = "none"; } setTimeout(fitPanel, 300); });
+    q.addEventListener("blur", ()=>{ setTimeout(()=>{ if(panel){ sg.style.display = ""; sk.style.display = ""; fitPanel(); } }, 200); });
+    if(window.innerWidth >= 900) setTimeout(()=>q.focus(), 50);
   }
   fab.addEventListener("click", open);
   document.addEventListener("click", e=>{
