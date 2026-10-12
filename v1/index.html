@@ -1752,7 +1752,7 @@ html body nav.vswitch.vswitch a[aria-current="page"]{background:#E0B65A;color:#2
   addEventListener("appinstalled", function(){ closePop(); btn.remove(); });
 
   /* pop up once per version on each phone, a few seconds after opening */
-  if(web && !standalone && !ls(KEY)) setTimeout(function(){ if(!document.querySelector(".sheet.open, .sheet[open]")) showPop(false); }, 4000);
+  if(web && !standalone && !ls(KEY)) setTimeout(function(){ if(!document.querySelector(".sheet.open, .sheet[open], #tour")) showPop(false); }, 4000);
 })();
 
 </script>

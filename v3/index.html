@@ -625,6 +625,33 @@ button,a,.chip,.tab,.plink,.btn,.mood,.tile,.colcard,summary{touch-action:manipu
 
 .inkstyles{margin:4px 0 12px}.inkstyles .chip .n{font-family:var(--mono);font-size:.72rem;opacity:.75;margin-left:2px}
 
+/* ---- Help tab, walkthrough, style chips ---- */
+.inkstyles{flex-wrap:wrap;gap:8px;margin:4px 0 14px}
+.inkhint{margin:2px 0 8px;font-size:.92rem;color:var(--ink)}
+.help-toc{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 6px}
+.help-toc a{display:inline-flex;align-items:center;min-height:36px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-decoration:none;font-weight:700;font-size:.85rem}
+.help-toc a:hover,.help-toc a:focus-visible{border-color:var(--brass);outline:none}
+.help-sec{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:12px 0;scroll-margin-top:140px}
+.help-sec h3{margin:0 0 8px;font-family:var(--display);font-size:1.2rem;color:var(--ink)}
+.help-sec dl{margin:0}
+.help-sec dt{font-weight:800;color:var(--ink);margin-top:10px}
+.help-sec dd{margin:3px 0 0;color:var(--ink);opacity:.92;line-height:1.5}
+.tour-hi{position:relative;z-index:60;outline:3px solid #E0B65A!important;outline-offset:3px;border-radius:14px;box-shadow:0 0 0 9999px rgba(20,12,28,.55)!important;transition:outline-color .2s}
+#tabs.tour-hi,#tabs .tour-hi{border-radius:12px}
+.tour{position:fixed;left:12px;right:12px;bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:9000;max-width:440px;margin:0 auto;background:#FFF8F0;color:#23172C;border:2px solid #23172C;border-radius:20px;box-shadow:0 18px 50px rgba(20,12,28,.45);padding:16px 18px;font-size:.95rem;line-height:1.45;animation:nolaPop .25s ease-out}
+.tour h2{margin:6px 0 6px;font-family:var(--display);font-size:1.2rem;color:#23172C}
+.tour p{margin:0 0 10px;color:#3A2C44}.tour b{color:#23172C}
+.tour-top{display:flex;align-items:center;gap:10px}
+.tour .badge-g{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#23172C;color:#E0B65A;font-family:var(--display);font-style:italic;font-weight:700}
+.tour-n{font-family:var(--mono);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:#5A4A66}
+.tour-x{all:unset;cursor:pointer;margin-left:auto;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;font-size:1.3rem;color:#23172C}
+.tour-x:focus-visible{outline:3px solid #E0B65A}
+.tour-dots{display:flex;gap:6px;margin:0 0 12px}.tour-dots i{width:8px;height:8px;border-radius:50%;background:#D8CCE0}.tour-dots i.on{background:#23172C;width:22px;border-radius:4px}
+.tour-acts{display:flex;justify-content:space-between;gap:8px}
+.tour .btn{color:#23172C!important;background:#fff!important;border-color:#23172C!important}
+.tour .btn.primary{background:#23172C!important;color:#F6EBDD!important;border-color:#23172C!important}
+@media (max-width:420px){ .tab span{font-size:.62rem} }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
@@ -2624,7 +2651,124 @@ const ICON = {
 };
 TAB_ICON.home = ICON.home; TAB_ICON.trip = TAB_ICON.plan;
 TABS.splice(0, TABS.length, ["home","Home"],["map","Map"],["explore","Explore"],["trip","Trip"],["saved","Saved"],["ink","Ink"]);
-VIEWKEYS.push("home","trip","col","time","birthday","all","girl");
+/* ---------- help: the ? tab with the full guide, and a 3-step walkthrough on first visit ---------- */
+TAB_ICON.help = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.8-2.5 2.3-2.5 4"/><path d="M12 17.2v.3"/></svg>';
+TABS.push(["help","Help"]);
+const HELP = [
+ ["start","Start here",[
+  ["What this is","Your New Orleans trip in one place: what's open right now, a real map, the day-by-day plan, places to vote on, tattoo ideas, and the Golden Girls cheering you on. Trip dates (Wed Nov 4 to Sun Nov 8) and the Olivier House Hotel are already built in."],
+  ["The 3-second version","Use the bar at the bottom to move around. Tap any place to see why it's worth it, when it's open, and how to get there. Tap the cheesecake to save it to the kitchen table."],
+  ["Replay the walkthrough","Tap <b>Show me the 3 steps again</b> at the top of this page any time."]]],
+ ["top","The top of the screen",[
+  ["Version bar","<b>V1 · Classic</b>, <b>V2</b> and <b>V3 · New</b> are three versions of the same trip app. The gold one is where you are. Tap another to switch; your saves stay on this phone."],
+  ["The logo","Tap <b>The NOLA Girls</b> any time to jump back to Home."],
+  ["Install app","The round download button (or <b>Install app</b> on wider screens) puts the app on your home screen. It opens full screen and keeps working with weak signal. On iPhone: Safari → Share → Add to Home Screen."],
+  ["Day / After Dark","Switches the look between a light day theme and a dark evening theme. <b>Auto</b> flips to After Dark at sunset. Change it in Trip tools → Look and feel."],
+  ["Trip tools","Dates, hotel, the look-and-feel setting, booking info, safety tips and useful numbers."]]],
+ ["bar","The bottom bar",[
+  ["Home","Your starting point: greeting, countdown, weather, Golden Girls, quick tiles, who's leading tonight, and Surprise me."],
+  ["Map","Every place on a real map, plus your location and the hotel."],
+  ["Explore","Search and fifteen hand-picked collections."],
+  ["Trip","The day-by-day plan you can edit, with river cruise times."],
+  ["Saved","The kitchen table: everyone's saves and votes, saved tattoo designs, and your passport of visited places. The number badge counts saved places."],
+  ["Ink","Tattoo design concepts, sketches, and shops with booking info."],
+  ["? Help","This guide."]]],
+ ["home","Home",[
+  ["Greeting and countdown","Shows the time in New Orleans, days until you arrive (or which trip day it is), the weather, and whether you're in Day or After Dark mode."],
+  ["Golden Girls banners","Dorothy, Blanche, Rose or Sophia weigh in on every screen. Tap <b>Another one</b> for a new line."],
+  ["Quick tiles","<b>Today's plan</b>, <b>Near me</b> (places within about a 15-minute walk), <b>Hidden gems</b>, <b>Tonight</b>, <b>Lauren's 21st</b>, <b>NOLA Time Machine</b>, <b>Passport</b> and <b>Tattoo ideas</b>."],
+  ["Who's leading tonight?","Tap a Golden Girl to see her picks: Dorothy (history and jazz), Blanche (romance and late nights), Rose (beignets, cats and swamps), Sophia (food, Voodoo and bargains). Open places come first. <b>Surprise me, [name]</b> builds an adventure in her style."],
+  ["Surprise me","Pick a vibe (Romantic, Local favorites, Nature, Cat lovers, History, Vegetarian, Jazz, Hidden gems), how many hours, and walk or ride. Tap <b>Find our adventure</b> for a route of places that are open then. <b>Spin again</b> shuffles it; <b>Add to the plan</b> drops it into today."]]],
+ ["explore","Explore and collections",[
+  ["Search","Type anything: a place, a food, a neighborhood, a tattoo idea or a history topic. Results update as you type."],
+  ["Collections","Tonight, Jazz & Cocktails, Hidden Gems, Where the Locals Go, History, Cat Adventures, Nature, Romantic, Vegetarian Eats, Photo Spots, River, Day Trips, Tattoo shops, Lauren's 21st and more. Each opens with a short intro."],
+  ["Inside a collection","Places that are open now are listed first. <b>See on the map</b> shows just that collection; <b>Surprise me from these</b> builds an adventure from it. If the weather looks rough, indoor places move to the top."],
+  ["All places","<b>All places with filters</b> lists everything, with filters for open now, walkable, saved only and area."]]],
+ ["place","Place details",[
+  ["Open a place","Tap any place name or card. A panel slides up with everything you need."],
+  ["What you'll see","Open or closed right now and today's hours, the 5-cat Google rating with a <b>See reviews on Google</b> link, why you'll love it, address, phone, price, music and reservation notes."],
+  ["Buttons","<b>Save</b> (the cheesecake) adds it to the kitchen table. <b>Mark visited</b> adds it to your journal and can earn a passport stamp. The hearts rate it after you've been. <b>Copy link</b> copies a link straight to this place. <b>Copy phone</b> and directions are there too."],
+  ["Booking","Tours, cruises and tattoo shops show how to book, the price, and any deposit or ID rules."],
+  ["Closing it","Tap the ×, tap outside the panel, or use your phone's back button."]]],
+ ["map","Map",[
+  ["Moving the map","On phones the map is locked so the page scrolls normally. Tap <b>Tap here to move the map</b> to pan and zoom, then <b>Done moving the map</b>."],
+  ["Your location","Tap the locate button and allow location to see where you are and what's close. Distances otherwise start from the hotel."],
+  ["Dots and colors","Dots group together when zoomed out; tap a group to zoom in. <b>Color by open now</b> shows what's open. Tap a dot for the place's name and details."],
+  ["Safety colors","Green, yellow and red areas show how comfortable each area is for walking at night. Green is busy and well lit, yellow means stay on main streets, red means take a car."],
+  ["Collections on the map","Pick a collection to show only those places."]]],
+ ["trip","Trip and the plan",[
+  ["Day by day","Each day (Nov 4 to Nov 8) has times, stops and notes. Tap a day to see it."],
+  ["Editing","Add stops, move them, remove them, or swap in a Plan B if something is closed or it rains. Changes save automatically."],
+  ["Route this day","Opens all of that day's stops as one walking route in Google Maps, starting at the hotel."],
+  ["River cruise times","Every sailing for the Natchez, the Creole Queen and the City of New Orleans, with sunset timing for your dates."]]],
+ ["saved","Saved, voting and passport",[
+  ["The kitchen table","Everything anyone saved with the cheesecake. Filter by person, or <b>Everyone's in</b> to see what all three of you want."],
+  ["Saved designs","Tattoo designs you saved, ready to show an artist."],
+  ["Passport","Earn stamps by marking places visited (jazz, beignets, cats, history and more). Rose gets very excited about every one."],
+  ["Journal","Places you've marked visited, with your heart ratings. <b>Remove from journal</b> undoes one."]]],
+ ["ink","Ink: tattoo ideas",[
+  ["Design concepts","100 AI-made concepts. Use the style buttons (New Orleans, 90s, Retro, Art deco, Gangsta cats, Aristocrat cats, Old-school flash, Y2K & cute, Voodoo & mystic) to narrow them down."],
+  ["Look closer","Tap an image to see it large. <b>Previous</b> and <b>Next</b> stay inside the style you picked."],
+  ["Take it to an artist","<b>Save</b> keeps it in Saved designs. <b>Copy brief</b> copies a short description to paste into a message to the shop."],
+  ["Sketches and shops","Below the concepts are 27 hand-drawn sketches and the tattoo shops, with website, address, phone, and how to book. You must be 18+ with photo ID; many shops take a deposit."]]],
+ ["more","Lauren's 21st, Time Machine and more",[
+  ["Lauren's 21st","A big night out: dinner, Preservation Hall, a 21st toast, dueling pianos, dancing and late-night beignets. Pick a night with <b>Plan the night on</b> and tap <b>Add this night to the plan</b>."],
+  ["NOLA Time Machine","Three hundred years of New Orleans by era, with the places where you can still feel each one."],
+  ["Golden Girl picks","Every place belongs to one of the girls. Her page lists her picks with open ones first."]]],
+ ["share","Saving, sharing and offline",[
+  ["Where saves live","On the public website, saves, votes and edits stay on the phone you made them on. In the shared claude.ai version, the group sees the same kitchen table and plan."],
+  ["Links to pages","Every screen has its own web address, so you can text someone a link to a collection, a place or a tattoo design. Your phone's back button works as expected."],
+  ["Offline","Once installed and opened, the app keeps working with weak signal. Live things like weather and map tiles need a connection."]]],
+ ["safe","Staying safe",[
+  ["The basics","Everyone saves the hotel address (828 Toulouse St) on their own phone. Carry a physical photo ID; most bars are 21+. Never leave a drink unattended. Rideshare home together, and nobody walks back alone."],
+  ["At night","Stick to busy, lit streets in the Quarter and Frenchmen. Use the map's safety colors and take a car for anything in yellow or red after dark."]]],
+ ["faq","Quick fixes",[
+  ["A place looks closed but should be open","Hours come from research done in October 2026 and can change. Check the place's Google link or call before going."],
+  ["The map won't move","Tap <b>Tap here to move the map</b> first."],
+  ["The app looks out of date","Close it and open it again with a connection; it updates itself."],
+  ["Something's missing","Tell Will, and it can be added to all three versions."]]]
+];
+function vHelp(){
+  let h = '<div class="head"><span class="eyebrow">How it works</span><h2>Help & guide</h2><p class="small muted">Everything the app can do, and how to use it.</p></div>';
+  h += quip("Dorothy","Read this once. Then you'll stop asking me where the map went.");
+  h += '<div class="row"><button class="btn primary" data-tour="1">Show me the 3 steps again</button></div>';
+  h += '<nav class="help-toc" aria-label="Guide sections">'+HELP.map(([k,t])=>'<a href="#help" data-helpjump="'+k+'">'+esc(t)+'</a>').join("")+'</nav>';
+  h += HELP.map(([k,t,items])=>'<section class="help-sec" id="help-'+k+'"><h3>'+esc(t)+'</h3><dl>'+items.map(([q,a])=>'<dt>'+esc(q)+'</dt><dd>'+a+'</dd>').join("")+'</dl></section>').join("");
+  h += quip("Sophia","Picture it: you read the whole guide. I'm proud of you. Now go eat a beignet.");
+  return h;
+}
+
+/* the 3-step walkthrough */
+const TOUR = [
+ {sel:"#tabs", g:"Rose", t:"1. Get around with the bottom bar", b:"<b>Home</b> is your start, <b>Map</b> shows everything nearby, <b>Explore</b> has collections and search, <b>Trip</b> is the day-by-day plan, <b>Saved</b> is the kitchen table, and <b>Ink</b> has tattoo ideas."},
+ {sel:"#main .tile, #main .card, #main .colcard", g:"Blanche", t:"2. Tap any place, then save it", b:"Every place opens with why it's worth it, today's hours, the cat rating and directions. Tap the <b>cheesecake</b> to save it to the kitchen table so everyone can vote."},
+ {sel:'#tabs [data-tab="help"]', g:"Dorothy", t:"3. Stuck? Tap the ?", b:"The <b>?</b> on the bottom bar opens the full guide to every button. Tap the logo any time to come back Home."}
+];
+let tourStep = -1;
+function tourClear(){ document.querySelectorAll(".tour-hi").forEach(e=>e.classList.remove("tour-hi")); const t = document.getElementById("tour"); if(t) t.remove(); }
+function tourShow(i){
+  tourClear(); tourStep = i; if(i < 0 || i >= TOUR.length){ tourStep = -1; try{ localStorage.setItem("nola3-tour-done","1"); }catch(e){} return; }
+  const s = TOUR[i], el = document.querySelector(s.sel);
+  if(el){ el.classList.add("tour-hi"); if(i===1) el.scrollIntoView({block:"center", behavior:"smooth"}); }
+  const d = document.createElement("div"); d.id = "tour"; d.className = "tour"; d.setAttribute("role","dialog"); d.setAttribute("aria-labelledby","tourT");
+  d.innerHTML = '<div class="tour-top"><span class="badge-g" data-g="'+s.g+'" aria-hidden="true">'+s.g[0]+'</span><span class="tour-n">Step '+(i+1)+' of '+TOUR.length+'</span><button class="tour-x" type="button" data-tourgo="skip" aria-label="Close the walkthrough">×</button></div>'
+    + '<h2 id="tourT">'+s.t+'</h2><p>'+s.b+'</p>'
+    + '<div class="tour-dots" aria-hidden="true">'+TOUR.map((_,k)=>'<i'+(k===i?' class="on"':'')+'></i>').join("")+'</div>'
+    + '<div class="tour-acts">'+(i>0?'<button class="btn" type="button" data-tourgo="back">Back</button>':'<button class="btn" type="button" data-tourgo="skip">Skip</button>')+'<button class="btn primary" type="button" data-tourgo="next">'+(i===TOUR.length-1?'Got it':'Next')+'</button></div>';
+  document.body.appendChild(d);
+  d.querySelector('[data-tourgo="next"]').focus({preventScroll:true});
+}
+document.addEventListener("click", e=>{
+  const b = e.target.closest("[data-tourgo],[data-tour],[data-helpjump]"); if(!b) return;
+  if(b.dataset.tour){ e.preventDefault(); S.tab = "home"; S.sheet = null; render(); window.scrollTo(0,0); setTimeout(()=>tourShow(0), 120); return; }
+  if(b.dataset.helpjump){ e.preventDefault(); document.getElementById("help-"+b.dataset.helpjump)?.scrollIntoView({block:"start", behavior:"smooth"}); return; }
+  const g = b.dataset.tourgo; if(g==="next") tourShow(tourStep+1); else if(g==="back") tourShow(tourStep-1); else tourShow(-1);
+});
+document.addEventListener("keydown", e=>{ if(e.key==="Escape" && tourStep>=0) tourShow(-1); });
+let tourSeen = false; try{ tourSeen = !!localStorage.getItem("nola3-tour-done"); }catch(e){ tourSeen = true; }
+if(!tourSeen) setTimeout(()=>{ if(!S.sheet && tourStep<0 && S.tab==="home") tourShow(0); }, 900);
+
+VIEWKEYS.push("home","trip","col","time","birthday","all","girl","help");
 const NAV_OF = {girl:"home", col:"explore", time:"explore", birthday:"explore", river:"explore", all:"explore", now:"home", info:"home", plan:"trip"};
 try{ const t2 = localStorage.getItem("nola2-tab"); S.tab = VIEWKEYS.includes(t2) && !["col","girl","time","all"].includes(t2) ? t2 : "home"; }catch(e){ S.tab = "home"; }
 if(location.hash && VIEWKEYS.includes(location.hash.slice(1))) S.tab = location.hash.slice(1);
@@ -2811,7 +2955,8 @@ function vInk2(){
   h += talk("ink");
   h += '<div class="head"><span class="eyebrow">Tattoo ideas</span><h2>Design concepts</h2><p class="small muted">'+AI_INK.length+' ideas in ten styles, from delicate New Orleans fine-line to 90s flash, art deco, gangsta cats and posh Parisian cats. Save favorites with the cheesecake, then copy the brief for your artist.</p></div>';
   const shown = S.inkStyle==="all" ? AI_INK : AI_INK.filter(d=>d.s===S.inkStyle);
-  h += '<div class="row hscroll inkstyles" role="group" aria-label="Design style">'+INK_STYLES.map(([k,l])=>{ const c = k==="all" ? AI_INK.length : AI_INK.filter(d=>d.s===k).length; return c ? '<button class="chip'+(S.inkStyle===k?' on':'')+'" data-inkstyle="'+k+'" aria-pressed="'+(S.inkStyle===k)+'">'+esc(l)+' <span class="n">'+c+'</span></button>' : ''; }).join("")+'</div>';
+  h += '<p class="inkhint"><b>Pick a style</b> to see just those designs. Tap <b>All</b> to see all '+AI_INK.length+' again. Tap any design to see it large.</p>';
+  h += '<div class="row inkstyles" role="group" aria-label="Design style">'+INK_STYLES.map(([k,l])=>{ const c = k==="all" ? AI_INK.length : AI_INK.filter(d=>d.s===k).length; return c ? '<button class="chip'+(S.inkStyle===k?' on':'')+'" data-inkstyle="'+k+'" aria-pressed="'+(S.inkStyle===k)+'">'+esc(l)+' <span class="n">'+c+'</span></button>' : ''; }).join("")+'</div>';
   h += '<div class="ai-grid">'+shown.map(aiCard).join("")+'</div>';
   h += '<div class="head" style="margin-top:12px"><span class="eyebrow">The originals</span><h2>27 hand-drawn sketches</h2></div>';
   return h + vInk().replace(/^<div class="head">[\s\S]*?<\/div>/, '').replace(/<section class="sect"><h3>Where to get it in New Orleans<\/h3>[\s\S]*?<\/section>/, shopsSection());
@@ -2874,7 +3019,7 @@ vSheet = function(){
 
 /* ---------- page addresses ----------
    #view.arg~kind.id — only letters, digits, . _ ~ - so links also work inside claude.ai. */
-const PAGE_NAMES = {girl:"Golden Girl picks", home:"Home", map:"Map", explore:"Explore", trip:"Trip", saved:"Saved", ink:"Tattoo ideas", col:"Collection", time:"Time Machine", birthday:"Lauren's 21st", river:"River cruises", info:"Trip tools", now:"Open now", all:"All places"};
+const PAGE_NAMES = {help:"Help & guide", girl:"Golden Girl picks", home:"Home", map:"Map", explore:"Explore", trip:"Trip", saved:"Saved", ink:"Tattoo ideas", col:"Collection", time:"Time Machine", birthday:"Lauren's 21st", river:"River cruises", info:"Trip tools", now:"Open now", all:"All places"};
 function routeFromState(){
   let r = S.tab;
   if(S.tab==="col") r += "."+S.col;
@@ -2981,7 +3126,7 @@ render = function(){
   try{ localStorage.setItem("nola2-tab", S.tab); }catch(e){}
   const a = document.activeElement, fid = a && a.id && a.tagName==="INPUT" && a.type!=="time" && a.type!=="date" ? a.id : null;
   let caret = null; try{ caret = fid ? a.selectionStart : null; }catch(_){}
-  const V = {girl:vGirl, home:vHome, map:vMap2, explore:vExplore2, trip:vTrip, plan:vTrip, saved:vSaved2, col:vCol, time:vTime, ink:vInk2, birthday:vBirthday, river:vRiver, info:vInfo2, now:vNow, all:vExplore}[S.tab] || vHome;
+  const V = {help:vHelp, girl:vGirl, home:vHome, map:vMap2, explore:vExplore2, trip:vTrip, plan:vTrip, saved:vSaved2, col:vCol, time:vTime, ink:vInk2, birthday:vBirthday, river:vRiver, info:vInfo2, now:vNow, all:vExplore}[S.tab] || vHome;
   document.getElementById("main").innerHTML = '<section class="view">'+V()+'</section>';
   document.getElementById("sheet-root").innerHTML = S.sheet ? vSheet() : "";
   syncURL();
@@ -3164,7 +3309,7 @@ html body nav.vswitch.vswitch a[aria-current="page"]{background:#E0B65A;color:#2
   addEventListener("appinstalled", function(){ closePop(); btn.remove(); });
 
   /* pop up once per version on each phone, a few seconds after opening */
-  if(web && !standalone && !ls(KEY)) setTimeout(function(){ if(!document.querySelector(".sheet.open, .sheet[open]")) showPop(false); }, 4000);
+  if(web && !standalone && !ls(KEY)) setTimeout(function(){ if(!document.querySelector(".sheet.open, .sheet[open], #tour")) showPop(false); }, 4000);
 })();
 
 </script>
