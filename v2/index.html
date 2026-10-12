@@ -2373,5 +2373,194 @@ html body nav.vswitch.vswitch a[aria-current="page"]{background:#E0B65A;color:#2
 
 </script>
 
+<script>
+/* Help tab, full guide and tours for V1 Classic and V2 (V3 has its own) */
+(function(){
+  if(typeof S === "undefined" || typeof render !== "function" || typeof TABS === "undefined") return;
+  var cur = document.querySelector('nav.vswitch a[aria-current="page"]');
+  var vn = cur ? +cur.id.replace("vlink","") : 2;
+  if(vn === 3) return;
+  var V1 = vn === 1;
+  var NOW = V1 ? "Open Now" : "Today", PLAN = V1 ? "The Plan" : "Plan";
+  var BAR = V1 ? "tabs along the top" : "bottom bar";
+  var e = function(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); };
+
+  var HELP = [
+   ["start","Start here",[
+    ["What this is","Your New Orleans trip in one place: what's open at any hour, a real map, the day-by-day plan"+(V1?"":", voting, tattoo ideas")+" and the Golden Girls cheering you on. Trip dates (Wed Nov 4 to Sun Nov 8) and the Olivier House Hotel (828 Toulouse St) are already built in."],
+    ["The 3-second version","Use the "+BAR+" to move around. Tap any place to see why it's worth it, when it's open, and how to get there. Tap the cheesecake to save it."],
+    ["Take the tour","Tap <b>Take the full tour</b> at the top of this page. It moves around the app for you; tap <b>Next</b> to go on or <b>×</b> to stop."]]],
+   ["top","The top of the screen",[
+    ["Version bar","<b>V1 · Classic</b>, <b>V2</b> and <b>V3 · New</b> are three versions of the same trip app. The gold one is where you are. Tap another to switch."],
+    ["The logo","Tap <b>The NOLA Girls</b> any time to jump back to "+NOW+"."],
+    ["Install app","Puts the app on your home screen so it opens full screen and keeps working with weak signal. On iPhone: Safari → Share → Add to Home Screen."],
+    V1 ? ["What's open now?","The big button opens <b>Open Now</b> set to this minute, so you see everything you can walk into right now."]
+       : ["Trip info","Dates, hotel, booking checklist, safety tips and useful numbers."]]],
+   ["bar", V1 ? "The tabs" : "The bottom bar", V1 ? [
+    ["Open Now","What's open at any time you pick, with search."],
+    ["The Plan","The day-by-day plan you can edit, with Plan B and a booking checklist."],
+    ["Explore","Every place with search, filters, and the cheesecake to save favorites."],
+    ["Map","The map with night-walking safety colors."],
+    ["River","Every riverboat sailing, with sunset timing for your dates."],
+    ["Info","Dates and hotel, budget, safety, and useful numbers."],
+    ["Help","This guide."]] : [
+    ["Today","What's open at any time you pick, plus Near me."],
+    ["Map","Every place on a real map, plus you and the hotel."],
+    ["Explore","Search everything with filters; river cruise times are here too."],
+    ["Plan","The day-by-day plan you can edit."],
+    ["Saved","The kitchen table: everyone's saves and Must / Maybe / Skip votes."],
+    ["Ink","27 tattoo sketches and the shops with booking info."],
+    ["Help","This guide."]]],
+   ["now", NOW,[
+    ["Pick a time","<b>Right now</b>, <b>+1 hour</b>, <b>Tonight 9 pm</b>, <b>Late night 1 am</b> or <b>Tomorrow 10 am</b>, or choose any day and time. Everything updates to show what's open then."],
+    ["Find me something","Tap <b>Find me something for the next 2 hours</b> for a short list of places that are open and worth it."],
+    ["Search and filters","Type in the search box, and use <b>Open past midnight</b>, <b>Kitchen table only</b> and the category chips to narrow it down."],
+    ["Golden Girls","Dorothy, Blanche, Rose or Sophia chime in at the top. Tap <b>Another one</b> for a new line."]]],
+   ["explore","Explore",[
+    ["Search","Type a place, a food, a neighborhood or a vibe. Results update as you type."],
+    ["Filters","<b>Open now only</b>, <b>Walkable only</b>, <b>Kitchen table only</b>, area, and sort order. <b>Clear filters</b> resets them."],
+    ["Saving","Tap the <b>cheesecake</b> on any place to save it to the kitchen table."]]],
+   ["place","Place details",[
+    ["Open a place","Tap any place name or card. A panel slides up."],
+    ["What you'll see","Open or closed right now and today's hours, the 5-cat Google rating with a link to the reviews, why you'll love it, the full address and a tap-to-call phone number. For parks and streets, the phone is whoever answers for them (it says who)."],
+    ["Buttons","<b>Save</b> (the cheesecake), <b>Add to plan</b>, <b>Directions</b> (Google or Apple Maps), <b>Copy phone</b> and <b>Website</b>."],
+    ["Booking","Tours and cruises show how to book, the price and any rules."],
+    ["Closing it","Tap the ×, tap outside the panel, or use your phone's back button."]]],
+   ["map","Map",[
+    ["On phones","The map stays out of the way so the page scrolls. Tap <b>Show the map</b> to open it, then <b>Tap here to move the map</b> to pan and zoom."],
+    ["Safety colors","Green areas are busy and well lit at night, yellow means stay on main streets, red means take a car. Tap <b>Safety colors</b> to show or hide them."],
+    ["Dots","Switch between <b>Dots by type</b> and <b>Dots by open now</b>. Tap a dot for the place."]]],
+   ["plan", PLAN,[
+    ["Day by day","Each day from Nov 4 to Nov 8 with times, stops and notes. Tap a day to see it."],
+    ["Editing","Add a stop or a day, move or remove stops, and swap in a <b>Plan B</b> if it rains or something is closed."],
+    ["Route this day","Opens the day's stops as one walking route in Google Maps, starting at the hotel."],
+    ["Booking checklist","At the bottom: what to book ahead, with links and phone numbers. Tick things off as you go."]]]
+  ];
+  if(!V1) HELP.push(["saved","Saved and voting",[
+    ["The kitchen table","Everything anyone saved with the cheesecake."],
+    ["Voting","Mark each place <b>Must</b>, <b>Maybe</b> or <b>Skip</b>. Places everyone wants rise to the top; skip the ones nobody wants."]]],
+   ["ink","Ink",[
+    ["Sketches","27 hand-drawn tattoo concepts: eight New Orleans ideas in three styles each, plus purple cats for Lauren and Tara. Tap one to see it large and copy a brief for the artist."],
+    ["Shops","Tattoo shops with website, address, phone and how to book. You must be 18+ with photo ID; many take a deposit."],
+    ["Want more?","V3 has 100 more AI design concepts in ten styles."]]]);
+  else HELP.push(["river","River",[
+    ["Cruise times","Every sailing on the Natchez, the Creole Queen and the City of New Orleans, with sunset timing for your dates and how to book."]]]);
+  HELP.push(["share","Saving and sharing",[
+    ["Where saves live","On the public website, saves, votes and plan edits stay on the phone you made them on. In the shared claude.ai version, the group sees the same plan and saves."],
+    ["Offline","Once installed and opened, the app keeps working with weak signal. Weather and map tiles need a connection."]]],
+   ["safe","Staying safe",[
+    ["The basics","Everyone saves the hotel address (828 Toulouse St) on their own phone. Carry a physical photo ID; most bars are 21+. Never leave a drink unattended. Rideshare home together, and nobody walks back alone."]]],
+   ["faq","Quick fixes",[
+    ["A place looks closed but should be open","Hours were researched in October 2026 and can change. Check the Google link or call first."],
+    ["The map won't move","Tap <b>Tap here to move the map</b> first."],
+    ["The app looks out of date","Close it and open it again with a connection; it updates itself."]]]);
+
+  var T = V1 ? {
+   quick: [
+    {go:"now", sel:"#tabs", t:"Get around with the tabs", b:"<b>Open Now</b>, <b>The Plan</b>, <b>Explore</b>, <b>Map</b>, <b>River</b> and <b>Info</b> sit along the top. Tap one to switch screens."},
+    {go:"now", sel:"header .nowbtn", t:"What's open now?", b:"The big button shows everything open this minute. Tap any place to see why it's worth it, its hours, address and phone."},
+    {go:"help", sel:'#tabs [data-tab="help"]', t:"Stuck? Tap Help", b:"<b>Help</b> has the full guide and a longer tour. Tap the logo any time to come back.", last:true}],
+   full: [
+    {go:"now", sel:"#main .talk", t:"Welcome to The NOLA Girls", b:"Picture it: Wed Nov 4 to Sun Nov 8 at the Olivier House on Toulouse St. The Golden Girls chime in up here; tap <b>Another one</b> for a new line."},
+    {go:"now", sel:"#tabs", t:"The tabs", b:"Six screens plus Help along the top: <b>Open Now</b>, <b>The Plan</b>, <b>Explore</b>, <b>Map</b>, <b>River</b> and <b>Info</b>."},
+    {go:"now", sel:"#main .whenrow", t:"Pick a time", b:"<b>Right now</b>, <b>+1 hour</b>, <b>Tonight 9 pm</b>, <b>Late night 1 am</b>, <b>Tomorrow 10 am</b>, or any day and time. Everything below shows what's open then."},
+    {go:"now", sel:"#nowq, #main .res", t:"Search and results", b:"Search by name, food or vibe, then tap any result. Open places are listed first."},
+    {go:"now", sheet:"cdm", sel:"#sheet-root .sheet", t:"Inside a place", b:"Open or closed now, hours, the 5-cat rating, why you'll love it, the address and a tap-to-call phone. <b>Save</b> it with the cheesecake, <b>Add to plan</b>, or get <b>Directions</b>."},
+    {go:"plan", sel:"#main .day-head", t:"The Plan", b:"Day by day, Nov 4 to 8. Edit stops, swap in a Plan B, and tap <b>Route this day in Google Maps</b>. The booking checklist is at the bottom."},
+    {go:"explore", sel:"#q", t:"Explore", b:"Every place, with filters for open now, walkable, kitchen table only and area. Tap the cheesecake to save favorites."},
+    {go:"map", sel:"#main .mapwrap, #main", t:"The map", b:"Green, yellow and red show how comfortable each area is to walk at night. On phones, tap <b>Tap here to move the map</b> first."},
+    {go:"river", sel:"#main", t:"River cruises", b:"Every riverboat sailing, with sunset timing for your dates and how to book."},
+    {go:"help", sel:'#tabs [data-tab="help"]', t:"You're ready", b:"<b>Help</b> has the full written guide and this tour any time. Now go get a beignet."}]
+  } : {
+   quick: [
+    {go:"now", sel:"#tabs", t:"Get around with the bottom bar", b:"<b>Today</b> shows what's open, <b>Map</b> shows everything nearby, <b>Explore</b> has search, <b>Plan</b> is the day-by-day plan, <b>Saved</b> is the kitchen table and <b>Ink</b> has tattoo ideas."},
+    {go:"now", sel:"#main .whenrow", t:"What's open, any time", b:"Pick <b>Right now</b> or any time and see what's open. Tap any place for its hours, address, phone and why it's worth it, then tap the <b>cheesecake</b> to save it."},
+    {go:"help", sel:'#tabs [data-tab="help"]', t:"Stuck? Tap Help", b:"<b>Help</b> has the full guide and a longer tour. Tap the logo any time to come back.", last:true}],
+   full: [
+    {go:"now", sel:"#main .talk", t:"Welcome to The NOLA Girls", b:"Picture it: Wed Nov 4 to Sun Nov 8 at the Olivier House on Toulouse St. The Golden Girls chime in up here; tap <b>Another one</b> for a new line."},
+    {go:"now", sel:"#tabs", t:"The bottom bar", b:"<b>Today</b>, <b>Map</b>, <b>Explore</b>, <b>Plan</b>, <b>Saved</b>, <b>Ink</b> and <b>Help</b>. The highlighted one is where you are."},
+    {go:"now", sel:"#main .whenrow", t:"Pick a time", b:"<b>Right now</b>, <b>+1 hour</b>, <b>Tonight 9 pm</b>, <b>Late night 1 am</b>, <b>Tomorrow 10 am</b>, or any day and time. Then tap <b>Find me something for the next 2 hours</b>."},
+    {go:"now", sheet:"cdm", sel:"#sheet-root .sheet", t:"Inside a place", b:"Open or closed now, hours, the 5-cat rating, why you'll love it, the address and a tap-to-call phone. <b>Save</b> it with the cheesecake, <b>Add to plan</b>, or get <b>Directions</b>."},
+    {go:"explore", sel:"#q", t:"Explore", b:"Search everything, with filters for open now, walkable, kitchen table only and area. River cruise times are here too."},
+    {go:"map", sel:"#main .mapwrap, #mapOpen, #main", t:"The map", b:"On phones, tap <b>Show the map</b>, then <b>Tap here to move the map</b>. Green, yellow and red show night-walking comfort; take a car for yellow or red after dark."},
+    {go:"plan", sel:"#main .day-head", t:"The plan", b:"Day by day, Nov 4 to 8. Edit stops, swap in a Plan B, and tap <b>Route this day in Google Maps</b>. The booking checklist is at the bottom."},
+    {go:"saved", sel:"#main .votes, #main", t:"The kitchen table", b:"Everything anyone saved. Vote <b>Must</b>, <b>Maybe</b> or <b>Skip</b> so the plan follows what everyone wants."},
+    {go:"ink", sel:"#main .ink-grid, #main", t:"Tattoo ideas", b:"27 sketches (tap one to see it large and copy a brief for the artist), plus the shops with booking info."},
+    {go:"now", sel:'header [data-tab="info"]', t:"Trip info", b:"Dates, hotel, the booking checklist, safety tips and useful numbers live here."},
+    {go:"help", sel:'#tabs [data-tab="help"]', t:"You're ready", b:"<b>Help</b> has the full written guide and this tour any time. Now go get a beignet."}]
+  };
+
+  /* the Help tab */
+  if(typeof TAB_ICON !== "undefined") TAB_ICON.help = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.8-2.5 2.3-2.5 4"/><path d="M12 17.2v.3"/></svg>';
+  if(!TABS.some(function(t){ return t[0]==="help"; })) TABS.push(["help","Help"]);
+  if(typeof VIEWKEYS !== "undefined" && VIEWKEYS.indexOf("help") < 0) VIEWKEYS.push("help");
+  function vHelp(){
+    var h = '<div class="help-wrap"><span class="eyebrow" style="font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;font-size:.75rem;color:var(--muted)">How it works</span><h2 style="margin:4px 0 4px">Help &amp; guide</h2><p class="muted small">Everything this version can do, and how to use it.</p>';
+    h += '<div class="row" style="display:flex;flex-wrap:wrap;gap:8px;margin:10px 0"><button class="btn primary" data-htour="full">Take the full tour ('+T.full.length+' steps)</button>'+(V1?'':'<button class="btn" data-tab="info">Trip info</button>')+'</div>';
+    h += '<nav class="help-toc" aria-label="Guide sections">'+HELP.map(function(s){ return '<a href="#" data-hjump="'+s[0]+'">'+e(s[1])+'</a>'; }).join("")+'</nav>';
+    h += HELP.map(function(s){ return '<section class="help-sec" id="hsec-'+s[0]+'"><h3>'+e(s[1])+'</h3><dl>'+s[2].map(function(x){ return '<dt>'+e(x[0])+'</dt><dd>'+x[1]+'</dd>'; }).join("")+'</dl></section>'; }).join("");
+    return h + '</div>';
+  }
+  var baseRender = render;
+  render = function(){
+    var r = baseRender.apply(this, arguments);
+    if(S.tab === "help"){ var m = document.getElementById("main"); if(m) m.innerHTML = '<section class="view">'+vHelp()+'</section>'; }
+    return r;
+  };
+
+  /* tours */
+  var list = "quick", step = -1;
+  function clear(){ document.querySelectorAll(".tour-hi").forEach(function(x){ x.classList.remove("tour-hi"); }); var t = document.getElementById("tour"); if(t) t.remove(); }
+  function end(){ clear(); step = -1; if(S.sheet && list==="full"){ S.sheet = null; render(); } try{ localStorage.setItem("nola-tour-done-v"+vn, "1"); }catch(x){} }
+  function show(i, l){
+    if(l) list = l; var L = T[list];
+    if(i < 0 || i >= L.length){ end(); return; }
+    clear(); step = i; var s = L[i], want = s.sheet || null, have = typeof S.sheet==="string" ? S.sheet : null;
+    if(S.tab !== s.go || want !== have){ S.tab = s.go; S.sheet = want; render(); if(!want) window.scrollTo(0,0); }
+    setTimeout(function(){
+      if(step !== i) return;
+      var el = document.querySelector(s.sel);
+      if(el && el.id !== "main"){ el.classList.add("tour-hi"); if(!want && s.sel.indexOf("#tabs")!==0 && s.sel.indexOf("header")!==0) el.scrollIntoView({block:"center", behavior:"smooth"}); }
+      var d = document.createElement("div"); d.id = "tour"; d.className = "tour"+(want||V1&&s.sel.indexOf("#tabs")===0?" tour-up":""); d.setAttribute("role","dialog"); d.setAttribute("aria-labelledby","tourT");
+      if(V1 && s.sel.indexOf("#tabs")===0) d.className = "tour";
+      d.innerHTML = '<div class="tour-top"><span class="badge-g" aria-hidden="true">'+("DBRS"[i%4])+'</span><span class="tour-n">'+(list==="full"?"Tour · ":"")+'Step '+(i+1)+' of '+L.length+'</span><button class="tour-x" type="button" data-htgo="skip" aria-label="Close the walkthrough">×</button></div>'
+        + '<h2 id="tourT">'+s.t+'</h2><p>'+s.b+'</p><div class="tour-dots" aria-hidden="true">'+L.map(function(_,k){ return '<i'+(k===i?' class="on"':'')+'></i>'; }).join("")+'</div>'
+        + '<div class="tour-acts">'+(i>0?'<button class="btn" type="button" data-htgo="back">Back</button>':'<button class="btn" type="button" data-htgo="skip">Skip</button>')
+        + (s.last?'<button class="btn" type="button" data-htour="full">Take the full tour</button>':'')
+        + '<button class="btn primary" type="button" data-htgo="next">'+(i===L.length-1?'Done':'Next')+'</button></div>';
+      document.body.appendChild(d);
+      d.querySelector('[data-htgo="next"]').focus({preventScroll:true});
+    }, 160);
+  }
+  document.addEventListener("click", function(ev){
+    var b = ev.target.closest("[data-htgo],[data-htour],[data-hjump]"); if(!b) return;
+    ev.preventDefault(); ev.stopPropagation();
+    if(b.dataset.htour){ clear(); show(0, "full"); return; }
+    if(b.dataset.hjump){ var t = document.getElementById("hsec-"+b.dataset.hjump); if(t) t.scrollIntoView({block:"start", behavior:"smooth"}); return; }
+    var g = b.dataset.htgo; if(g==="next") show(step+1); else if(g==="back") show(step-1); else end();
+  }, true);
+  document.addEventListener("keydown", function(ev){ if(ev.key==="Escape" && step>=0) end(); });
+
+  var css = document.createElement("style");
+  css.textContent = ".help-toc{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 6px}.help-toc a{display:inline-flex;align-items:center;min-height:36px;padding:6px 12px;border-radius:999px;border:1px solid var(--line,#ddd);background:var(--surface,#fff);color:var(--ink,#222);text-decoration:none;font-weight:700;font-size:.85rem}"
+   + ".help-sec{background:var(--surface,#fff);border:1px solid var(--line,#ddd);border-radius:16px;padding:14px 16px;margin:12px 0;scroll-margin-top:140px}.help-sec h3{margin:0 0 8px;font-size:1.15rem;color:var(--ink,#222)}.help-sec dl{margin:0}.help-sec dt{font-weight:800;color:var(--ink,#222);margin-top:10px}.help-sec dd{margin:3px 0 0;color:var(--ink,#222);line-height:1.5}"
+   + ".tour-hi{position:relative;z-index:60;outline:3px solid #E0B65A!important;outline-offset:3px;border-radius:12px;box-shadow:0 0 0 9999px rgba(20,12,28,.5)!important}"
+   + ".tour{position:fixed;left:12px;right:12px;bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:9000;max-width:440px;margin:0 auto;background:#FFF8F0;color:#23172C;border:2px solid #23172C;border-radius:20px;box-shadow:0 18px 50px rgba(20,12,28,.45);padding:16px 18px;font:400 .95rem/1.45 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}"
+   + ".tour.tour-up{bottom:auto;top:calc(64px + env(safe-area-inset-top,0px))}.tour h2{margin:6px 0;font:700 1.2rem/1.2 Georgia,serif;color:#23172C}.tour p{margin:0 0 10px;color:#3A2C44}.tour b{color:#23172C}"
+   + ".tour-top{display:flex;align-items:center;gap:10px}.tour .badge-g{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#23172C;color:#E0B65A;font:italic 700 1rem Georgia,serif}"
+   + ".tour-n{font-family:ui-monospace,Consolas,monospace;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:#5A4A66}.tour-x{all:unset;cursor:pointer;margin-left:auto;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;font-size:1.3rem;color:#23172C}"
+   + ".tour-dots{display:flex;gap:6px;margin:0 0 12px}.tour-dots i{width:8px;height:8px;border-radius:50%;background:#D8CCE0}.tour-dots i.on{background:#23172C;width:22px;border-radius:4px}"
+   + ".tour-acts{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}.tour .btn{color:#23172C!important;background:#fff!important;border:1px solid #23172C!important;min-height:40px;padding:8px 16px;border-radius:999px;font-weight:700;cursor:pointer}.tour .btn.primary{background:#23172C!important;color:#F6EBDD!important}"
+   + (V1 ? "" : "@media (max-width:420px){ #tabs .tab span{font-size:.62rem} }");
+  document.head.appendChild(css);
+
+  render();
+  var seen = false; try{ seen = !!localStorage.getItem("nola-tour-done-v"+vn); }catch(x){ seen = true; }
+  if(!seen) setTimeout(function(){ if(!S.sheet && step < 0 && S.tab === "now") show(0, "quick"); }, 900);
+  try{ var h0 = location.hash.slice(1); if(h0 === "help"){ S.tab = "help"; render(); } else if(h0 === "tour"){ setTimeout(function(){ show(0, "full"); }, 700); } }catch(x){}
+})();
+
+</script>
+
 </body>
 </html>

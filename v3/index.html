@@ -2799,7 +2799,9 @@ document.addEventListener("click", e=>{
 }, true);
 document.addEventListener("keydown", e=>{ if(e.key==="Escape" && tourStep>=0) tourEnd(); });
 let tourSeen = false; try{ tourSeen = !!localStorage.getItem("nola3-tour-done"); }catch(e){ tourSeen = true; }
-if(!tourSeen) setTimeout(()=>{ if(!S.sheet && tourStep<0 && S.tab==="home") tourShow(0, "quick"); }, 900);
+if(!tourSeen) setTimeout(()=>{ if(!S.sheet && tourStep<0 && S.tab==="home" && location.hash!=="#tour") tourShow(0, "quick"); }, 900);
+if(location.hash==="#tour") setTimeout(()=>tourShow(0, "full"), 700);
+else if(!tourSeen && location.hash==="") {}
 
 VIEWKEYS.push("home","trip","col","time","birthday","all","girl","help");
 const NAV_OF = {girl:"home", col:"explore", time:"explore", birthday:"explore", river:"explore", all:"explore", now:"home", info:"home", plan:"trip"};
