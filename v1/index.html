@@ -788,11 +788,12 @@ const S = {tab:"now", day:1, q:"", cat:"all", area:"all", picksOnly:false, sort:
 const TABS = [["now","Open Now"],["plan","The Plan"],["explore","Explore"],["map","Map"],["river","River"],["info","Info"]];
 let db=null, user=null, uid=null, shared=false, readOnly=false;
 const LOCAL = "_me";
-let picks = {}, checks = {}, profiles = {}, trip = {};
+const TRIP_DEFAULT = {arrive:"2026-11-04", depart:"2026-11-08", hotel:"Olivier House Hotel", addr:"828 Toulouse St, New Orleans, LA 70112", lat:29.95796, lon:-90.06731};
+let picks = {}, checks = {}, profiles = {}, trip = Object.assign({}, TRIP_DEFAULT);
 
 try{ picks[LOCAL] = new Set(JSON.parse(localStorage.getItem("nola-picks")||"[]")); }catch(e){ picks[LOCAL]=new Set(); }
 try{ checks = JSON.parse(localStorage.getItem("nola-checks")||"{}")||{}; }catch(e){ checks={}; }
-try{ trip = JSON.parse(localStorage.getItem("nola-trip")||"{}")||{}; }catch(e){ trip={}; }
+try{ const t0 = JSON.parse(localStorage.getItem("nola-trip")||"{}")||{}; trip = t0.arrive ? t0 : Object.assign({}, TRIP_DEFAULT); }catch(e){ trip = Object.assign({}, TRIP_DEFAULT); }
 let plan = null;
 try{ const lp = JSON.parse(localStorage.getItem("nola-plan")||"null"); if(lp && Array.isArray(lp.days)) plan = lp; }catch(e){}
 if(!plan) plan = seedPlan();
@@ -1435,7 +1436,7 @@ function toggleCheck(id){
 function saveTrip(){
   const dr = S.draft || {};
   if(dr.arrive && dr.depart && parseD(dr.depart) < parseD(dr.arrive)){ toast("The leave date is before the arrive date."); return; }
-  trip = {arrive:dr.arrive||"", depart:dr.depart||"", hotel:(dr.hotel||"").trim(), addr:(dr.addr||"").trim()};
+  trip = {arrive:dr.arrive||"", depart:dr.depart||"", hotel:(dr.hotel||"").trim(), addr:(dr.addr||"").trim()}; if(trip.hotel===TRIP_DEFAULT.hotel && trip.addr===TRIP_DEFAULT.addr){ trip.lat=TRIP_DEFAULT.lat; trip.lon=TRIP_DEFAULT.lon; }
   S.editing=false; S.draft=null; render(); toast("Trip details saved.");
   if(shared) enqueue(()=>db.doc("trip/info").set(trip));
   else { try{ localStorage.setItem("nola-trip", JSON.stringify(trip)); }catch(e){} }
@@ -1608,7 +1609,7 @@ setInterval(()=>{
     if(snap.exists){ const v = snap.data(); if(Array.isArray(v.days) && v.days.length){ plan = JSON.parse(JSON.stringify({days:v.days})); render(); } }
   }, ()=>{});
   db.doc("trip/info").onSnapshot(snap=>{
-    if(snap.exists){ const t=snap.data(); trip={arrive:t.arrive||"", depart:t.depart||"", hotel:t.hotel||"", addr:t.addr||""}; render(); }
+    if(snap.exists && snap.data().arrive){ const t=snap.data(); trip={arrive:t.arrive||"", depart:t.depart||"", hotel:t.hotel||"", addr:t.addr||""}; render(); }
   }, ()=>{});
 })();
 </script>
