@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="V3 New · New Orleans trip hub: what is open now, a real map, the plan, saved places, and tattoo ideas.">
+<meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#23172C">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" href="../icon.svg" type="image/svg+xml">
@@ -696,6 +697,39 @@ button.holla[aria-pressed="true"] .holla-dot{background:#1E7A4C}
 .sbody>b{color:var(--ink);font-size:1rem}
 .shint{font-size:.78rem;color:var(--muted)}
 .sbody .seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+
+/* ---- UI/UX audit (9.5 standard) ---- */
+/* every control is at least 44px to tap */
+.btn,.chip,.colcard,.callbtn,.ride-btn,.ask-act,.ask-chip,.help-toc a,.todo-grid button,.meow-acts a,.meow-acts button,.bg-acts button,.seg button,.era,.tm-era,[data-tm],[data-savedtab],[data-inkstyle],[data-hcat],[data-surp],[data-girl],[data-mapcol],[data-radius],[data-when],[data-person]{min-height:44px}
+.pmenu-btn{width:44px!important;height:44px!important;min-height:44px!important}
+.chip{display:inline-flex;align-items:center}
+.talk .again{min-height:44px;padding:0 16px}
+.ask-chip{display:inline-flex;align-items:center;padding:6px 12px}
+.ask-btn{width:44px;height:44px}
+/* small-looking controls keep their look but get a 44px invisible tap area */
+button.nola-install,.nm,.plink,.rt-g,.rt a,.sos h3 a,.holla-off,.lg-list a{position:relative}
+button.nola-install::after,.nm::after,.plink::after,.rt-g::after,.rt a::after,.sos h3 a::after,.holla-off::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+/* readable small text: nothing under 11px */
+.tab span{font-size:.72rem!important}
+@media (max-width:899px){ .tab{font-size:.72rem} }
+.tag,.cat-tag,.ctag,.res .tags span,.card .tags span,[class*="tag"]{font-size:max(.72rem,11px)}
+.h3x{font-size:1.1rem;margin:0 0 8px}
+/* reduced motion: everything, not just some animations */
+@media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important} }
+/* ---- audit round 2: remaining tap targets ---- */
+button.holla,.cakebtn,[data-ink]{min-height:44px}
+[data-ink]{min-width:44px}
+[data-close],.ask-x,.meow-x,.tour-x,.sheet .x,.sheet-top button{min-width:44px;min-height:44px}
+#main details>summary,#sheet-root details>summary{min-height:44px;display:flex;align-items:center}
+#main [data-open]:not(.btn):not(.chip):not(.pthumb):not(.pcardimg):not(.colcard):not(.tile),#sheet-root dd a,.pimg figcaption a,#main .box li a,#main .tips a,.rt a{position:relative}
+#main [data-open]:not(.btn):not(.chip):not(.pthumb):not(.pcardimg):not(.colcard):not(.tile)::after,#sheet-root dd a::after,.pimg figcaption a::after,#main .box li a::after,#main .tips a::after,.rt a::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+
+.chip{min-width:44px;justify-content:center}
+.mapsel select,#main select{min-height:44px}
+/* Ink shop cards: inline links/buttons get a 44px tap area */
+.kv .lnk2,.kv .btn.mini,.card-top h3 button{position:relative;display:inline-flex;align-items:center;min-height:44px}
+.kv .btn.mini{min-width:44px;justify-content:center}
+.card-top h3 button{min-width:44px;justify-content:center}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
@@ -3101,7 +3135,7 @@ function vInk2(){
   return h + vInk().replace(/^<div class="head">[\s\S]*?<\/div>/, '').replace(/<section class="sect"><h3>Where to get it in New Orleans<\/h3>[\s\S]*?<\/section>/, shopsSection());
 }
 function vInfo2(){
-  return '<div class="box"><h3>Look and feel</h3><div class="seg">'+[["auto","Auto (After Dark after sunset)"],["day","Always day"],["night","Always After Dark"]].map(([k,l])=>'<button class="chip" data-setmode="'+k+'" aria-pressed="'+(S.mode===k)+'">'+l+'</button>').join("")+'</div></div>' + vInfo();
+  return '<div class="box"><h2 class="h3x">Look and feel</h2><div class="seg">'+[["auto","Auto (After Dark after sunset)"],["day","Always day"],["night","Always After Dark"]].map(([k,l])=>'<button class="chip" data-setmode="'+k+'" aria-pressed="'+(S.mode===k)+'">'+l+'</button>').join("")+'</div></div>' + vInfo();
 }
 
 /* map v2: collection layers + walking radius */
@@ -3387,8 +3421,8 @@ document.addEventListener("change", e=>{
   function placeLine(p, W){ const st = statusAt(p, W||nowW()); return p.n + " — " + (st.label || (st.state==="open" ? "open now" : "closed now")); }
   function localAnswer(qRaw){
     const q = qRaw.toLowerCase(), W = nowW();
-    if(/hotel|where are we staying|our address/.test(q)) return {text:"Home base is the Olivier House Hotel, 828 Toulouse St, New Orleans, LA 70112. Everyone should save it on their own phone.", ids:[]};
-    if(/safe|safety|dangerous|walk at night/.test(q)) return {text:"Stick to busy, lit streets after dark: Bourbon, Royal, Decatur, Frenchmen, Canal and St. Charles. Take a car for anything far, never leave a drink unattended, and nobody walks back alone. The Map tab shows green, yellow and red night-walking areas.", ids:[]};
+    if(/hotel|where are we staying|our address/.test(q)) return {text:"Olivier House Hotel. 828 Toulouse Street, New Orleans, 70112. Save it on your phone. All of you. I am not repeating it at two in the morning.", ids:[]};
+    if(/safe|safety|dangerous|walk at night/.test(q)) return {text:"Busy, lit streets after dark. Bourbon, Royal, Decatur, Frenchmen, Canal, St. Charles. Take a car for anything else. Never leave a drink unattended. Nobody walks back alone. The Map tab shows safe, caution, and avoid zones. This is not a discussion.", ids:[]};
     if(/plan|today|tomorrow|day \d|itinerary|schedule/.test(q) && plan && plan.days){
       const ts = typeof tripStatus==="function" ? tripStatus() : null;
       let n = (q.match(/day (\d)/)||[])[1]; n = n ? +n : (ts && ts.day ? ts.day + (/tomorrow/.test(q)?1:0) : 1);
@@ -3412,7 +3446,7 @@ document.addEventListener("change", e=>{
     if(wantOpen) pool = pool.filter(x=>isOpen(x, W));
     const near = /near|close|walk|nearby|around here/.test(q);
     pool.sort((a,b)=>{ const da = distInfo(a), db = distInfo(b); return (da&&db) ? da.m-db.m : a.d-b.d; });
-    if(!pool.length) return {text:"I couldn't find "+(wantOpen?"anything open right now":"a match")+" for that. Try Holla Holla at the top, or ask another way — like \"coffee open now\" or \"jazz tonight\".", ids:[]};
+    if(!pool.length) return {text:"Nothing. "+(wantOpen?"Everything matching that is closed right now.":"I have no idea what you're looking for.")+" Try Holla Holla, or ask me something I can work with — \"coffee open now\" or \"jazz tonight.\"", ids:[]};
     const top = pool.slice(0, 6);
     return {text:(wantOpen ? "Open right now" : "Here are some")+(near ? ", closest first" : "")+" — "+label+":\n"+top.map(x=>"• "+placeLine(x, W)+(distInfo(x)?" · "+distInfo(x).txt:"")).join("\n"), ids:top.map(x=>x.id)};
   }
@@ -3426,7 +3460,7 @@ document.addEventListener("change", e=>{
   }
   async function claudeAnswer(q, onText){
     const ctx = context();
-    const prompt = "You are the friendly helper inside 'The NOLA Girls', a New Orleans trip app for Will, Emily and their niece Lauren (21). Answer the question briefly (under 120 words), warmly, with a light Golden Girls wink, using ONLY the app data below. Prefer places that are open now when the question is about now. When you mention a place from the data, append its id in double brackets right after the name, like Café du Monde [[cdm]]. Don't invent hours, prices or places.\n\nAPP DATA (JSON):\n" + JSON.stringify(ctx) + "\n\nQUESTION: " + q;
+    const prompt = "You ARE Dorothy Zbornak from The Golden Girls. You are the AI assistant inside 'The NOLA Girls', a New Orleans trip app for Will, Emily and their niece Lauren (who is turning 21).\n\nVOICE RULES — you must follow these exactly:\n- Speak in Dorothy's voice: dry, deadpan sarcasm with a sharp wit. Bea Arthur energy.\n- Complete, grammatically correct sentences. Declarative. Land with finality.\n- Use the three-beat structure: acknowledge sincerely, pause, deliver the kill shot in the same flat tone.\n- Never use bullet points, headers, or corporate language. Talk TO people, not at spreadsheets.\n- Keep answers under 100 words unless someone really messed up.\n- Reference the other Girls when relevant: 'Ma' for Sophia, 'Rose' with a deep breath first, 'Blanche' with a wry observation, 'Stanley' with contempt.\n- Use Dorothy's phrases naturally: 'Oh, please.' 'Excuse me?' 'The point is...' 'Let me tell you something...'\n- End with a mic drop, not a summary. Last line should be the sharpest.\n- When giving practical advice (safety, directions, hours), deliver it like a substitute teacher who cares but will not be argued with.\n- Never use exclamation points casually. Never hedge with 'I think' or 'maybe'. State.\n- Never laugh at your own jokes. The deadpan IS the joke.\n- Sign responses '— Dorothy' only when the tone warrants a dramatic exit.\n\nDATA RULES:\n- Use ONLY the app data below. Don't invent hours, prices or places.\n- Prefer places that are open now when the question is about now.\n- When you mention a place from the data, append its id in double brackets right after the name, like Café du Monde [[cdm]].\n\nAPP DATA (JSON):\n" + JSON.stringify(ctx) + "\n\nQUESTION: " + q;
     const input = window.askClaudeInput ? window.askClaudeInput(q, HIST) : prompt;
     const r = await SAMPLE(input, {modelTier:"default", cache:false, onText:({text})=>onText(text)});
     return r.text;
@@ -3488,13 +3522,61 @@ document.addEventListener("change", e=>{
   }
   let voiceTurn = false, convo = false; try{ convo = localStorage.getItem("nola-ask-convo")==="1"; }catch(e){}
   function listenAgain(){ if(convo && panel){ const m = $(".mic", panel); if(m && !m.classList.contains("on")) setTimeout(()=>m.click(), 350); } }
-  function say(t){ const want = speak || voiceTurn; voiceTurn = false; if(!want || !window.speechSynthesis){ listenAgain(); return; } try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(t).replace(/\[\[[^\]]+\]\]/g,"").slice(0,600)); const v = speechSynthesis.getVoices().find(v=>/en-US/i.test(v.lang) && /female|samantha|aria|jenny|zira/i.test(v.name)); if(v) u.voice = v; u.onend = listenAgain; speechSynthesis.speak(u); }catch(e){ listenAgain(); } }
+  const TTS_URL = "";
+  const player = new Audio(); player.preload = "auto";
+  let unlocked = false;
+  const SILENT = (() => { const n = 800, b = new ArrayBuffer(44 + n), d = new DataView(b); const w = (o, t) => { for(let i = 0; i < t.length; i++) d.setUint8(o + i, t.charCodeAt(i)); }; w(0, "RIFF"); d.setUint32(4, 36 + n, true); w(8, "WAVEfmt "); d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, 1, true); d.setUint32(24, 8000, true); d.setUint32(28, 8000, true); d.setUint16(32, 1, true); d.setUint16(34, 8, true); w(36, "data"); d.setUint32(40, n, true); for(let i = 0; i < n; i++) d.setUint8(44 + i, 128); return URL.createObjectURL(new Blob([b], {type:"audio/wav"})); })();
+  function unlockAudio(){ if(unlocked) return; unlocked = true; try{ player.src = SILENT; const p = player.play(); if(p && p.catch) p.catch(()=>{ unlocked = false; }); }catch(e){ unlocked = false; } try{ if(window.speechSynthesis) speechSynthesis.speak(new SpeechSynthesisUtterance("")); }catch(e){} }
+  document.addEventListener("pointerdown", e => { if(e.target.closest && e.target.closest(".ask-panel,.ask-fab")) unlockAudio(); }, true);
+  function spoken(t){
+    let x = String(t||"").replace(/\[\[[^\]]+\]\]/g, "");
+    const lines = x.split("\n").map(l => l.trim()).filter(Boolean);
+    const items = lines.filter(l => /^[•\-*]/.test(l));
+    if(items.length > 3){ const head = lines.filter(l => !/^[•\-*]/.test(l) && !/^Or tap/i.test(l)); x = head.concat(items.slice(0, 3)).join("\n") + "\nAnd " + (items.length - 3) + " more on your screen."; }
+    x = x.replace(/^[•\-*]\s*/gm, "").replace(/(\d(?:\.\d)?)\s*★/g, "$1 stars").replace(/★/g, "")
+      .replace(/~\s*/g, "about ").replace(/\bmin\b/g, "minute").replace(/\bmins\b/g, "minutes")
+      .replace(/\s+[·|—–]\s+/g, ", ").replace(/[·|]/g, ",").replace(/\s—\s?|—/g, ", ")
+      .replace(/\b(\d{3})-(\d{3})-(\d{4})\b/g, "$1, $2, $3").replace(/\bSt\b\.?/g, "Street").replace(/\bAve\b\.?/g, "Avenue")
+      .replace(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/g, d => ({Mon:"Monday",Tue:"Tuesday",Wed:"Wednesday",Thu:"Thursday",Fri:"Friday",Sat:"Saturday",Sun:"Sunday"})[d]).replace(/\bNov\b\.?/g, "November").replace(/\bOct\b\.?/g, "October")
+      .replace(/(\d)\s*(am|pm)?\s*[–-]\s*(\d|midnight|noon)/gi, (m, a, ap, b) => a + (ap ? " " + ap : "") + " to " + b).replace(/(day)\s*[–-]\s*/g, "$1 to ")
+      .replace(/,?\s*LA\s+\d{5}\b/g, "").replace(/\b(\d+)\s+minute\b/g, (m, n) => n + (n === "1" ? " minute" : " minutes")).replace(/(\d) minutes walk/g, "$1-minute walk")
+      .replace(/\s*\(([^)]*)\)/g, ", $1,").replace(/,\s*,/g, ",").replace(/,\s*\./g, ".")
+      .replace(/https?:\/\/\S+/g, "").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, "")
+      .replace(/\n+/g, ". ").replace(/:\s*\./g, ":").replace(/\.\s*\./g, ".").replace(/,\s*\./g, ".").replace(/\s{2,}/g, " ").trim();
+    if(x.length > 650){ const cut = x.slice(0, 650); const end = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("? "), cut.lastIndexOf("! ")); x = (end > 200 ? cut.slice(0, end + 1) : cut) + " The rest is on your screen."; }
+    return x;
+  }
+  function deviceVoice(text){
+    if(!window.speechSynthesis){ listenAgain(); return; }
+    const pick = () => { const vs = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)); const score = v => (/premium|enhanced|neural|natural/i.test(v.name)?4:0) + (/google/i.test(v.name)?2:0) + (/ava|zoe|allison|susan|samantha|jenny|aria|sonia|libby/i.test(v.name)?2:0) - (/zira|david|mark|fred|albert|junior|novelty|whisper/i.test(v.name)?3:0); return vs.sort((a,b) => score(b) - score(a))[0]; };
+    const go = () => { try{ speechSynthesis.cancel(); const parts = text.match(/[^.!?]+[.!?]*/g) || [text]; parts.forEach((p, i) => { const u = new SpeechSynthesisUtterance(p.trim()); const v = pick(); if(v) u.voice = v; u.pitch = 0.78; u.rate = 0.92; if(i === parts.length - 1) u.onend = listenAgain; speechSynthesis.speak(u); }); }catch(e){ listenAgain(); } };
+    if(speechSynthesis.getVoices().length) go(); else { let done = false; const once = () => { if(done) return; done = true; go(); }; speechSynthesis.onvoiceschanged = once; setTimeout(once, 900); }
+  }
+  let sayN = 0;
+  async function say(t){
+    const want = speak; voiceTurn = false;
+    if(!want){ listenAgain(); return; }
+    const text = spoken(t); if(!text){ listenAgain(); return; }
+    const n = ++sayN;
+    try{ player.pause(); }catch(e){} try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
+    if(TTS_URL){
+      try{
+        const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 9000);
+        const r = await fetch(TTS_URL, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({text}), signal:ctl.signal});
+        clearTimeout(timer);
+        if(n !== sayN) return;
+        if(r.ok){ const url = URL.createObjectURL(await r.blob()); if(n !== sayN) return; player.onended = () => { URL.revokeObjectURL(url); listenAgain(); }; player.src = url; await player.play(); return; }
+      }catch(e){ if(n !== sayN) return; }
+    }
+    deviceVoice(text);
+  }
+  window.askSpoken = spoken;
   const HIST = [];
   async function ask(q){
     q = (q||"").trim(); if(!q) return;
     addMsg("me", q); const inp = $("#askq", panel); if(inp) inp.value = "";
-    if(/^(bye|goodbye|stop|stop listening|that's all|thats all|thank you that's all|end call|hang up)\b/i.test(q)){ convo = false; const c = $("#askconvo", panel); if(c) c.checked = false; try{ localStorage.setItem("nola-ask-convo","0"); }catch(_){} addMsg("bot", "Bye for now, honey. Tap the mic whenever you need me."); say("Bye for now, honey."); return; }
-    let act = null; try{ act = window.askAction ? window.askAction(q) : null; }catch(e){ act = null; }
+    if(/^(bye|goodbye|stop|stop listening|that's all|thats all|thank you that's all|end call|hang up)\b/i.test(q)){ convo = false; const c = $("#askconvo", panel); if(c) c.checked = false; try{ localStorage.setItem("nola-ask-convo","0"); }catch(_){} addMsg("bot", "Fine. Go. Have fun. Try not to end up on the news. Tap the mic when you need me again."); say("Fine. Go. Have fun. Try not to end up on the news."); return; }
+    let act = null; try{ act = (window.askAction ? window.askAction(q) : null) || (window.askFind ? window.askFind(q) : null); }catch(e){ act = null; }
     if(act){ addMsg("bot", act.text, act.ids, act.actions); say(act.text); HIST.push(["user", q], ["assistant", act.text]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12); return; }
     if(SAMPLE){
       const b = addMsg("bot", "Thinking…");
@@ -3516,20 +3598,20 @@ document.addEventListener("change", e=>{
     if(panel){ panel.remove(); panel = null; fab.style.display = ""; document.documentElement.classList.remove("ask-open"); if(window.visualViewport) visualViewport.removeEventListener("resize", fitPanel); return; }
     fab.style.display = "none";
     panel = document.createElement("section"); panel.className = "ask-panel"; panel.setAttribute("role","dialog"); panel.setAttribute("aria-label","Ask the Girls");
-    panel.innerHTML = '<div class="ask-hd"><span class="badge-g" style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#E0B65A;color:#23172C;font:italic 700 1rem Georgia,serif">B</span><div><b>Ask the Girls</b><small>'+(SAMPLE?"Answers by Claude, from this app's places":"Instant answers from this app's places")+'</small></div><button class="ask-x" type="button" aria-label="Close">×</button></div>'
+    panel.innerHTML = '<div class="ask-hd"><span class="badge-g" style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--lav,#7558AE);color:#fff;font:italic 700 1rem Georgia,serif">D</span><div><b>Ask Dorothy</b><small>'+(SAMPLE?"Dorothy Zbornak, powered by Claude":"Instant answers from this app's places")+'</small></div><button class="ask-x" type="button" aria-label="Close">×</button></div>'
       + '<div class="ask-log" aria-live="polite"></div>'
       + '<div class="ask-sugg">'+SUGG.map(s=>'<button class="ask-chip" type="button" data-asksugg="'+esc(s)+'">'+esc(s)+'</button>').join("")+'</div>'
-      + '<label class="ask-speak"><input type="checkbox" id="askspeak"'+(speak?" checked":"")+'> Read answers out loud</label>'
+      + '<label class="ask-speak"><input type="checkbox" id="askspeak"'+(speak?" checked":"")+'> Read answers out loud in Dorothy’s voice</label>'
       + (SR ? '<label class="ask-convo"><input type="checkbox" id="askconvo"'+(convo?" checked":"")+'> Conversation mode: keep listening after each answer (say “bye” to stop)</label><div class="ask-live" aria-live="polite">● Listening…</div>' : '')
       + '<form class="ask-in"><input id="askq" type="text" placeholder="Ask anything about the trip…" aria-label="Your question" autocomplete="off">'+(SR?'<button class="ask-btn mic" type="button" aria-label="Ask by voice">'+ICON_MIC+'</button>':'')+'<button class="ask-btn" type="submit" aria-label="Send">'+ICON_SEND+'</button></form>';
     document.body.appendChild(panel);
     document.documentElement.classList.add("ask-open");
     if(window.visualViewport){ visualViewport.addEventListener("resize", fitPanel); visualViewport.addEventListener("scroll", fitPanel); fitPanel(); }
-    addMsg("bot", "Honey, ask me anything: what's open, where to eat, what's on the plan, hours, addresses. Tap the mic to just say it.");
+    addMsg("bot", "All right. Ask me anything: what's open, where to eat, what's on the plan, hours, addresses. I have opinions on all of it. Tap the mic if you'd rather just say it — I'll listen. I always listen. That's my curse.");
     $(".ask-x", panel).onclick = open;
     $(".ask-in", panel).onsubmit = e=>{ e.preventDefault(); ask($("#askq", panel).value); };
     if($("#askconvo", panel)) $("#askconvo", panel).onchange = e=>{ convo = e.target.checked; try{ localStorage.setItem("nola-ask-convo", convo?"1":"0"); }catch(_){} if(convo){ const m = $(".mic", panel); if(m) m.click(); } };
-    $("#askspeak", panel).onchange = e=>{ speak = e.target.checked; try{ localStorage.setItem("nola-ask-speak", speak?"1":"0"); }catch(_){} if(!speak && window.speechSynthesis) speechSynthesis.cancel(); };
+    $("#askspeak", panel).onchange = e=>{ speak = e.target.checked; try{ localStorage.setItem("nola-ask-speak", speak?"1":"0"); }catch(_){} if(!speak){ try{ player.pause(); }catch(_){} if(window.speechSynthesis) speechSynthesis.cancel(); } else { unlockAudio(); say("Fine. I'll talk. But if you interrupt me, I will remember it."); } };
     const mic = $(".mic", panel);
     if(mic) mic.onclick = ()=>{
       try{
@@ -4039,8 +4121,12 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
   /* ---- finding places ---- */
   const STOP = /^(the|and|what|whats|when|where|how|does|do|is|are|for|open|hours|close|closes|closing|time|phone|number|address|tell|about|get|there|can|we|you|i|me|to|of|in|on|at|a|an|it|its|that|this|near|best|good|go|going|any|some|still|right|now|today|tonight|tomorrow|day|safe|far|from|our|my|with|by|call|directions|way|much|cost|price|rating|rated|reviews|should|would|could|they|them|place|places|spot|spots|new|orleans|nola)$/;
   const DF = {}; P.forEach(p => new Set(lc(p.n).replace(/['’]/g,"").replace(/[^a-z0-9& ]/g," ").split(/\s+/)).forEach(w => { DF[w] = (DF[w]||0) + 1; }));
-  const GENERIC = /^(house|houses|street|park|cafe|café|bar|pub|tour|tours|museum|garden|gardens|square|shop|shops|tattoo|tattoos|jazz|hall|cemetery|plantation|cruise|river|center|club|walk|work|drink|drinks|social|cultural|historic|french|quarter|district|point|lounge|rescue|state|city|art|arts|world|queen|creole|swamp|line|second|design|dinner|lunch|romantic|night|tonight|best|cheap|lost|wallet|weather|pack|airport|streetcar|history|difference|between|mean|happening|cat|cats|food|eat|beignet|beignets|coffee|music|dance|safe|nearest|hospital|install|save|holla|table|kitchen|area|around|tell|about|whole|plan|doing|thing|things|stuff|done|free|spot|spots|rooftop|view|views)$/;
+  const GENERIC = /^(house|houses|street|park|cafe|café|bar|pub|tour|tours|museum|garden|gardens|square|shop|shops|tattoo|tattoos|jazz|hall|cemetery|plantation|cruise|river|center|club|walk|work|drink|drinks|social|cultural|historic|french|quarter|district|point|lounge|rescue|state|city|art|arts|world|queen|creole|swamp|line|second|design|dinner|lunch|romantic|night|tonight|best|cheap|lost|wallet|weather|pack|airport|streetcar|history|difference|between|mean|happening|cat|cats|food|eat|beignet|beignets|coffee|music|dance|safe|nearest|hospital|install|save|holla|table|kitchen|area|around|tell|about|whole|plan|doing|thing|things|stuff|done|free|spot|spots|rooftop|view|views|store|stores|salon|thrift|market|center|centre|gallery|studio)$/;
   function findPlaces(q){
+    /* a full place name always wins ("is salon salon open") */
+    const qq = " " + lc(q).replace(/['’]/g,"").replace(/[^a-z0-9& ]/g," ").replace(/\s+/g," ") + " ";
+    const exact = P.filter(p => { const nm = lc(p.n).replace(/\(.*?\)/g,"").replace(/['’]/g,"").replace(/[^a-z0-9& ]/g," ").replace(/\s+/g," ").trim(); return nm.length > 3 && qq.includes(" " + nm + " "); }).sort((a,b) => b.n.length - a.n.length);
+    if(exact.length) return exact.slice(0, 1);
     const words = lc(q).replace(/['’]/g,"").replace(/[^a-z0-9& ]/g," ").split(/\s+/).filter(w => w.length > 2 && !STOP.test(w) && !GENERIC.test(w) && (DF[w]||0) <= 3);
     if(!words.length) return [];
     const scored = P.map(p => { const n = lc(p.n).replace(/['’]/g,"").replace(/[^a-z0-9& ]/g," "); let sc = 0; words.forEach(w => { if(new RegExp("\\b"+w.replace(/[^a-z0-9]/g,"")+"(s|es|'s)?\\b").test(n)) sc += w.length + 2; }); return [p, sc]; }).filter(x => x[1] >= 5).map(([p, sc]) => { const n = lc(p.n); lc(q).replace(/['’]/g,"").split(/[^a-z0-9]+/).filter(w => w.length > 3 && GENERIC.test(w)).forEach(w => { if(n.includes(w)) sc += 1; }); return [p, sc]; }).sort((a,b) => b[1]-a[1]);
@@ -4056,7 +4142,8 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     [/drag|gay|queer|lgbt|pride/, p => p.c.includes("queer")],
     [/dance|dancing|club|party/, p => p.c.includes("party") || p.c.includes("queer")],
     [/vegan|vegetarian|plant.based/, p => /vegan|vegetarian|plant.based|plant-driven/i.test(hay(p))],
-    [/dinner|lunch|eat|food|hungry|restaurant|po.?boy|gumbo|jambalaya|crawfish/, p => p.c.includes("eat")],
+    [/po.?boys?|crawfish|gumbo|jambalaya|seafood|oysters?|shrimp|muffuletta|red beans|boudin|catfish|etouffee|étouffée/, p => { const d = (lc(qNow).match(/po.?boys?|crawfish|gumbo|jambalaya|seafood|oysters?|shrimp|muffuletta|red beans|boudin|catfish|etouffee|étouffée/)||[""])[0].replace(/s$/,"").replace(/po.?boy/,"po.?boy"); return d && new RegExp(d, "i").test(p.n + " " + hay(p)); }],
+    [/dinner|lunch|eat|food|hungry|restaurant/, p => p.c.includes("eat")],
     [/cat|kitt/, p => /\bcats?\b|kitt|feline/i.test(hay(p))],
     [/tattoo|ink/, p => p.c.includes("tattoo")],
     [/museum/, p => /museum|cabildo|collection|presbyt|pharmacy|musée|musee/i.test(p.n)],
@@ -4159,7 +4246,8 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
 
   function listAnswer(q){
     const hit = CATMAP.find(([re]) => re.test(q));
-    const wantsList = hit || /open|available|now|tonight|tomorrow|where (can|should) (we|i)|recommend|suggest|best|cheap|free|near|close by|nearby|walk/.test(q);
+    const general = /^(what('| i)?s|whats|anything|everything|places?|stuff|things?)\b.*\b(open|available|going on|to do)\b|^(open|what('| i)?s open)|\b(open|available) (now|right now|tonight|near me|nearby)\b|^(where (can|should) (we|i) go|what (can|should) (we|i) do)\b|near me\??$|^near(by| us)\b/.test(q);
+    const wantsList = hit || general;
     if(!wantsList) return null;
     const {W, label, explicit} = parseWhen(q);
     let pool = hit ? P.filter(hit[1]) : P.slice();
@@ -4184,8 +4272,9 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
   }
 
   window.askFindPlaces = findPlaces;
+  let qNow = "";
   window.askEngine = function(qRaw, hist){
-    let q = lc(qRaw).replace(/[’`]/g, "'").trim();
+    let q = lc(qRaw).replace(/[’`]/g, "'").trim(); qNow = q;
     /* follow-ups like "what about tomorrow?" reuse the last question's subject */
     if(/^(what|how) about|^and |^also |^same (for|but)/.test(q) && hist && hist.length){ const lastQ = [...hist].reverse().find(h => h[0]==="user"); if(lastQ) q = lc(lastQ[1]).replace(/\b(now|right now|tonight|today|tomorrow|this (morning|afternoon|evening)|at \d{1,2}(:\d{2})?\s*(am|pm)?)\b/g, " ") + " " + q.replace(/^(what|how) about|^and |^also |^same (for|but)/, " "); }
     if(/^(hi|hey|hello|yo|howdy|good (morning|evening))\b/.test(q) && q.length < 25) return {text:"Hey, darlin'! Ask me what's open, where to eat, the plan for any day, hours or addresses for any place, or anything about New Orleans.", ids:[]};
@@ -4214,8 +4303,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     if(kbHit){ const t = kbHit[1](q); if(t) return {text:t, ids:[]}; }
     if(ha) return ha;
     const words = q.replace(/[^a-z ]/g," ").split(/\s+/).filter(w => w.length > 3 && !STOP.test(w));
-    const loose = P.filter(p => words.some(w => lc(hay(p)).includes(w))).slice(0, 5);
-    if(loose.length) return {text:"Here's what I found for that:\n"+loose.map(p => "• "+p.n+" — "+stTxt(p, W0())+(fmtDist(p)?" · "+fmtDist(p):"")).join("\n"), ids:loose.map(p => p.id)};
+    if(words.length){ const term = words.slice(0, 4).join(" "); return {text:"That's not in our guide, honey. Here's a search for \"" + term + "\" near you:", ids:[], actions:[{label:"Find " + term + " nearby", href:"https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(term + " near me"), kind:"call"}]}; }
     return {text:"I'm not sure about that one, honey. Try asking about a place (\"Is Preservation Hall open tomorrow?\"), a kind of thing (\"late-night food near us\"), the plan (\"what's on day 3?\"), getting around, tipping, safety, or New Orleans history and food.", ids:[]};
   };
 
@@ -4435,21 +4523,34 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
   const THING = /\b(pharmacy|drugstore|cvs|walgreens|atm|bank|grocery|groceries|store|market|nail|salon|barber|haircut|spa|massage|laundry|souvenir|souvenirs|gift|clothes|shoes|sunglasses|umbrella|phone charger|charger|post office|gas station|gym|yoga|bike rental|scooter|parking|restroom|bathroom|wifi|hotel|tattoo|piercing|thrift|bookstore|record store|music store|costume|wig|mask|beads|hat|hats|jewelry|art gallery|gallery|antique|antiques|liquor|wine shop|cigar|dispensary|vet|dog park|playground|church|mass)\b/;
   const enc = encodeURIComponent;
   const maps = t => "https://www.google.com/maps/search/?api=1&query=" + enc(t + " near me");
+  window.askFind = function(qRaw){
+    const q = String(qRaw||"").toLowerCase(); const m = q.match(FOOD) || q.match(THING); if(!m) return null;
+    const r = window.askEngine(qRaw, []); return r && r.actions && r.actions.length && /^That's not in our guide|^Here's how to find|^Closest pharmacy/.test(r.text) ? r : null;
+  };
   window.askEngine = function(qRaw, hist){
     const a = base(qRaw, hist) || {text:"", ids:[]};
     const q = String(qRaw||"").toLowerCase();
     const food = q.match(FOOD), thing = q.match(THING);
-    const term = (food && food[0]) || (thing && thing[0]);
+    const MODW = /^(vegan|vegetarian|gluten.free|breakfast|brunch|lunch|dinner|snack|snacks|food|eat|hungry|coffee|tea)$/;
+    const foods = [...q.matchAll(new RegExp(FOOD.source, "g"))].map(x => x[0]);
+    const noun = foods.filter(f => !MODW.test(f)).pop();
+    const term = noun || (food && food[0]) || (thing && thing[0]);
     if(!term) return a;
     const COVERED = /beignet|coffee|cafe|café|chicory|breakfast|brunch|jazz|music|cocktail|\bbars?\b|drink|wine|beer|vegan|vegetarian|dinner|lunch|eat|food|po.?boy|gumbo|jambalaya|crawfish|tattoo|museum|voodoo|swamp|river|cruise|antique|souvenir|shop/;
     const guideHas = COVERED.test(term) && !/^Here's what I found|^Top picks:|^Open right now:/.test(a.text);
     const placeHit = a.ids && a.ids.length === 1 && /^Right now|^Tomorrow|^On /.test(a.text) && !new RegExp("museum", "i").test((BY[a.ids[0]]||{}).n || "") ;
-    const weak = !guideHas && !placeHit || !a.ids || !a.ids.length || /^I'm not sure|^I couldn't find|^No /.test(a.text);
-    const what = q.replace(/\b(where|can|could|do|does|i|we|you|find|get|buy|grab|have|me|us|some|a|an|the|best|good|great|near|nearby|close|around|here|by|is|are|there|any|anywhere|to|for|want|need|looking|for|please|tonight|today|now|open|place|places|spot|spots)\b/g, " ").replace(/[^a-z0-9 '&-]/g, " ").replace(/\s+/g, " ").trim() || term;
+    const GENERICFOOD = /^(food|eat|hungry|dinner|lunch|breakfast|brunch|snack|snacks|coffee|tea|cocktail|wine|beer|vegan|vegetarian)$/;
+    const key = term.split(" ").pop().replace(/s$/, "");
+    const relevant = (a.ids||[]).some(id => { const p = BY[id]; if(!p) return false; return GENERICFOOD.test(term) ? true : new RegExp(key.replace(/[^a-z ]/g, "").replace(/po ?boy/, "po.?boy"), "i").test(food ? p.n + " " + hay(p) : p.n); });
+    const nextOpen = /^No .*Next to open/.test(a.text) && (a.ids||[]).length;
+    const weak = !relevant || /^I'm not sure|^I couldn't find|^That's not in our guide/.test(a.text);
+    const MODS = (q.match(/\b(vegan|vegetarian|gluten.free|late.night|24.hour|cheap|fancy|thin crust|deep dish|new york|wood.fired|fried|grilled|raw|chargrilled|spicy|cajun|creole|kids|breakfast|brunch|craft|frozen|iced|hot)\b/g) || []).filter((x, i, arr) => arr.indexOf(x) === i);
+    const what = (MODS.filter(m => !term.includes(m)).concat([term]).join(" ")).trim();
     const acts = [{label:"Find " + what + " nearby", href:maps(what), kind:"call"}];
     if(food) acts.push({label:"Uber Eats: " + what, href:"https://www.ubereats.com/search?q=" + enc(what), kind:"eats"}, {label:"DoorDash: " + what, href:"https://www.doordash.com/search/store/" + enc(what) + "/", kind:"dash"});
     if(/pharmacy|drugstore|cvs|walgreens|medicine/.test(q)) return {text:"Closest pharmacy to the Quarter: Walgreens, 900 Canal St (504-568-1271), open late but not 24 hours — call to check tonight's hours. Here's what's open near you:", ids:[], actions:[{label:"Call Walgreens 504-568-1271", href:"tel:5045681271", kind:"call"}].concat(acts)};
     if(weak) return {text:(food ? "That's not in our guide, but here's how to find " + what + " right now:" : "Here's how to find " + what + " near you:"), ids:[], actions:acts};
+    if(a.ids && a.ids.length === 1 && /^Right now|^Tomorrow|^On |^Open /.test(a.text)) return a;
     return Object.assign({}, a, {actions:(a.actions||[]).concat(acts.slice(0, food ? 2 : 1))});
   };
 })();
@@ -4549,6 +4650,25 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
   const css = document.createElement("style");
   css.textContent = `.lg-in{padding:0 16px 14px}.lg-in h4{margin:12px 0 4px;color:var(--ink)}.lg-list{list-style:none;margin:6px 0;padding:0;max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:10px;font-size:.8rem}.lg-list li{padding:6px 10px;border-bottom:1px solid var(--line);color:var(--ink)}.lg-list time{font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-right:6px}.lg-ask{background:rgba(224,182,90,.15)}.lg-person{margin:6px 0}.lg-person summary{cursor:pointer;font-weight:700;color:var(--ink)}`;
   document.head.appendChild(css);
+})();
+
+/* Ask: hotel questions answer with the actual hotel; everyday errands search the right words */
+(function(){
+  const prev = window.askAction;
+  const HOTEL = "Olivier House Hotel, 828 Toulouse St, New Orleans, LA 70112";
+  const ERR = [[/\bnails?\b|mani(cure)?|pedi(cure)?/, "nail salon"], [/\bhair ?(cut|done|salon)|blow ?out\b/, "hair salon"], [/\b(atm|cash)\b/, "ATM"], [/\b(laundry|laundromat)\b/, "laundromat"], [/\b(urgent care|doctor|clinic)\b/, "urgent care"]];
+  window.askAction = function(q){
+    const s = String(q||"").toLowerCase();
+    if(/\b(my|our|the) hotel\b|where (are|am) (we|i) staying|olivier house/.test(s) && !/uber|lyft|ride|food|deliver/.test(s)){
+      return {text:"You're staying at the Olivier House Hotel, 828 Toulouse St, New Orleans, LA 70112 (French Quarter, at the corner of Dauphine), phone 504-525-8456. Check-in Nov 4, check-out Nov 8.", ids:[], actions:[
+        {label:"Directions to the hotel", href:"https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(HOTEL), kind:"call"},
+        {label:"Uber to the hotel", href:"https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=29.95796&dropoff[longitude]=-90.06731&dropoff[nickname]=Olivier%20House%20Hotel&dropoff[formatted_address]=" + encodeURIComponent(HOTEL), kind:"call"},
+        {label:"Call the hotel", href:"tel:+15045258456", kind:"call"}]};
+    }
+    const r = prev ? prev(q) : null; if(r) return r;
+    for(const [re, term] of ERR){ if(re.test(s) && /where|find|get|need|near|nearest|closest/.test(s)) return {text:"That's not in our guide, honey. Here's a search for " + term + " near you:", ids:[], actions:[{label:"Find " + term + " nearby", href:"https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(term + " near me"), kind:"call"}]}; }
+    return null;
+  };
 })();
 
 </script>
