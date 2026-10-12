@@ -655,6 +655,22 @@ button,a,.chip,.tab,.plink,.btn,.mood,.tile,.colcard,summary{touch-action:manipu
 .tour.tour-up{bottom:auto;top:calc(64px + env(safe-area-inset-top,0px))}
 .tour-acts{flex-wrap:wrap}
 
+/* ---- Holla Holla ---- */
+button.holla{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:8px 16px;border-radius:999px;background:#A8322D;color:#fff;font:800 .9rem/1 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.01em;white-space:nowrap;border:2px solid #23172C;box-shadow:0 3px 0 #23172C}
+button.holla:hover,button.holla:focus-visible{background:#C23F37;outline:none}
+button.holla:active{transform:translateY(2px);box-shadow:0 1px 0 #23172C}
+button.holla[aria-pressed="true"]{background:#E0B65A;color:#23172C}
+.holla-dot{width:9px;height:9px;border-radius:50%;background:#7CFFB2;box-shadow:0 0 0 0 rgba(124,255,178,.7);animation:hollaPulse 1.8s infinite}
+button.holla[aria-pressed="true"] .holla-dot{background:#1E7A4C}
+@keyframes hollaPulse{0%{box-shadow:0 0 0 0 rgba(124,255,178,.7)}70%{box-shadow:0 0 0 8px rgba(124,255,178,0)}100%{box-shadow:0 0 0 0 rgba(124,255,178,0)}}
+@media (prefers-reduced-motion:reduce){ .holla-dot{animation:none} }
+.holla-head{background:#A8322D;color:#fff;border-radius:18px;padding:16px 18px;margin:4px 0 12px}
+.holla-head .eyebrow{color:#FFE2A8!important}
+.holla-head h2{color:#fff;margin:4px 0 4px}
+.holla-head p{margin:0;color:#fff;opacity:.95}
+.holla-head b{color:#fff}
+@media (max-width:420px){ button.holla{padding:7px 12px;font-size:.84rem} }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
@@ -663,7 +679,7 @@ button,a,.chip,.tab,.plink,.btn,.mood,.tile,.colcard,summary{touch-action:manipu
   <header class="top">
     <nav class="vswitch" aria-label="App version"><span>Version</span><a id="vlink1">V1 · Classic</a><a id="vlink2">V2</a><a id="vlink3" aria-current="page">V3 · New</a></nav>
     <div class="top-row"><div class="v2brand"><span class="kick">New Orleans · Our adventure</span><h1 class="logo2">The <b>NOLA</b> Girls</h1></div>
-      <div class="row"><span class="sync" id="sync">Saved on this device</span></div></div>
+      <div class="row"><button class="holla" type="button" data-holla="1" aria-label="Holla Holla: show everything open right now"><span class="holla-dot" aria-hidden="true"></span>Holla Holla</button><span class="sync" id="sync">Saved on this device</span></div></div>
     <div class="iron" aria-hidden="true"></div>
     <div class="tabs" role="tablist" id="tabs"></div>
   </header>
@@ -2645,6 +2661,10 @@ function vGirl(){
 const GIRL_MOOD = {Dorothy:"history", Blanche:"romantic", Rose:"nature", Sophia:"locals"};
 const STAMP_CHEERS = ["Sophia says: about time.","Blanche says: that's how a lady collects.","Rose says: I'm so proud I could burst!","Dorothy says: fine. Good. Keep going."];
 
+function vHolla(){
+  const live = !S.when;
+  return '<section class="holla-head"><span class="eyebrow">Holla Holla</span><h2>'+(live?'Open right now':'Open at the time you picked')+'</h2><p>'+(live?'Everything you can walk into this very minute. Search, filter, or tap a time below to look ahead.':'Tap <b>Right now</b> to jump back to this minute.')+'</p></section>' + vNow();
+}
 /* ---------- views ---------- */
 const ICON = {
  plan:TAB_ICON.plan, near:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>',
@@ -2663,7 +2683,7 @@ const HELP = [
   ["The 3-second version","Use the bar at the bottom to move around. Tap any place to see why it's worth it, when it's open, and how to get there. Tap the cheesecake to save it to the kitchen table."],
   ["Take the tour","Tap <b>Take the full tour</b> at the top of this page for a step-by-step walk through every screen. It moves around the app for you; tap <b>Next</b> to go on or <b>×</b> to stop."]]],
  ["top","The top of the screen",[
-  ["Version bar","<b>V1 · Classic</b>, <b>V2</b> and <b>V3 · New</b> are three versions of the same trip app. The gold one is where you are. Tap another to switch; your saves stay on this phone."],
+  ["Holla Holla","The button at the top right, on every screen. Tap it any time to see <b>everything open this very minute</b>, with search and filters. Change the time with <b>+1 hour</b>, <b>Tonight 9 pm</b> and the others to plan ahead."],
   ["The logo","Tap <b>The NOLA Girls</b> any time to jump back to Home."],
   ["Install app","The round download button (or <b>Install app</b> on wider screens) puts the app on your home screen. It opens full screen and keeps working with weak signal. On iPhone: Safari → Share → Add to Home Screen."],
   ["Day and evening look","The app switches to a darker evening look on its own after sunset in New Orleans. To keep it always light or always dark, open <b>Trip details & settings</b> at the top of this Help page → Look and feel."],
@@ -2745,11 +2765,12 @@ function vHelp(){
 const TOURS = {
  quick: [
   {go:"home", sel:"#tabs", g:"Rose", t:"Get around with the bottom bar", b:"<b>Home</b> is your start, <b>Map</b> shows everything nearby, <b>Explore</b> has collections and search, <b>Trip</b> is the day-by-day plan, <b>Saved</b> is the kitchen table, and <b>Ink</b> has tattoo ideas."},
-  {go:"home", sel:"#main .tile", g:"Blanche", t:"Tap any place, then save it", b:"Every place opens with why it's worth it, today's hours, the cat rating and directions. Tap the <b>cheesecake</b> to save it to the kitchen table so everyone can vote."},
+  {go:"home", sel:"header .holla", g:"Blanche", t:"Holla Holla!", b:"Tap <b>Holla Holla</b> at the top right any time to see everything open this very minute, with search and filters. Tap a place for hours, address and phone, and the <b>cheesecake</b> to save it."},
   {go:"home", sel:'#tabs [data-tab="help"]', g:"Dorothy", t:"Stuck? Tap Help", b:"<b>Help</b> on the bottom bar has the full guide and a longer tour of everything. Tap the logo any time to come back Home.", last:'<button class="btn" type="button" data-tourfull="1">Take the full tour</button>'}
  ],
  full: [
   {go:"home", sel:"#main .hero", g:"Sophia", t:"Welcome to The NOLA Girls", b:"Picture it: Wed Nov 4 to Sun Nov 8, home base at the Olivier House on Toulouse St. This card shows the New Orleans time, the countdown and the weather. The app knows what's open at any hour, so you never walk up to a locked door."},
+  {go:"home", sel:"header .holla", g:"Blanche", t:"Holla Holla", b:"The button at the top right shows <b>everything open this very minute</b>. Search by name or vibe, filter by type, and use <b>+1 hour</b> or <b>Tonight 9 pm</b> to look ahead. It's the fastest way to answer \"where can we go right now?\""},
   {go:"home", sel:"#tabs", g:"Rose", t:"The bottom bar", b:"Seven buttons get you everywhere: <b>Home</b>, <b>Map</b>, <b>Explore</b>, <b>Trip</b>, <b>Saved</b>, <b>Ink</b> and <b>Help</b>. The gold one is where you are. The logo at the top always brings you back Home."},
   {go:"home", sel:"#main .talk", g:"Blanche", t:"The girls have opinions", b:"Dorothy, Blanche, Rose and Sophia chime in on every screen. Tap <b>Another one</b> for a new line. They're also a shortcut to good picks, as you'll see."},
   {go:"home", sel:"#main .tile", g:"Rose", t:"Quick tiles", b:"<b>Today's plan</b>, <b>Near me</b> (about a 15-minute walk), <b>Hidden gems</b>, <b>Tonight</b>, <b>Lauren's 21st</b>, the <b>Time Machine</b>, your <b>Passport</b> and <b>Tattoo ideas</b>. One tap each."},
@@ -3054,7 +3075,7 @@ vSheet = function(){
 
 /* ---------- page addresses ----------
    #view.arg~kind.id — only letters, digits, . _ ~ - so links also work inside claude.ai. */
-const PAGE_NAMES = {help:"Help & guide", girl:"Golden Girl picks", home:"Home", map:"Map", explore:"Explore", trip:"Trip", saved:"Saved", ink:"Tattoo ideas", col:"Collection", time:"Time Machine", birthday:"Lauren's 21st", river:"River cruises", info:"Trip details & settings", now:"Open now", all:"All places"};
+const PAGE_NAMES = {help:"Help & guide", girl:"Golden Girl picks", home:"Home", map:"Map", explore:"Explore", trip:"Trip", saved:"Saved", ink:"Tattoo ideas", col:"Collection", time:"Time Machine", birthday:"Lauren's 21st", river:"River cruises", info:"Trip details & settings", now:"Holla Holla · Open right now", all:"All places"};
 function routeFromState(){
   let r = S.tab;
   if(S.tab==="col") r += "."+S.col;
@@ -3155,13 +3176,14 @@ render = function(){
   const night = applyMode();
   const savedN = [...new Set([...totalPicked(), ...Object.values(votes).flatMap(v=>Object.keys(v||{}))])].filter(x=>BY[x]).length;
   const cur = NAV_OF[S.tab] || S.tab;
+  document.querySelectorAll("header .holla").forEach(b=>b.setAttribute("aria-pressed", String(S.tab==="now")));
   document.getElementById("tabs").innerHTML = TABS.map(([k,l])=>'<button class="tab" role="tab" data-tab="'+k+'" aria-selected="'+(cur===k)+'">'+(TAB_ICON[k]||"")+'<span>'+l+'</span>'+(k==="saved"&&savedN?'<span class="n">'+savedN+'</span>':'')+'</button>').join("");
   const sync = document.getElementById("sync"); if(sync){ sync.textContent = shared ? (readOnly?"Viewing the group's trip":"Shared with the group") : "Saved on this device"; sync.className = "sync"+(shared?" on":""); }
   const mb = document.getElementById("modebtn"); if(mb) mb.textContent = S.mode==="auto" ? (night?"☾ After Dark · auto":"☀ Day · auto") : S.mode==="night" ? "☾ After Dark" : "☀ Day";
   try{ localStorage.setItem("nola2-tab", S.tab); }catch(e){}
   const a = document.activeElement, fid = a && a.id && a.tagName==="INPUT" && a.type!=="time" && a.type!=="date" ? a.id : null;
   let caret = null; try{ caret = fid ? a.selectionStart : null; }catch(_){}
-  const V = {help:vHelp, girl:vGirl, home:vHome, map:vMap2, explore:vExplore2, trip:vTrip, plan:vTrip, saved:vSaved2, col:vCol, time:vTime, ink:vInk2, birthday:vBirthday, river:vRiver, info:vInfo2, now:vNow, all:vExplore}[S.tab] || vHome;
+  const V = {help:vHelp, girl:vGirl, home:vHome, map:vMap2, explore:vExplore2, trip:vTrip, plan:vTrip, saved:vSaved2, col:vCol, time:vTime, ink:vInk2, birthday:vBirthday, river:vRiver, info:vInfo2, now:vHolla, all:vExplore}[S.tab] || vHome;
   document.getElementById("main").innerHTML = '<section class="view">'+V()+'</section>';
   document.getElementById("sheet-root").innerHTML = S.sheet ? vSheet() : "";
   syncURL();
@@ -3172,7 +3194,7 @@ render = function(){
 /* ---------- v2 events ---------- */
 window.addEventListener("error", e=>{ try{ toast("Something hiccuped. Pull down to refresh if a button stops working."); console.error(e.error||e.message); }catch(_){} });
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle]");
+  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle],[data-holla]");
   if(!el) return; const d = el.dataset;
   if(d.surp){ const [k,v]=d.surp.split(":"); S.surp[k] = k==="hrs" ? +v : v; S.surpRes = surpriseNow(); if(!d.go){ render(); return; } }
   if(d.savedtab){ S.savedTab = d.savedtab; if(!d.go){ render(); return; } }
@@ -3195,6 +3217,7 @@ document.addEventListener("click", e=>{
   if(d.nearme){ S.radius = 15; S.tab = "map"; render(); locate(()=>{ if(LMAP && LOC) S.mapGo = [[LOC.lat,LOC.lon],16]; }); return; }
   if(d.clearuq){ S.uq = ""; render(); return; }
   if(d.share){ shareLink(); return; }
+  if(d.holla){ S.tab = "now"; S.when = null; S.sheet = null; window.scrollTo(0,0); render(); return; }
   if(d.inkstyle){ S.inkStyle = d.inkstyle; render(); return; }
   if(d.girl){ S.girl = d.girl; S.tab = "girl"; S.sheet = null; window.scrollTo(0,0); render(); return; }
   if(d.girlsurp){ S.surp.mood = GIRL_MOOD[d.girlsurp] || "hidden"; S.surpRes = surpriseNow(); S.tab = "home"; render(); setTimeout(()=>document.getElementById("adv")?.scrollIntoView({block:"start", behavior:"smooth"}), 60); return; }
@@ -3221,6 +3244,7 @@ html body nav.vswitch.vswitch a{color:#F6EBDD;background:transparent;text-decora
 html body nav.vswitch.vswitch a:hover,html body nav.vswitch.vswitch a:focus-visible{border-color:#E0B65A;outline:none}
 html body nav.vswitch.vswitch a[aria-current="page"]{background:#E0B65A;color:#23172C;border-color:#E0B65A}
 @media (max-width:420px){ html body nav.vswitch.vswitch{gap:5px;padding:5px 12px} html body nav.vswitch.vswitch a{padding:4px 11px;min-height:28px} }
+html body nav.vswitch.vswitch{display:none!important}
 </style>
 <script>
 (function(){
@@ -3259,9 +3283,9 @@ html body nav.vswitch.vswitch a[aria-current="page"]{background:#E0B65A;color:#2
   css.textContent =
     "header .top-row #sync,header #sub{display:none!important}" +
     ".nola-home{cursor:pointer;border-radius:8px}.nola-home:focus-visible{outline:3px solid #E0B65A;outline-offset:3px}" +
-    "button.nola-install{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 14px;border-radius:999px;background:#E0B65A;color:#23172C;font:800 .82rem/1.1 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;white-space:nowrap;border:1px solid #23172C;box-shadow:0 2px 0 #23172C}" +
+    "button.nola-install{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:3px 10px;border-radius:999px;background:#E0B65A;color:#23172C;font:700 .72rem/1.1 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;white-space:nowrap;border:1px solid #23172C;box-shadow:0 1px 0 #23172C}" +
     "button.nola-install:hover,button.nola-install:focus-visible{background:#F0CB7A;outline:none}" +
-    "button.nola-install svg{width:16px;height:16px;flex:none}" +
+    "button.nola-install svg{width:13px;height:13px;flex:none}" +
     ".nola-pop{position:fixed;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:10000;max-width:440px;margin:0 auto;background:#FFF8F0;color:#23172C;border:2px solid #23172C;border-radius:20px;box-shadow:0 18px 50px rgba(35,23,44,.35);padding:18px 18px 16px;font:400 .95rem/1.45 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;animation:nolaPop .25s ease-out}" +
     "@keyframes nolaPop{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}" +
     ".nola-pop h2{margin:0 0 6px;font:800 1.15rem/1.2 Georgia,'Times New Roman',serif;color:#23172C}" +
@@ -3274,8 +3298,8 @@ html body nav.vswitch.vswitch a[aria-current="page"]{background:#E0B65A;color:#2
     ".nola-pop .nola-later{all:unset;cursor:pointer;box-sizing:border-box;min-height:44px;padding:10px 16px;border-radius:999px;border:1px solid #23172C;color:#23172C;font-weight:700}" +
     ".nola-pop .nola-go:focus-visible,.nola-pop .nola-later:focus-visible{outline:3px solid #E0B65A;outline-offset:2px}" +
     ".nola-pop .nola-x{all:unset;cursor:pointer;position:absolute;top:8px;right:10px;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;color:#23172C;font-size:1.3rem}" +
-    "@media (max-width:420px){button.nola-install{padding:6px 11px;font-size:.78rem}}" +
-    "button.nola-install.nola-compact{padding:0;width:38px;min-height:38px;justify-content:center;font-size:0;gap:0}button.nola-install.nola-compact svg{width:18px;height:18px}";
+    "@media (max-width:420px){button.nola-install{padding:3px 9px;font-size:.7rem}}" +
+    "button.nola-install.nola-compact{padding:0;width:30px;min-height:30px;justify-content:center;font-size:0;gap:0}button.nola-install.nola-compact svg{width:14px;height:14px}";
   document.head.appendChild(css);
 
   /* 1. the logo takes you home in this version */

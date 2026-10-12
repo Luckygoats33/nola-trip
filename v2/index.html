@@ -2167,6 +2167,7 @@ html body nav.vswitch.vswitch a{color:#F6EBDD;background:transparent;text-decora
 html body nav.vswitch.vswitch a:hover,html body nav.vswitch.vswitch a:focus-visible{border-color:#E0B65A;outline:none}
 html body nav.vswitch.vswitch a[aria-current="page"]{background:#E0B65A;color:#23172C;border-color:#E0B65A}
 @media (max-width:420px){ html body nav.vswitch.vswitch{gap:5px;padding:5px 12px} html body nav.vswitch.vswitch a{padding:4px 11px;min-height:28px} }
+html body nav.vswitch.vswitch{display:none!important}
 </style>
 <script>
 (function(){
@@ -2205,9 +2206,9 @@ html body nav.vswitch.vswitch a[aria-current="page"]{background:#E0B65A;color:#2
   css.textContent =
     "header .top-row #sync,header #sub{display:none!important}" +
     ".nola-home{cursor:pointer;border-radius:8px}.nola-home:focus-visible{outline:3px solid #E0B65A;outline-offset:3px}" +
-    "button.nola-install{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 14px;border-radius:999px;background:#E0B65A;color:#23172C;font:800 .82rem/1.1 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;white-space:nowrap;border:1px solid #23172C;box-shadow:0 2px 0 #23172C}" +
+    "button.nola-install{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:3px 10px;border-radius:999px;background:#E0B65A;color:#23172C;font:700 .72rem/1.1 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;white-space:nowrap;border:1px solid #23172C;box-shadow:0 1px 0 #23172C}" +
     "button.nola-install:hover,button.nola-install:focus-visible{background:#F0CB7A;outline:none}" +
-    "button.nola-install svg{width:16px;height:16px;flex:none}" +
+    "button.nola-install svg{width:13px;height:13px;flex:none}" +
     ".nola-pop{position:fixed;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:10000;max-width:440px;margin:0 auto;background:#FFF8F0;color:#23172C;border:2px solid #23172C;border-radius:20px;box-shadow:0 18px 50px rgba(35,23,44,.35);padding:18px 18px 16px;font:400 .95rem/1.45 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;animation:nolaPop .25s ease-out}" +
     "@keyframes nolaPop{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}" +
     ".nola-pop h2{margin:0 0 6px;font:800 1.15rem/1.2 Georgia,'Times New Roman',serif;color:#23172C}" +
@@ -2220,8 +2221,8 @@ html body nav.vswitch.vswitch a[aria-current="page"]{background:#E0B65A;color:#2
     ".nola-pop .nola-later{all:unset;cursor:pointer;box-sizing:border-box;min-height:44px;padding:10px 16px;border-radius:999px;border:1px solid #23172C;color:#23172C;font-weight:700}" +
     ".nola-pop .nola-go:focus-visible,.nola-pop .nola-later:focus-visible{outline:3px solid #E0B65A;outline-offset:2px}" +
     ".nola-pop .nola-x{all:unset;cursor:pointer;position:absolute;top:8px;right:10px;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;color:#23172C;font-size:1.3rem}" +
-    "@media (max-width:420px){button.nola-install{padding:6px 11px;font-size:.78rem}}" +
-    "button.nola-install.nola-compact{padding:0;width:38px;min-height:38px;justify-content:center;font-size:0;gap:0}button.nola-install.nola-compact svg{width:18px;height:18px}";
+    "@media (max-width:420px){button.nola-install{padding:3px 9px;font-size:.7rem}}" +
+    "button.nola-install.nola-compact{padding:0;width:30px;min-height:30px;justify-content:center;font-size:0;gap:0}button.nola-install.nola-compact svg{width:14px;height:14px}";
   document.head.appendChild(css);
 
   /* 1. the logo takes you home in this version */
