@@ -2753,7 +2753,8 @@ TAB_ICON.home = ICON.home; TAB_ICON.trip = TAB_ICON.plan;
 TABS.splice(0, TABS.length, ["home","Home"],["map","Map"],["explore","Explore"],["trip","Trip"],["saved","Saved"],["ink","Ink"]);
 /* ---------- help: the ? tab with the full guide, and a 3-step walkthrough on first visit ---------- */
 TAB_ICON.help = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.8-2.5 2.3-2.5 4"/><path d="M12 17.2v.3"/></svg>';
-TABS.push(["help","Help"]);
+TAB_ICON.bingo = '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/><circle cx="12" cy="12" r="1.6"/></svg>';
+TABS.push(["bingo","Bingo"],["help","Help"]);
 const HELP = [
  ["start","Start here",[
   ["What this is","Your New Orleans trip in one place: what's open right now, a real map, the day-by-day plan, places to vote on, tattoo ideas, and the Golden Girls cheering you on. Trip dates (Wed Nov 4 to Sun Nov 8) and the Olivier House Hotel are already built in."],
@@ -2901,7 +2902,7 @@ if(!tourSeen) setTimeout(()=>{ if(!S.sheet && tourStep<0 && S.tab==="home" && lo
 if(location.hash==="#tour") setTimeout(()=>tourShow(0, "full"), 700);
 else if(!tourSeen && location.hash==="") {}
 
-VIEWKEYS.push("home","trip","col","time","birthday","all","girl","help");
+VIEWKEYS.push("home","trip","col","time","birthday","all","girl","help","bingo");
 const NAV_OF = {girl:"home", col:"explore", time:"explore", birthday:"explore", river:"explore", all:"explore", now:"home", info:"home", plan:"trip"};
 try{ const t2 = localStorage.getItem("nola2-tab"); S.tab = VIEWKEYS.includes(t2) && !["col","girl","time","all"].includes(t2) ? t2 : "home"; }catch(e){ S.tab = "home"; }
 if(location.hash && VIEWKEYS.includes(location.hash.slice(1))) S.tab = location.hash.slice(1);
@@ -3152,7 +3153,7 @@ vSheet = function(){
 
 /* ---------- page addresses ----------
    #view.arg~kind.id — only letters, digits, . _ ~ - so links also work inside claude.ai. */
-const PAGE_NAMES = {help:"Help & guide", girl:"Golden Girl picks", home:"Home", map:"Map", explore:"Explore", trip:"Trip", saved:"Saved", ink:"Tattoo ideas", col:"Collection", time:"Time Machine", birthday:"Lauren's 21st", river:"River cruises", info:"Trip details & settings", now:"Holla Holla · Open right now", all:"All places"};
+const PAGE_NAMES = {bingo:"NOLA Girls Bingo", help:"Help & guide", girl:"Golden Girl picks", home:"Home", map:"Map", explore:"Explore", trip:"Trip", saved:"Saved", ink:"Tattoo ideas", col:"Collection", time:"Time Machine", birthday:"Lauren's 21st", river:"River cruises", info:"Trip details & settings", now:"Holla Holla · Open right now", all:"All places"};
 function routeFromState(){
   let r = S.tab;
   if(S.tab==="col") r += "."+S.col;
@@ -3261,7 +3262,7 @@ render = function(){
   const a = document.activeElement, fid = a && a.id && a.tagName==="INPUT" && a.type!=="time" && a.type!=="date" ? a.id : null;
   let caret = null; try{ caret = fid ? a.selectionStart : null; }catch(_){}
   if(S.holla && S.tab !== S.hollaTab) hollaOff();
-  const V0 = {help:vHelp, girl:vGirl, home:vHome, map:vMap2, explore:vExplore2, trip:vTrip, plan:vTrip, saved:vSaved2, col:vCol, time:vTime, ink:vInk2, birthday:vBirthday, river:vRiver, info:vInfo2, now:vHolla, all:vExplore}[S.tab] || vHome;
+  const V0 = {bingo:()=>(window.vBingo ? window.vBingo() : ""), help:vHelp, girl:vGirl, home:vHome, map:vMap2, explore:vExplore2, trip:vTrip, plan:vTrip, saved:vSaved2, col:vCol, time:vTime, ink:vInk2, birthday:vBirthday, river:vRiver, info:vInfo2, now:vHolla, all:vExplore}[S.tab] || vHome;
   const V = S.holla ? vHollaCtx : V0;
   document.getElementById("main").innerHTML = '<section class="view">'+V()+'</section>';
   document.getElementById("sheet-root").innerHTML = S.sheet ? vSheet() : "";
@@ -3857,6 +3858,154 @@ var SAFE_CONTACTS = {"groups":[{"title":"Emergency","items":[{"name":"Police / F
   `;
   document.head.appendChild(css);
   enhance();
+})();
+
+/* ---------- NOLA Girls Bingo: Watch Party, Trip Spotting, and Classic Numbers (original prompts) ---------- */
+(function(){
+  const PACKS = {
+    watch: {t:"Watch Party", sub:"Mark the moments while you watch an episode together.", items:[
+      "The girls argue in the kitchen","Rose starts a St. Olaf story","Someone wears a fabulous caftan","Cheesecake comes out","Someone makes a big confession","The doorbell rings","Someone mentions Miami","Rose takes something literally","Sophia lands a zinger","Sophia gives blunt advice","A touching ending","Everyone laughs at once","Someone needs advice","A family secret comes out","Late-night kitchen talk","Dorothy gives The Look","Sophia starts a story with 'Picture it'","A dramatic entrance","An old flame shows up","A silly argument over nothing","A hug between friends","Blanche flirts","A new neighbor appears","A date goes wrong","Someone's ex calls","A wedding is mentioned","Someone sings","A man in a suit arrives","Shoulder pads spotted","Someone storms out","Someone slams a door","Sophia's purse makes an appearance","A trip gets planned","Money trouble","Someone gets a job","A visit from family","Someone lies and gets caught","A holiday episode","Someone is jealous","Someone gets sick","A bet between the girls","A Halloween or costume moment","Someone writes a letter","A pet or animal appears","A phone call changes everything","Someone cries","A surprise party","Someone dances","The lanai","A fight about the bathroom","Someone in a robe at breakfast","A secret admirer","A heart-to-heart on the couch","Everyone gangs up on one girl","Someone mentions their age","A big apology","A real estate or money scheme","Someone's dating a younger man","The girls go out on the town","Someone breaks the fourth wall with a look"]},
+    trip: {t:"Trip Spotting", sub:"Spot these around New Orleans. Mark them as they happen.", items:[
+      "Powdered sugar on someone's shirt","A brass band playing on the street","Someone yells 'Who Dat!'","A second line parade","A cat on a porch or balcony","Ride the St. Charles streetcar","Taste chicory coffee","A Hurricane in a to-go cup","Beads hanging in a tree","A balcony full of ferns","A gas lamp lit in daytime","A street performer painted silver","A trumpet heard from a doorway","A horse-drawn carriage","Spanish moss on an oak","A fortune teller in Jackson Square","A shotgun house","A purple, green and gold anything","Someone calls you 'baby'","A po-boy","Gumbo or jambalaya","A rooftop or balcony drink","Live jazz after midnight","A ghost tour group","A Voodoo shop","A riverboat calliope","The Mississippi up close","Someone dances in the street","A mule-drawn carriage","A tarot reading","A painted crosswalk or mural","A dog in a costume","Pralines","A drink with a tiny umbrella","Rain that stops in 5 minutes","A fleur-de-lis spotted 10 times","Someone gets lost in the Quarter","Iced coffee in November","A photo at a colorful house","Cemetery tomb with offerings","Someone buys a hat","The girls take a group selfie","A tattoo idea gets serious","Sticky Bourbon Street shoes","A bartender tells a story","Someone orders a Sazerac","Brunch with live music","A boat on the river at sunset","A bead thrown at you","A cat café visit"]}
+  };
+  const HOST = [["Dorothy","Calling it. Try to keep up."],["Blanche","Ooh, that number has a nice ring to it, darlin'."],["Rose","In St. Olaf we called numbers backwards. Nobody ever won."],["Sophia","Picture it: you, losing. Pay attention."],["Dorothy","If you miss this one, I'm not repeating it."],["Blanche","Mark it, honey. Then mark me down for a cocktail."],["Rose","I love this number! It's so... numbery."],["Sophia","I'm old. Call faster."]];
+  const LETTERS = ["B","I","N","G","O"];
+  const KEY = "nola-bingo-v1";
+  let G = null;
+  try{ G = JSON.parse(localStorage.getItem(KEY) || "null"); }catch(e){}
+  if(!G) G = {mode:"watch", cards:{}, sound:true, howto:false, wins:0, calls:[], lastHost:null};
+  const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(G)); }catch(e){} };
+  const shuffle = a => { a = a.slice(); for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  function newCard(mode){
+    let cells;
+    if(mode === "classic"){
+      cells = [];
+      const cols = [0,1,2,3,4].map(c => shuffle(Array.from({length:15}, (_, i) => c*15 + i + 1)).slice(0, 5));
+      for(let r = 0; r < 5; r++) for(let c = 0; c < 5; c++) cells.push(String(cols[c][r]));
+      G.calls = []; G.lastHost = null;
+    } else cells = shuffle(PACKS[mode].items).slice(0, 25);
+    cells[12] = "FREE";
+    G.cards[mode] = {cells, marks:cells.map((_, i) => i === 12), won:0};
+    save();
+  }
+  const card = () => { if(!G.cards[G.mode]) newCard(G.mode); return G.cards[G.mode]; };
+  const LINES = []; for(let i = 0; i < 5; i++){ LINES.push([0,1,2,3,4].map(c => i*5 + c)); LINES.push([0,1,2,3,4].map(r => r*5 + i)); } LINES.push([0,6,12,18,24]); LINES.push([4,8,12,16,20]);
+  const winLines = c => LINES.filter(l => l.every(i => c.marks[i]));
+
+  /* sound + buzz */
+  let AC = null;
+  function beep(f, d, type){ if(!G.sound) return; try{ AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const o = AC.createOscillator(), g = AC.createGain(); o.type = type || "triangle"; o.frequency.value = f; g.gain.setValueAtTime(.12, AC.currentTime); g.gain.exponentialRampToValueAtTime(.001, AC.currentTime + d); o.connect(g).connect(AC.destination); o.start(); o.stop(AC.currentTime + d); }catch(e){} }
+  const buzz = ms => { try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} };
+  function fanfare(){ [523,659,784,1047].forEach((f, i) => setTimeout(() => beep(f, .25, "square"), i*120)); buzz([60,40,60]); }
+
+  window.vBingo = function(){
+    const c = card(), wins = winLines(c), marked = c.marks.filter(Boolean).length, cls = G.mode === "classic";
+    let h = '<section class="bg-hero"><span class="bg-kick">Miami game night, New Orleans style</span><h2>NOLA Girls Bingo</h2><p>Mark the moments. Make a line. Celebrate friendship.</p></section>';
+    h += '<div class="bg-modes" role="tablist" aria-label="How to play">'+[["watch","Watch Party"],["trip","Trip Spotting"],["classic","Classic Numbers"]].map(([k,l]) => '<button role="tab" type="button" class="bg-mode" data-bgmode="'+k+'" aria-selected="'+(G.mode===k)+'">'+l+'</button>').join("")+'</div>';
+    h += '<p class="bg-sub">'+(cls ? "The girls call numbers. Mark them on your card when they're called." : esc(PACKS[G.mode].sub))+'</p>';
+    if(!G.howto) h += '<div class="bg-howto"><b>How to play</b><ol><li>Pick a game above.</li><li>Tap a square when it happens'+(cls?" (only called numbers count)":"")+'. Tap again to undo.</li><li>Get 5 in a row, across, down or diagonal. The middle is free.</li></ol><button type="button" data-bghowto="1">Got it</button></div>';
+    if(cls){
+      const last = G.calls[G.calls.length - 1];
+      h += '<div class="bg-caller"><div class="bg-ball'+(last?'':' empty')+'">'+(last ? '<small>'+LETTERS[Math.floor((last-1)/15)]+'</small>'+last : '?')+'</div><div class="bg-host">'+(G.lastHost ? '<b>'+esc(G.lastHost[0])+':</b> “'+esc(G.lastHost[1])+'”' : 'Tap <b>Call a number</b> to start.')+'<span class="bg-count">'+G.calls.length+' of 75 called</span></div><button type="button" class="bg-call" data-bgcall="1"'+(G.calls.length>=75?' disabled':'')+'>Call a number</button></div>';
+    }
+    h += '<div class="bg-card" role="grid" aria-label="Bingo card">'+LETTERS.map(l => '<div class="bg-l" role="columnheader">'+l+'</div>').join("");
+    c.cells.forEach((t, i) => { const free = i === 12, on = c.marks[i], inWin = wins.some(l => l.includes(i));
+      h += '<button type="button" role="gridcell" class="bg-cell'+(on?' on':'')+(free?' free':'')+(inWin?' win':'')+(cls?' num':'')+'" data-bgcell="'+i+'" aria-pressed="'+on+'" aria-label="'+esc(free?"Free space":t)+(on?", marked":"")+'"'+(free?' disabled':'')+'><span>'+esc(free?"FREE":t)+'</span></button>'; });
+    h += '</div>';
+    h += '<div class="bg-status"><b>'+marked+' / 25 marked</b><span>'+(wins.length ? (wins.length>1 ? wins.length+' lines! Go for the full card.' : 'BINGO! One line done.') : 'Get 5 in a row to win')+'</span></div>';
+    if(cls && G.calls.length) h += '<details class="bg-called"><summary>Numbers called ('+G.calls.length+')</summary><div>'+G.calls.slice().reverse().map(n => '<span>'+LETTERS[Math.floor((n-1)/15)]+n+'</span>').join("")+'</div></details>';
+    h += '<div class="bg-acts"><button type="button" data-bgnew="1">New card</button><button type="button" data-bgreset="1">Reset marks</button><button type="button" data-bgprint="1">Print card</button><button type="button" data-bgfull="1">Full screen</button><button type="button" data-bgsound="1">Sound: '+(G.sound?"on":"off")+'</button></div>';
+    if(G.wins) h += '<p class="bg-wins">Bingos won on this phone: <b>'+G.wins+'</b></p>';
+    h += '<p class="bg-note">Multiplayer rooms (everyone on their own card, live) are planned for a later version.</p>';
+    return h;
+  };
+  function celebrate(n){
+    fanfare(); G.wins++; save();
+    const girl = [["Blanche","Honey, that's the most exciting thing to happen in this house since the plumber."],["Sophia","Picture it: you, a winner. I'm almost proud."],["Rose","BINGO! Just like the big Herring Festival of '47!"],["Dorothy","Congratulations. Now do it again, but faster."]][Math.floor(Math.random()*4)];
+    const d = document.createElement("div"); d.className = "bg-party"; d.setAttribute("role","alertdialog"); d.setAttribute("aria-label","Bingo!");
+    const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    d.innerHTML = (reduce ? '' : '<div class="bg-confetti" aria-hidden="true">'+Array.from({length:40}, (_, i) => '<i style="left:'+(Math.random()*100)+'%;animation-delay:'+(Math.random()*.6)+'s;background:'+["#F4B6C2","#FFD3A5","#A8E6CF","#7FD1D1","#E0B65A"][i%5]+'"></i>').join("")+'</div>')
+      + '<div class="bg-win"><h2>BINGO!</h2><p>'+(n>1 ? n+' lines and counting.' : 'Five in a row.')+'</p><blockquote>“'+esc(girl[1])+'”<cite>— '+girl[0]+'</cite></blockquote><div class="bg-acts"><button type="button" data-bgclose="1">Keep playing</button><button type="button" data-bgnew="1" class="go">New card</button></div></div>';
+    document.body.appendChild(d); d.querySelector("[data-bgclose]").focus();
+  }
+  function printCard(){
+    const c = card(), w = window.open("", "_blank", "width=700,height=900");
+    const html = '<!doctype html><html><head><meta charset="utf-8"><title>NOLA Girls Bingo</title><style>body{font-family:Georgia,serif;text-align:center;color:#23172C}h1{margin:10px 0 2px}p{margin:0 0 12px;font:14px system-ui}table{border-collapse:collapse;margin:0 auto}td,th{border:2px solid #23172C;width:120px;height:110px;padding:6px;font:13px system-ui;vertical-align:middle}th{height:44px;font:700 28px Georgia;background:#F4B6C2}td.f{background:#FFD3A5;font-weight:700}@media print{button{display:none}}</style></head><body><h1>NOLA Girls Bingo</h1><p>'+(G.mode==="classic"?"Classic Numbers":PACKS[G.mode].t)+' · New Orleans, Nov 4–8, 2026</p><table><tr>'+LETTERS.map(l=>'<th>'+l+'</th>').join("")+'</tr>'+[0,1,2,3,4].map(r=>'<tr>'+[0,1,2,3,4].map(col=>{ const i=r*5+col; return '<td'+(i===12?' class="f"':'')+'>'+esc(i===12?"FREE":c.cells[i])+'</td>'; }).join("")+'</tr>').join("")+'</table><p style="margin-top:14px"><button onclick="print()">Print</button></p></body></html>';
+    if(w){ w.document.write(html); w.document.close(); setTimeout(()=>{ try{ w.print(); }catch(e){} }, 300); }
+    else if(typeof toast==="function") toast("Allow pop-ups to print the card.");
+  }
+  document.addEventListener("click", e=>{
+    const t = e.target.closest("[data-bgmode],[data-bgcell],[data-bgnew],[data-bgreset],[data-bgprint],[data-bgfull],[data-bgsound],[data-bgcall],[data-bghowto],[data-bgclose]"); if(!t) return;
+    e.preventDefault(); e.stopPropagation();
+    const d = t.dataset, party = document.querySelector(".bg-party");
+    if(d.bgclose){ if(party) party.remove(); return; }
+    if(d.bgmode){ G.mode = d.bgmode; save(); render(); return; }
+    if(d.bghowto){ G.howto = true; save(); render(); return; }
+    if(d.bgsound){ G.sound = !G.sound; save(); render(); return; }
+    if(d.bgprint){ printCard(); return; }
+    if(d.bgfull){ const el = document.documentElement; try{ document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen && el.requestFullscreen(); }catch(_){} return; }
+    if(d.bgnew){ if(party) party.remove(); newCard(G.mode); beep(440,.15); render(); window.scrollTo(0,0); return; }
+    if(d.bgreset){ const c = card(); c.marks = c.cells.map((_, i) => i === 12); c.won = 0; save(); render(); return; }
+    if(d.bgcall){ const left = Array.from({length:75}, (_, i) => i+1).filter(n => !G.calls.includes(n)); if(!left.length) return; const n = left[Math.floor(Math.random()*left.length)]; G.calls.push(n); G.lastHost = HOST[Math.floor(Math.random()*HOST.length)]; save(); beep(660,.12); beep(880,.18); render(); return; }
+    if(d.bgcell){
+      const c = card(), i = +d.bgcell;
+      if(G.mode === "classic" && !c.marks[i] && !G.calls.includes(+c.cells[i])){ t.classList.remove("nope"); void t.offsetWidth; t.classList.add("nope"); buzz(80); if(typeof toast==="function") toast("Not called yet, honey."); return; }
+      c.marks[i] = !c.marks[i]; beep(c.marks[i] ? 520 : 300, .08); buzz(15);
+      const n = winLines(c).length; const newWin = n > (c.won||0); c.won = n; save(); render();
+      if(newWin) setTimeout(()=>celebrate(n), 120);
+    }
+  }, true);
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ const p = document.querySelector(".bg-party"); if(p) p.remove(); } });
+
+  const css = document.createElement("style");
+  css.textContent = `
+  .bg-hero{position:relative;overflow:hidden;border-radius:20px;padding:20px 18px;margin:4px 0 12px;color:#23172C;background:radial-gradient(circle at 85% 20%,rgba(255,255,255,.55) 0 18%,transparent 19%),repeating-conic-gradient(from 0deg at 85% 20%,rgba(255,255,255,.18) 0 6deg,transparent 6deg 12deg),linear-gradient(135deg,#F4B6C2 0%,#FFD3A5 45%,#A8E6CF 100%)}
+  .bg-hero h2{margin:4px 0 2px;font:800 1.9rem/1.05 Georgia,serif;letter-spacing:.01em;color:#23172C;text-shadow:2px 2px 0 rgba(255,255,255,.6)}
+  .bg-hero p{margin:0;font-weight:600;color:#23172C}
+  .bg-kick{font:700 .72rem ui-monospace,Consolas,monospace;letter-spacing:.12em;text-transform:uppercase;color:#7A2E5A}
+  .bg-modes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 0 8px}
+  .bg-mode{all:unset;cursor:pointer;text-align:center;padding:10px 6px;border-radius:12px;font-weight:800;font-size:.85rem;background:var(--surface);border:1px solid var(--line);color:var(--ink);min-height:24px}
+  .bg-mode[aria-selected="true"]{background:#7FD1D1;color:#23172C;border-color:#23172C}
+  .bg-sub{margin:4px 0 10px;color:var(--muted);font-size:.88rem}
+  .bg-howto{background:#FFF8F0;color:#23172C;border:2px dashed #E0B65A;border-radius:14px;padding:12px 14px;margin:0 0 12px}.bg-howto ol{margin:6px 0 8px;padding-left:20px}.bg-howto button{all:unset;cursor:pointer;font-weight:800;background:#23172C;color:#F6EBDD;padding:6px 14px;border-radius:999px}
+  .bg-card{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;background:#23172C;padding:6px;border-radius:16px;box-shadow:0 10px 30px rgba(20,12,28,.25)}
+  .bg-l{text-align:center;font:800 1.4rem Georgia,serif;color:#FFD3A5;padding:2px 0}
+  .bg-cell{all:unset;cursor:pointer;aspect-ratio:1/1;min-height:44px;display:flex;align-items:center;justify-content:center;text-align:center;padding:3px;border-radius:9px;background:#FFF8F0;color:#23172C;font:600 .62rem/1.15 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;position:relative;overflow:hidden;box-sizing:border-box;word-break:break-word;hyphens:auto}
+  @media (min-width:520px){ .bg-cell{font-size:.78rem;padding:6px} }
+  .bg-cell.num{font:800 1.25rem Georgia,serif}
+  .bg-cell.on{background:#F4B6C2}
+  .bg-cell.on::after{content:"";position:absolute;width:62%;height:62%;border-radius:50%;background:rgba(122,46,90,.35);box-shadow:inset 0 0 0 3px rgba(122,46,90,.55);animation:dab .18s ease-out}
+  .bg-cell span{position:relative;z-index:1}
+  .bg-cell.free{background:#FFD3A5;font:800 .85rem Georgia,serif;cursor:default}
+  .bg-cell.win{background:#E0B65A}
+  .bg-cell.nope{animation:nope .3s}
+  .bg-cell:focus-visible{outline:3px solid #7FD1D1;outline-offset:1px}
+  @keyframes dab{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+  @keyframes nope{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  .bg-status{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin:10px 2px;color:var(--ink)}.bg-status span{color:var(--muted);font-size:.85rem}
+  .bg-acts{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+  .bg-acts button{all:unset;cursor:pointer;padding:9px 14px;border-radius:999px;font-weight:800;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-height:24px}
+  .bg-acts button.go{background:#23172C;color:#F6EBDD}
+  .bg-caller{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px;margin:0 0 10px}
+  .bg-ball{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;align-content:center;background:radial-gradient(circle at 35% 30%,#fff,#FFD3A5 60%,#E0B65A);color:#23172C;font:800 1.7rem Georgia,serif;box-shadow:0 6px 14px rgba(0,0,0,.2)}.bg-ball small{font-size:.8rem;line-height:1}.bg-ball.empty{color:#B9A88F}
+  .bg-host{color:var(--ink);font-size:.9rem}.bg-count{display:block;color:var(--muted);font-size:.75rem;margin-top:4px}
+  .bg-call{all:unset;cursor:pointer;grid-column:1/-1;text-align:center;background:#7FD1D1;color:#23172C;font-weight:800;padding:12px;border-radius:999px;border:2px solid #23172C}.bg-call[disabled]{opacity:.5}
+  .bg-called{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:8px 0;color:var(--ink)}.bg-called summary{cursor:pointer;font-weight:800}.bg-called div{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.bg-called span{font:700 .8rem ui-monospace,Consolas,monospace;background:var(--bg);border:1px solid var(--line);padding:3px 7px;border-radius:999px}
+  .bg-wins{color:var(--ink);font-size:.85rem}.bg-note{color:var(--muted);font-size:.75rem}
+  .bg-party{position:fixed;inset:0;z-index:9600;background:rgba(20,12,28,.55);display:grid;place-items:center;padding:16px}
+  .bg-win{position:relative;z-index:2;max-width:380px;background:linear-gradient(135deg,#F4B6C2,#FFD3A5 50%,#A8E6CF);color:#23172C;border:3px solid #23172C;border-radius:24px;padding:20px;text-align:center;animation:nolaPop .3s ease-out}
+  .bg-win h2{margin:0;font:900 3rem Georgia,serif;letter-spacing:.06em;color:#23172C}.bg-win blockquote{margin:10px 0;font:italic 600 1rem Georgia,serif}.bg-win cite{display:block;font:600 .75rem ui-monospace,Consolas,monospace;margin-top:4px}
+  .bg-win .bg-acts{justify-content:center}.bg-win .bg-acts button{background:#fff;color:#23172C;border-color:#23172C}.bg-win .bg-acts button.go{background:#23172C;color:#F6EBDD}
+  .bg-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none}.bg-confetti i{position:absolute;top:-10px;width:8px;height:14px;border-radius:2px;animation:fall 2.4s linear forwards}
+  @keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+  @media (prefers-reduced-motion:reduce){ .bg-cell.on::after,.bg-win{animation:none} }
+  `;
+  document.head.appendChild(css);
+  HELP.splice(Math.max(0, HELP.findIndex(s=>s[0]==="share")), 0, ["bingo","NOLA Girls Bingo",[
+    ["Three games","<b>Watch Party</b>: mark classic sitcom moments while you watch an episode. <b>Trip Spotting</b>: mark New Orleans moments as they happen on the trip. <b>Classic Numbers</b>: tap <b>Call a number</b> and the girls call B-I-N-G-O numbers; only called numbers can be marked."],
+    ["Winning","Five in a row across, down or diagonal. The middle square is free. Keep going for more lines or the full card."],
+    ["Extras","<b>New card</b> shuffles a fresh card, <b>Print card</b> makes a paper copy for game night, <b>Full screen</b> hides everything else, and sound can be turned off. Your card is saved on this phone."]]]);
+  render();
 })();
 
 </script>
