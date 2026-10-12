@@ -1,6 +1,6 @@
 /* Offline: keep both app versions and their libraries; map tiles and live data are not cached. */
-const CACHE = "nola-hub-v6";
-const SHELL = ["./", "index.html", "v1/", "v1/index.html", "v1/manifest.webmanifest", "v2/", "v2/index.html", "v2/manifest.webmanifest", "v3/", "v3/index.html", "v3/manifest.webmanifest", "icon.svg",
+const CACHE = "nola-hub-v7";
+const SHELL = ["./", "index.html", "v1/", "v1/index.html", "v2/", "v2/index.html", "v3/", "v3/index.html", "manifest.webmanifest", "icon.svg",
   "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js",
   "https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });

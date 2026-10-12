@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="V3 New · New Orleans trip hub: what is open now, a real map, the plan, saved places, and tattoo ideas.">
 <meta name="theme-color" content="#23172C">
-<link rel="manifest" href="manifest.webmanifest">
+<link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" href="../icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3068,6 +3068,7 @@ html body nav.vswitch.vswitch a[aria-current="page"]{background:#E0B65A;color:#2
   var android = /android/i.test(ua);
   var KEY = "nola-install-seen-v" + vn;
   var deferred = null;
+  if(web){ try{ localStorage.setItem("nola-last-version", "v" + vn); }catch(e){} }
   function ls(k, v){ try{ if(v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }catch(e){ return null; } }
 
   /* styles: fixed colors so it looks the same in every version and mode */
@@ -3148,7 +3149,7 @@ html body nav.vswitch.vswitch a[aria-current="page"]{background:#E0B65A;color:#2
     }
     pop = document.createElement("div");
     pop.className = "nola-pop"; pop.setAttribute("role", "dialog"); pop.setAttribute("aria-modal", "false"); pop.setAttribute("aria-labelledby", "nolaPopT");
-    pop.innerHTML = '<button class="nola-x" type="button" aria-label="Close">×</button><div class="nola-top"><span class="nola-ico" aria-hidden="true">GG</span><div><h2 id="nolaPopT">Get The NOLA Girls app</h2><span style="font-size:.82rem;color:#5A4A66">' + name + ' · free · no app store</span></div></div>' + body +
+    pop.innerHTML = '<button class="nola-x" type="button" aria-label="Close">×</button><div class="nola-top"><span class="nola-ico" aria-hidden="true">GG</span><div><h2 id="nolaPopT">Get The NOLA Girls app</h2><span style="font-size:.82rem;color:#5A4A66">One app with V1, V2 and V3 · free · no app store</span></div></div>' + body +
       '<div class="nola-acts">' + go + '<button class="nola-later" type="button">' + (go ? "Not now" : "Got it") + '</button></div>';
     document.body.appendChild(pop);
     pop.querySelector(".nola-x").addEventListener("click", closePop);
