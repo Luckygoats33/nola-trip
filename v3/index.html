@@ -3422,7 +3422,8 @@ document.addEventListener("change", e=>{
   async function claudeAnswer(q, onText){
     const ctx = context();
     const prompt = "You are the friendly helper inside 'The NOLA Girls', a New Orleans trip app for Will, Emily and their niece Lauren (21). Answer the question briefly (under 120 words), warmly, with a light Golden Girls wink, using ONLY the app data below. Prefer places that are open now when the question is about now. When you mention a place from the data, append its id in double brackets right after the name, like Café du Monde [[cdm]]. Don't invent hours, prices or places.\n\nAPP DATA (JSON):\n" + JSON.stringify(ctx) + "\n\nQUESTION: " + q;
-    const r = await SAMPLE(prompt, {modelTier:"default", cache:false, onText:({text})=>onText(text)});
+    const input = window.askClaudeInput ? window.askClaudeInput(q, HIST) : prompt;
+    const r = await SAMPLE(input, {modelTier:"default", cache:false, onText:({text})=>onText(text)});
     return r.text;
   }
 
@@ -3480,16 +3481,18 @@ document.addEventListener("change", e=>{
     log.appendChild(d); log.scrollTop = log.scrollHeight; return d;
   }
   function say(t){ if(!speak || !window.speechSynthesis) return; try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(t).replace(/\[\[[^\]]+\]\]/g,"").slice(0,600)); const v = speechSynthesis.getVoices().find(v=>/en-US/i.test(v.lang) && /female|samantha|aria|jenny|zira/i.test(v.name)); if(v) u.voice = v; speechSynthesis.speak(u); }catch(e){} }
+  const HIST = [];
   async function ask(q){
     q = (q||"").trim(); if(!q) return;
     addMsg("me", q); const inp = $("#askq", panel); if(inp) inp.value = "";
     if(SAMPLE){
       const b = addMsg("bot", "Thinking…");
       try{ const t = await claudeAnswer(q, t=>{ b.firstChild ? (b.firstChild.nodeValue = t.replace(/\s*\[\[[a-z0-9-]+\]\]/gi,"")) : (b.textContent = t); });
-        b.remove(); addMsg("bot", t); say(t); return; }
+        b.remove(); addMsg("bot", t); say(t); HIST.push(["user", q], ["assistant", t]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12); return; }
       catch(e){ b.remove(); if(e && e.code==="not_granted"){ SAMPLE = null; } }
     }
-    const a = localAnswer(q); addMsg("bot", a.text, a.ids); say(a.text);
+    let a = null; try{ a = window.askEngine ? window.askEngine(q, HIST) : null; }catch(e){ a = null; }
+    a = a || localAnswer(q); addMsg("bot", a.text, a.ids); say(a.text); HIST.push(["user", q], ["assistant", a.text]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12);
   }
   function fitPanel(){
     if(!panel || !window.visualViewport) return;
@@ -3937,6 +3940,237 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
   `;
   document.head.appendChild(css);
   enhance();
+})();
+
+/* ---------- Ask the Girls, smarter: New Orleans knowledge + everything in the app (works without AI); richer Claude context ---------- */
+(function(){
+  const lc = s => String(s||"").toLowerCase();
+  const W0 = () => nolaNow();
+  const fmtDist = p => { const d = distInfo(p); return d ? d.txt : ""; };
+  const rating = p => { const r = (window.NOLA_RATINGS||{})[p.id]; return r && r.r ? r.r.toFixed(1)+"★"+(r.n ? " ("+(r.n>=1000?(r.n/1000).toFixed(1)+"k":r.n)+" reviews)" : "") : ""; };
+  const stTxt = (p, W) => { const s = statusAt(p, W); if(s.state==="open") return "open"+(s.closeLabel ? " until "+s.closeLabel : ""); if(s.state==="later") return "closed (opens at "+s.openLabel+")"; if(s.state==="unknown") return "always open or no set hours"; return "closed"; };
+  const ADD = (n, base) => { const d = new Date(base + "T12:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0,10); };
+
+  /* ---- understanding "when" ---- */
+  function parseWhen(q){
+    const N = W0(); let W = null, label = "right now";
+    const t = q.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm|a\.m\.|p\.m\.)?\b/);
+    let mins = null;
+    if(t && (t[3] || /\bat\b|\bby\b|\baround\b/.test(q))){ let h = +t[1] % 12; if(/p/.test(t[3]||"") || (!t[3] && h < 7)) h += 12; if(!t[3] && +t[1] === 12) h = 12; mins = h*60 + (+(t[2]||0)); }
+    if(/\bnoon\b/.test(q)) mins = 12*60; if(/\bmidnight\b/.test(q)) mins = 24*60 - 1;
+    if(/\btonight\b/.test(q) && mins == null) mins = 21*60;
+    if(/\b(this )?morning\b/.test(q) && mins == null) mins = 10*60;
+    if(/\b(this )?afternoon\b/.test(q) && mins == null) mins = 15*60;
+    if(/\blate night\b|\bafter midnight\b/.test(q) && mins == null) mins = 25*60;
+    const day = q.match(/\bday (\d)\b/); const ti = tripInfo();
+    const dowNames = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+    const dn = dowNames.findIndex(d => q.includes(d));
+    if(day && ti){ const dt = ti.dateOf(+day[1]); W = {dow:dt.getDay(), mins:mins==null ? 12*60 : mins, date:dt.toISOString().slice(0,10)}; label = "on day "+day[1]+" ("+dayLabel(dt)+")"+(mins!=null?" at "+fmtM(mins%1440):""); }
+    else if(/\btomorrow\b/.test(q)){ W = {dow:(N.dow+1)%7, mins:mins==null ? 12*60 : mins, date:N.date ? ADD(1, N.date) : undefined}; label = "tomorrow"+(mins!=null?" at "+fmtM(mins%1440):""); }
+    else if(dn >= 0){ const add = (dn - N.dow + 7) % 7 || 7; W = {dow:dn, mins:mins==null ? 12*60 : mins, date:N.date ? ADD(add, N.date) : undefined}; label = "on "+dowNames[dn][0].toUpperCase()+dowNames[dn].slice(1)+(mins!=null?" at "+fmtM(mins%1440):""); }
+    else if(mins != null){ W = {dow:N.dow, mins, date:N.date}; if(mins >= 24*60){ W = {dow:(N.dow+1)%7, mins:mins-1440, date:N.date ? ADD(1, N.date) : undefined}; } label = (/tonight/.test(q)?"tonight":"today")+" at "+fmtM(mins%1440); }
+    if(W && W.mins >= 1440){ W.mins -= 1440; }
+    return {W: W || N, label, explicit: !!W};
+  }
+
+  /* ---- finding places ---- */
+  const STOP = /^(the|and|what|whats|when|where|how|does|do|is|are|for|open|hours|close|closes|closing|time|phone|number|address|tell|about|get|there|can|we|you|i|me|to|of|in|on|at|a|an|it|its|that|this|near|best|good|go|going|any|some|still|right|now|today|tonight|tomorrow|day|safe|far|from|our|my|with|by|call|directions|way|much|cost|price|rating|rated|reviews|should|would|could|they|them|place|places|spot|spots|new|orleans|nola)$/;
+  const DF = {}; P.forEach(p => new Set(lc(p.n).replace(/['’]/g,"").replace(/[^a-z0-9& ]/g," ").split(/\s+/)).forEach(w => { DF[w] = (DF[w]||0) + 1; }));
+  const GENERIC = /^(house|houses|street|park|cafe|café|bar|pub|tour|tours|museum|garden|gardens|square|shop|shops|tattoo|tattoos|jazz|hall|cemetery|plantation|cruise|river|center|club|walk|work|drink|drinks|social|cultural|historic|french|quarter|district|point|lounge|rescue|state|city|art|arts|world|queen|creole|swamp|line|second|design|dinner|lunch|romantic|night|tonight|best|cheap|lost|wallet|weather|pack|airport|streetcar|history|difference|between|mean|happening|cat|cats|food|eat|beignet|beignets|coffee|music|dance|safe|nearest|hospital|install|save|holla|table|kitchen|area|around|tell|about|whole|plan|doing|thing|things|stuff|done|free|spot|spots|rooftop|view|views)$/;
+  function findPlaces(q){
+    const words = lc(q).replace(/['’]/g,"").replace(/[^a-z0-9& ]/g," ").split(/\s+/).filter(w => w.length > 2 && !STOP.test(w) && !GENERIC.test(w) && (DF[w]||0) <= 3);
+    if(!words.length) return [];
+    const scored = P.map(p => { const n = lc(p.n).replace(/['’]/g,"").replace(/[^a-z0-9& ]/g," "); let sc = 0; words.forEach(w => { if(new RegExp("\\b"+w.replace(/[^a-z0-9]/g,"")+"(s|es|'s)?\\b").test(n)) sc += w.length + 2; }); return [p, sc]; }).filter(x => x[1] >= 5).map(([p, sc]) => { const n = lc(p.n); lc(q).replace(/['’]/g,"").split(/[^a-z0-9]+/).filter(w => w.length > 3 && GENERIC.test(w)).forEach(w => { if(n.includes(w)) sc += 1; }); return [p, sc]; }).sort((a,b) => b[1]-a[1]);
+    if(!scored.length) return [];
+    return scored.filter(x => x[1] === scored[0][1]).map(x => x[0]).slice(0, 3);
+  }
+  const CATMAP = [
+    [/beignet/, p => /beignet|du monde/i.test(p.n) || (WHY[p.id]||"").toLowerCase().includes("beignet")],
+    [/coffee|caf[eé]|chicory|espresso|latte/, p => p.c.includes("coffee")],
+    [/breakfast|brunch/, p => p.c.includes("coffee") || /brunch|breakfast/i.test(hay(p))],
+    [/jazz|live music|music|band|brass/, p => p.c.includes("jazz")],
+    [/cocktail|bar\b|bars\b|drink|hurricane|sazerac|wine|beer|nightcap/, p => p.c.includes("drink")],
+    [/drag|gay|queer|lgbt|pride/, p => p.c.includes("queer")],
+    [/dance|dancing|club|party/, p => p.c.includes("party") || p.c.includes("queer")],
+    [/vegan|vegetarian|plant.based/, p => /vegan|vegetarian|plant.based|plant-driven/i.test(hay(p))],
+    [/dinner|lunch|eat|food|hungry|restaurant|po.?boy|gumbo|jambalaya|crawfish/, p => p.c.includes("eat")],
+    [/cat|kitt/, p => /\bcats?\b|kitt|feline/i.test(hay(p))],
+    [/tattoo|ink/, p => p.c.includes("tattoo")],
+    [/museum/, p => /museum|cabildo|collection|presbyt|pharmacy|musée|musee/i.test(p.n)],
+    [/history|historic|cemeter/, p => p.c.includes("history")],
+    [/voodoo|ghost|haunt|spooky|tarot|psychic/, p => p.c.includes("spooky")],
+    [/swamp|gator|alligator/, p => /swamp|gator|barataria|honey island/i.test(p.n+" "+(WHY[p.id]||""))],
+    [/nature|park|garden|\boak|bayou/, p => p.c.includes("nature")],
+    [/river|cruise|boat|steamboat|ferry|paddle/, p => p.c.includes("river")],
+    [/shop|antique|shopping|store|souvenir/, p => p.c.includes("shop")],
+    [/plantation|day trip|daytrip|outside the city/, p => p.c.includes("daytrip")],
+    [/romantic|date night|date/, p => p.c.includes("date")],
+    [/photo|instagram|picture spot|selfie/, p => { try{ return colPlaces("photo").includes(p); }catch(e){ return p.c.includes("photo"); } }],
+    [/locals?\b|off the beaten|non.?touristy|hidden gem/, p => { try{ return colPlaces("locals").includes(p) || colPlaces("hidden").includes(p); }catch(e){ return false; } }],
+    [/saints|football|superdome|game/, p => p.c.includes("sports")]
+  ];
+
+  /* ---- New Orleans know-how (works offline) ---- */
+  const KB = [
+    [/safe|safety|danger|crime|pickpocket|scam/, () => "Stick to busy, lit streets after dark (Bourbon, Royal, Decatur, Frenchmen, Canal, St. Charles) and take a rideshare for anything farther, especially past Rampart into Tremé. Watch for the 'I bet I can tell you where you got your shoes' hustle (the answer is 'on your feet', and they want $20). Keep phones out of back pockets in crowds, never leave a drink unattended, and nobody walks home alone. Every place in the app has a green, yellow or red safety rating. Emergency: 911; NOPD non-emergency: 504-821-2222."],
+    [/sunset|sundown|golden hour|what time (is it )?dark/, () => { let t = ""; try{ const today = sunsetNOLA(new Date()); const ti = tripInfo(); const trip = ti ? sunsetNOLA(ti.dateOf(2)) : null; t = "Sunset today is about "+fmtM(today.mins)+(trip ? ". During your trip (early November, after the clocks fall back) it's about "+fmtM(trip.mins)+"" : "")+"."; }catch(e){ t = "In early November, sunset in New Orleans is a little after 5 pm (clocks fall back Nov 1)."; } return t + " Best sunset spots: the riverfront Moonwalk, Crescent Park, or an evening riverboat."; }],
+    [/rain(y)? day|when it rains|indoor|inside (stuff|things|activities)|bad weather/, () => { const N = W0(); const ins = P.filter(p => p.c.includes("history") || /museum/i.test(p.n)).filter(p => statusAt(p, N).state === "open" || statusAt(p, N).state === "later").slice(0, 6); return "Rainy-day plan: museums (the Cabildo and Presbytère on Jackson Square, the Historic New Orleans Collection, the Pharmacy Museum, the Voodoo Museum), a jazz show at Preservation Hall, a long lunch, antiques on Royal Street, or a cooking class. Showers here usually pass in under an hour."+(ins.length ? "\nIndoor picks: "+ins.map(p => p.n).join(", ")+"." : ""); }],
+    [/lauren.*(drink|bar|club|21|old enough|card)|(drink|bar|club).*lauren/, () => "Yes! Lauren is 21, so she can go anywhere 21+. She just needs a physical photo ID with her (not a phone photo) — bars on Bourbon and Frenchmen card at the door."],
+    [/how (do|can) (i|we) save|save a place|add to (the )?kitchen table|favorite a place/, () => "Tap any place to open it, then tap the cheesecake (Save). It goes to the kitchen table on the Saved tab, where you can vote Must / Maybe / Skip and see what everyone wants."],
+    [/design (a|my|your|our) tattoo|tattoo design|make a tattoo|create a tattoo|ai tattoo/, () => "Go to the Ink tab and tap \"Create a design\". Describe your idea, pick a style, and choose Sketch with Claude or Make it with Higgsfield (those work in the claude.ai version of the app). Or browse the 100 design concepts with the style buttons, then tap Copy brief to send one to an artist."],
+    [/how (do|can) (i|we) (get )?directions|navigate to|open (it )?in (google|apple) maps/, () => "Open any place and tap Directions. It opens Google Maps with the full address and starts from wherever you are."],
+    [/how (do|can) (i|we) vote|voting/, () => "On the Saved tab (the kitchen table), each saved place has Must / Maybe / Skip. Tap Everyone's in to see what all three of you want."],
+    [/weather|temperature|\brain\b|forecast|\bcold\b|\bhot\b|\bjacket|what (should|to) (i |we )?(wear|pack)|\bpack(ing)?\b/, () => (typeof WX!=="undefined" && WX ? "Right now it's "+WX.temp+"° and "+WXL(WX.code).toLowerCase()+" in New Orleans (rain chance next 3 hours: "+WX.rain+"%). " : "") + "Early November is usually lovely: highs around 75°F, lows in the high 50s, and drier than summer. Pack layers, a light jacket for the river or late nights, comfy walking shoes (the sidewalks are uneven), and a small umbrella just in case."],
+    [/tip|tipping|gratuity/, () => "Tip like anywhere in the US: 18–20% at sit-down restaurants, $1–2 a drink at bars, a few dollars in the band's bucket or tip jar, and $3–5 for a carriage or walking-tour guide (more for a great one). Street musicians and the second line brass bands live on tips, so carry small bills."],
+    [/open container|drink(s|ing)? (on|in) the street|go.?cup|to.go cup|(walk|carry|stroll)(ing)?( around)? with (a )?(drink|beer|cocktail)|drink outside/, () => "Yes, you can walk with a drink in the French Quarter and most of the city, as long as it's in a plastic cup, not glass. Bars will give you a 'go cup' when you leave. You must be 21+ and carry ID."],
+    [/drinking age|21|id\b|carded|passport/, () => "The drinking age is 21 and bars check ID, especially on Bourbon and Frenchmen. Bring a physical photo ID (a phone photo usually isn't accepted). Lauren is 21, so she's all set."],
+    [/streetcar|street car|bus|rta|jazzy pass|public transport|transit|ferry/, () => "The streetcars and buses are run by RTA: $1.25 a ride (exact change) or get the Le Pass app for 1-, 3- or 5-day Jazzy Passes. The St. Charles line (the green one) goes Uptown through the Garden District; the Canal line goes to City Park and the cemeteries; the Riverfront line runs along the river. The Algiers ferry leaves from the foot of Canal St. RTA's info line is 504-248-3900."],
+    [/uber|lyft|rideshare|taxi|cab/, () => "Uber and Lyft work everywhere and are the easiest way home after dark. In the Quarter, pickups are easiest on Decatur, Rampart or Canal since many Quarter streets close to cars at night. United Cab: 504-522-9771."],
+    [/airport|msy|flight|fly in|from the airport/, () => "Louis Armstrong International (MSY) is about 25–30 minutes from the French Quarter by car. Rideshare is about $35–45; taxis have a flat rate to the Quarter (about $36 for 1–2 people, plus a few dollars each for more). The 202 Airport Express bus is the cheap option."],
+    [/parking|park the car|drive in the quarter/, () => "Skip driving in the Quarter if you can: streets are narrow and parking is tight. Garages run about $20–40 a day. Hotels often have valet. Watch for street-cleaning and residential-permit signs; tows are expensive."],
+    [/second line/, () => "A second line is a parade with a brass band where anyone can join and dance behind it. The neighborhood social aid & pleasure clubs hold them most Sundays from fall through spring, so you may catch one on Sunday Nov 8. WWOZ's 'Takin' It to the Streets' page lists the route and start time each week."],
+    [/mardi gras|carnival|king cake/, () => "Mardi Gras isn't during your trip: Carnival season starts January 6 and runs to Fat Tuesday in February or March, which is also king cake season. In November you'll still see beads in the trees on St. Charles and Mardi Gras World is open year-round if you want a taste."],
+    [/creole|cajun|difference/, () => "Creole cooking is the city's own: French, Spanish, African and Caribbean roots, often with tomatoes and butter (think shrimp Creole, gumbo z'herbes, red beans). Cajun food comes from the Acadian country west of town: rustic, one-pot, spicier (boudin, crawfish étouffée). Both use the 'holy trinity' of onion, celery and bell pepper."],
+    [/gumbo|jambalaya|etouffee|étouffée|red beans/, () => "Gumbo is a dark-roux stew served over rice; jambalaya is a rice dish cooked with everything in the pot; étouffée is shellfish 'smothered' in a buttery sauce; red beans and rice is the traditional Monday dish. Ask for vegetarian versions — several spots in the app's Vegetarian Eats make them."],
+    [/po.?boy|muffuletta|praline|sazerac|hurricane drink|what to eat|must.?eat|food to try|local food/, () => "Must-tries: beignets and café au lait, a po-boy (fried shrimp or roast beef 'debris'), gumbo, a muffuletta from Central Grocery, pralines, red beans and rice, and a Sazerac (the city's official cocktail). Vegetarian? Look for fried green tomato or mushroom po-boys and z'herbes gumbo."],
+    [/history|founded|1718|louisiana purchase|katrina|battle of new orleans/, () => "Quick history: founded by the French in 1718, handed to Spain in 1763 (most of the Quarter's buildings are actually Spanish-era, after fires in 1788 and 1794), back to France, then sold to the US in the 1803 Louisiana Purchase. Andrew Jackson won the Battle of New Orleans in 1815. Jazz was born here around 1900. Hurricane Katrina flooded 80% of the city in 2005. The app's NOLA Time Machine walks through each era."],
+    [/neighbou?rhood|french quarter|marigny|bywater|garden district|treme|tremé|cbd|uptown|warehouse/, () => "The French Quarter is the old city (Bourbon is the party street, Royal has galleries and antiques). The Marigny, just downriver, has Frenchmen Street's music clubs; the Bywater beyond it has colorful houses and Crescent Park. Tremé is the historic Black neighborhood behind Rampart (birthplace of jazz; take a car at night). The CBD and Warehouse District have museums and hotels; the Garden District and Uptown are the mansion-and-oak St. Charles streetcar ride."],
+    [/bourbon (st|street)? vs|frenchmen vs|bourbon or frenchmen|frenchmen or bourbon/, () => "Bourbon Street is loud, neon and touristy (fun for an hour, cheap drinks, cover bands). Frenchmen Street in the Marigny is where locals go for real live jazz in small clubs like The Spotted Cat, d.b.a. and Snug Harbor. Do both: a Bourbon walk-through, then Frenchmen for the music."],
+    [/slang|who dat|where y.?at|lagniappe|neutral ground|making groceries|yat|dawlin|cher/, () => "Local talk: 'Where y'at?' = how are you. 'Who dat!' = Saints cheer. 'Lagniappe' (lan-yap) = a little something extra. 'Neutral ground' = the median. 'Making groceries' = grocery shopping. 'Dawlin'' = darling. Parishes, not counties."],
+    [/voodoo/, () => "New Orleans Voodoo is a real religion that blends West African, Haitian and Catholic traditions, made famous by Marie Laveau in the 1800s. Visit respectfully: the New Orleans Historic Voodoo Museum and Voodoo shops are in the app, and Congo Square is where enslaved Africans gathered on Sundays."],
+    [/cemetery|cemeteries|tomb|marie laveau/, () => "The above-ground tombs are because of the high water table. St. Louis Cemetery No. 1 (Marie Laveau's tomb) is open only with a licensed guided tour; book ahead. Lafayette Cemetery No. 1 in the Garden District is under restoration, so check before going. Go in daylight."],
+    [/\blost\b|stolen|robbed|theft|steal|pickpocket(ed)?|wallet|purse|police report|report (a|the)? ?(crime|theft)|file a report/, () => { const g = (typeof SAFE_CONTACTS!=="undefined" && SAFE_CONTACTS) ? SAFE_CONTACTS.groups : []; const pick = g.flatMap(x => x.items).filter(i => /nopd|8th district|online|recovered|evidence/i.test(i.name)).slice(0, 5); return "So sorry, honey. If you're in danger call 911. Otherwise:\n" + pick.map(i => "• "+i.name+(i.phone?": "+i.phone:"")+(i.url?" — "+i.url:"")+(i.note?" — "+i.note:"")).join("\n") + "\nCancel cards right away, and tell the Olivier House front desk (504-525-8456) in case it's turned in."; }],
+    [/emergency|hospital|\ber\b|urgent care|doctor|sick|injur|hurt|pharmacy|medicine|ambulance/, () => { const g = (typeof SAFE_CONTACTS!=="undefined" && SAFE_CONTACTS) ? SAFE_CONTACTS.groups : []; const pick = g.flatMap(x => x.items).filter(i => /university medical|lcmc|urgent|ochsner|walgreens|poison/i.test(i.name)).sort((a, b) => { const r = x => /university medical/i.test(x.name) ? 0 : /lcmc/i.test(x.name) ? 1 : /urgent|ochsner/i.test(x.name) ? 2 : /walgreens/i.test(x.name) ? 3 : 4; return r(a) - r(b); }).slice(0, 6); return "In an emergency call 911.\n" + pick.map(i => "• "+i.name+(i.phone?": "+i.phone:"")+(i.note?" — "+i.note:"")).join("\n") + "\nThe Help tab has every number with tap-to-call."; }],
+    [/cash|atm|credit card|money/, () => "Cards work almost everywhere, but carry some cash for band tip jars, street performers, covers at small clubs, and Café du Monde (cash only at some windows; check). ATMs are everywhere in the Quarter, but use ones inside banks or stores."],
+    [/dress code|what to wear (out|to dinner)|fancy|jacket required/, () => "Most places are casual. A few old-line restaurants want 'smart casual' at dinner (Galatoire's and Arnaud's ask men to wear a jacket at night). Wear shoes you can walk and dance in; the Quarter's sidewalks are bumpy."],
+    [/saints|football|pelicans|game|sports/, () => "Check the Saints' schedule on neworleanssaints.com for Nov 4–8 home games at the Caesars Superdome (it's in the app). Game days make the CBD and Quarter extra busy, and rideshares surge."],
+    [/how long|how many days|when do we (arrive|leave|get there|fly)|trip dates|countdown|days (until|till|to go)/, () => { const ti = tripInfo(); if(!ti) return null; const now = new Date(); const days = Math.ceil((ti.A - now)/86400000); return "You arrive Wednesday, Nov 4 and leave Sunday, Nov 8, 2026 — 4 nights at the Olivier House Hotel, 828 Toulouse St."+(days > 0 ? " That's "+days+" day"+(days===1?"":"s")+" from now." : ""); }],
+    [/hotel|where are we staying|our address|olivier/, () => "You're staying at the Olivier House Hotel, 828 Toulouse St, New Orleans, LA 70112 (front desk 504-525-8456). It's in the heart of the French Quarter: 2 blocks to Bourbon, 5 to Jackson Square, about 10 minutes' walk to Frenchmen."],
+    [/golden girls|dorothy|blanche|rose|sophia/, () => "The girls are your hosts! Dorothy brings history and jazz, Blanche romance and late nights, Rose beignets, cats and swamps, and Sophia food, Voodoo and bargains. Tap 'Who's leading tonight?' on Home to see each girl's picks, or Holla Holla for what's open now."]
+  ];
+
+  /* ---- about the app itself (from Help) ---- */
+  function helpAnswer(q){
+    if(!/\bapp\b|button|\btab\b|feature|install|\bsave\b|saving|\bvote|holla|surprise me|passport|tattoo idea|design (a|my|your) tattoo|tattoo design|cheesecake|kitchen table|settings|dark mode|after dark|full tour|walkthrough|how do i use|the map work|dorothy (pop|nudge)|ask the girls/.test(q)) return null;
+    const words = q.replace(/[^a-z ]/g," ").split(/\s+/).filter(w => w.length > 3 && !STOP.test(w));
+    let best = null, sc = 0;
+    (HELP||[]).forEach(([k, t, items]) => items.forEach(([h, a]) => { const txt = lc(t+" "+h+" "+a.replace(/<[^>]+>/g,"")); let s = 0; words.forEach(w => { if(txt.includes(w)) s += lc(h).includes(w) ? 3 : 1; }); if(s > sc){ sc = s; best = [t, h, a]; } }));
+    return best && sc >= 2 ? {text:best[1]+": "+best[2].replace(/<[^>]+>/g,"")+"\n(More in the Help tab.)", ids:[]} : null;
+  }
+
+  function planAnswer(q){
+    if(!/\bplan\b|itinerary|schedule|agenda|what are we doing|what('| i)?s on (for|the|our|day)|whats on (for|the|our|day)|\bday \d\b|doing (today|tomorrow|tonight)/.test(q) || !plan || !plan.days) return null;
+    if(/open|bar|coffee|eat|food|jazz/.test(q) && !/plan|itinerary|schedule|agenda|on (the|our) plan/.test(q)) return null;
+    const ti = tripInfo(), ts = typeof tripStatus==="function" ? tripStatus() : null;
+    let n = (q.match(/day (\d)/)||[])[1];
+    if(n) n = +n; else if(/tomorrow/.test(q)) n = ts && ts.day ? ts.day + 1 : 1; else if(/today/.test(q)) n = ts && ts.day ? ts.day : 1; else if(/whole|all|entire|full/.test(q)) n = 0; else n = ts && ts.day ? ts.day : 1;
+    if(n === 0) return {text:plan.days.map(d => "Day "+d.n+(ti?" ("+dayLabel(ti.dateOf(d.n))+")":"")+": "+(d.t||"")+" — "+(d.items||[]).slice(0,4).map(i => i.h).join(", ")).join("\n"), ids:[]};
+    const d = plan.days.find(x => x.n === n); if(!d) return {text:"Your plan has days 1 to "+plan.days.length+".", ids:[]};
+    const items = d.items||[];
+    return {text:"Day "+d.n+(ti?" · "+dayLabel(ti.dateOf(d.n)):"")+(d.t?" — "+d.t:"")+":\n"+items.map(i => "• "+(i.t?fmtM(toM(i.t))+" ":"")+(i.h||"")+(i.d?" — "+i.d:"")).join("\n")+(ts && !ts.day ? "\n(Edit it on the Trip tab.)" : ""), ids:[...new Set(items.flatMap(i => i.p||[]))].filter(id => BY[id]).slice(0,6)};
+  }
+
+  function placeAnswer(q, ps){
+    const {W, label, explicit} = parseWhen(q);
+    if(ps.length > 1 && !/compare|vs|or\b/.test(q)) ps = ps.slice(0, 2);
+    return {text: ps.map(p => {
+      const s = safetyOf ? safetyOf(p) : null, h = p.hrs || {};
+      const parts = [];
+      const askHours = /open|close|hours|time|when/.test(q), askAddr = /address|where is|located|location|directions|how do (i|we) get/.test(q), askPh = /phone|call|number/.test(q), askSafe = /safe|danger|night/.test(q), askRate = /rating|rated|reviews|good|worth|best/.test(q), askFar = /far|walk|distance|close to|how long/.test(q), askWhy = /why|what is|what's|tell me|worth/.test(q);
+      const askBook = /\bbook|\breserv|\bticket|sell out|\bline\b|\bwait\b/.test(q);
+      const all = !(askHours||askAddr||askPh||askSafe||askRate||askFar||askBook);
+      if(askBook) parts.push(p.n + ": " + (h.reserve ? "Booking — " + h.reserve : "No booking info on file; walk-ins are usually fine.") + (h.detail ? "\n" + h.detail : ""));
+      const st0 = statusAt(p, W); if(!(st0.state !== "unknown" || askHours)) parts.push(p.n + (p.a ? " (" + p.a + ")" : "")); if(st0.state !== "unknown" || askHours) parts.push((explicit ? label[0].toUpperCase()+label.slice(1)+", " : "Right now, ") + p.n + " is " + stTxt(p, W) + ".");
+      if(askHours || all) if(h.hoursText) parts.push("Hours: " + h.hoursText);
+      if(askAddr || all) if(p.ad) parts.push("Address: " + p.ad + (askAddr ? "\nDirections: " + mapUrl(p) : ""));
+      if(askPh || all) if(p.ph) parts.push("Phone: " + p.ph + (p.phw ? " ("+p.phw+")" : "")); else if(askPh && p.contact) parts.push("Contact: " + p.contact);
+      if(askFar || all){ const d = fmtDist(p); if(d) parts.push("Distance: " + d + (distInfo(p) ? " from "+distInfo(p).from : "")); }
+      if(askRate || all){ const r = rating(p); if(r) parts.push("Google: " + r); }
+      if(askSafe || all) if(s) parts.push("Safety: " + s.label + " — " + s.why);
+      if(askWhy || all) if(WHY[p.id]) parts.push("Why go: " + WHY[p.id]);
+      if((all || /how much|price|cost|ticket|cover|fee|expensive/.test(q)) && (h.price || p.pr)) parts.push("Price: " + (h.price || p.pr));
+      if(h.reserve && (all || /book|reserv|ticket/.test(q))) parts.push("Booking: " + h.reserve);
+      return parts.join("\n");
+    }).join("\n\n"), ids: ps.map(p => p.id)};
+  }
+
+  function listAnswer(q){
+    const hit = CATMAP.find(([re]) => re.test(q));
+    const wantsList = hit || /open|available|now|tonight|tomorrow|where (can|should) (we|i)|recommend|suggest|best|cheap|free|near|close by|nearby|walk/.test(q);
+    if(!wantsList) return null;
+    const {W, label, explicit} = parseWhen(q);
+    let pool = hit ? P.filter(hit[1]) : P.slice();
+    if(hit && /cat|kitt/.test((q.match(hit[0])||[""])[0]) && typeof colPlaces === "function"){ try{ const cp = colPlaces("cats"); if(cp && cp.length) pool = cp; }catch(e){} }
+    if(/cheap|free|budget|inexpensive/.test(q)) pool = pool.filter(p => /free|\$(?!\$)/i.test(p.pr||"") && !/\$\$\$/.test(p.pr||""));
+    if(/walk|nearby|near|close by|close to (us|me|here|the hotel)/.test(q)) pool = pool.filter(p => { const d = distInfo(p); return d ? d.m < 1800 : p.d === 0; });
+    if(/safe/.test(q)) pool = pool.filter(p => safetyOf(p).lv === "green");
+    const onlyOpen = /\bopen\b|\bnow\b|right now|tonight|available|still|late|anything|near me|nearby|around here/.test(q) || explicit;
+    if(/how much|price|cost|ticket|expensive/.test(q) && pool.length){ const tp = pool.slice(0, 6); return {text:"Prices — "+(hit ? (q.match(hit[0])||[""])[0] : "places")+":\n"+tp.map(p => "• "+p.n+": "+((p.hrs&&p.hrs.price)||p.pr||"see listing")).join("\n"), ids:tp.map(p => p.id)}; }
+    let shown = onlyOpen ? pool.filter(p => statusAt(p, W).state === "open") : pool;
+    shown.sort((a, b) => { const ra = ((window.NOLA_RATINGS||{})[a.id]||{}).r||0, rb = ((window.NOLA_RATINGS||{})[b.id]||{}).r||0; const da = distInfo(a), db = distInfo(b); const near = /near|close|walk/.test(q); return near && da && db ? da.m - db.m : (rb - ra) || ((da&&db) ? da.m - db.m : a.d - b.d); });
+    const LBL = {beignet:"beignets",coffee:"coffee",breakfast:"breakfast",jazz:"live music",cocktail:"bars",bar:"bars",bars:"bars",drink:"drinks",dance:"dancing",vegan:"vegan & vegetarian",vegetarian:"vegan & vegetarian",dinner:"dinner",lunch:"lunch",eat:"food",food:"food",cat:"cat spots",cats:"cat spots",tattoo:"tattoo shops",museum:"museums",history:"history",voodoo:"Voodoo & spooky",swamp:"swamp & nature",river:"river trips",cruise:"river trips",shop:"shopping",romantic:"romantic spots",date:"date spots",drag:"LGBTQ+ spots",gay:"LGBTQ+ spots",queer:"LGBTQ+ spots",lgbt:"LGBTQ+ spots",swamp:"swamp tours",locals:"local favorites",local:"local favorites"};
+    const kw = hit ? (q.match(hit[0])||[""])[0] : ""; const kind = LBL[kw] || LBL[kw.replace(/s$/,"")] || kw || "places";
+    if(!shown.length){
+      if(!onlyOpen || !pool.length) return {text:"I couldn't find "+kind+" for that. Try different words, or tap Holla Holla.", ids:[]};
+      const nxt = pool.map(p => { const st = statusAt(p, W); return [p, st]; }).filter(x => x[1].state==="later").sort((a,b) => a[1].opensIn - b[1].opensIn).slice(0, 4);
+      return {text:"No "+kind+" open "+label+(nxt.length ? ". Next to open:\n"+nxt.map(([p,st]) => "• "+p.n+" — opens at "+st.openLabel+(fmtDist(p)?" · "+fmtDist(p):"")).join("\n") : ". Try another time, like \"tomorrow at 10am\"."), ids:nxt.map(x => x[0].id)};
+    }
+    const top = shown.slice(0, 6);
+    if(/how much|price|cost|ticket|expensive/.test(q)) return {text:"Prices — "+kind+":\n"+top.map(p => "• "+p.n+": "+((p.hrs&&p.hrs.price)||p.pr||"see listing")).join("\n"), ids:top.map(p => p.id)};
+    return {text:(onlyOpen ? "Open "+label : "Top picks")+(hit?" — "+kind:"")+":\n"+top.map(p => "• "+p.n+" — "+stTxt(p, W)+(fmtDist(p)?" · "+fmtDist(p):"")+(rating(p)?" · "+rating(p).split(" ")[0]:"")+(safetyOf(p).lv!=="green"?" · "+safetyOf(p).label.toLowerCase():"")).join("\n")+(shown.length>6?"\n…and "+(shown.length-6)+" more. Tap Holla Holla to see them all.":""), ids:top.map(p => p.id)};
+  }
+
+  window.askEngine = function(qRaw, hist){
+    let q = lc(qRaw).replace(/[’`]/g, "'").trim();
+    /* follow-ups like "what about tomorrow?" reuse the last question's subject */
+    if(/^(what|how) about|^and |^also |^same (for|but)/.test(q) && hist && hist.length){ const lastQ = [...hist].reverse().find(h => h[0]==="user"); if(lastQ) q = lc(lastQ[1]).replace(/\b(now|right now|tonight|today|tomorrow|this (morning|afternoon|evening)|at \d{1,2}(:\d{2})?\s*(am|pm)?)\b/g, " ") + " " + q.replace(/^(what|how) about|^and |^also |^same (for|but)/, " "); }
+    if(/^(hi|hey|hello|yo|howdy|good (morning|evening))\b/.test(q) && q.length < 25) return {text:"Hey, darlin'! Ask me what's open, where to eat, the plan for any day, hours or addresses for any place, or anything about New Orleans.", ids:[]};
+    if(/thank/.test(q) && q.length < 30) return {text:"Anytime, honey. Now go have a beignet.", ids:[]};
+    const kbHit = KB.find(([re]) => re.test(q));
+    const explain = /^is (bourbon|frenchmen|royal|decatur|canal|rampart|the quarter|the french quarter|the marigny|marigny|the bywater|bywater|trem[eé]|the cbd|cbd|uptown|the garden district|garden district|(?:the )?[a-z]+ (?:street|st|area|neighborhood))\b.*\bsafe/.test(q) || /tell me about|what('| i)?s (a|an|the)\b|what is|what does|mean|difference|explain|history|why do|or frenchmen|or bourbon| vs\.? |versus|how (do|does|can|should) (i|we|you)|is it (ok|okay|legal|safe)|can (i|we) (walk|drink|carry)/.test(q);
+    if(/olivier|where are we staying|(our|the) hotel('s)? (address|phone|number|name)|(address|phone|number|call) (of |for |to )?(the |our )?hotel|which hotel|what hotel/.test(q)){ const hk = KB.find(([re]) => re.test("olivier")); if(hk) return {text:hk[1](q), ids:[]}; }
+    const to = q.match(/(?:how (?:do|can|should) (?:i|we) get to|directions to|way to|take us to|get us to|how far (?:is|to))\s+(?:the\s+)?(.+?)\??$/);
+    if(to){ const t = lc(to[1]).replace(/[^a-z0-9& ]/g," ").trim(); const hitP = P.filter(p => lc(p.n).includes(t) || t.split(" ").filter(w => w.length > 3).every(w => lc(p.n).includes(w))).slice(0, 1)[0];
+      if(hitP){ const d = distInfo(hitP); return {text:hitP.n+(hitP.ad?" — "+hitP.ad:"")+(d?"\n"+d.txt+" from "+d.from+".":"")+(d && d.mode==="car" ? " That's a ride: take Uber/Lyft, or the streetcar if it's on the St. Charles or Canal line." : " An easy walk.")+"\nDirections (opens Google Maps from where you are): "+mapUrl(hitP), ids:[hitP.id]}; } }
+    if(kbHit && explain){ const t = kbHit[1](q); if(t) return {text:t, ids:[]}; }
+    if(/what (should|can|could) (we|i) do|things to do|what to do|ideas for|plan for (us|me)/.test(q) && !/rain/.test(q)){
+      const {W, label, explicit} = parseWhen(q); const ti = tripInfo();
+      let dayN = null; if(ti && W.date){ for(let n = 1; n <= (plan.days||[]).length; n++){ if(ti.dateOf(n).toISOString().slice(0,10) === W.date) dayN = n; } }
+      const open = P.filter(p => statusAt(p, W).state === "open").sort((a, b) => (((window.NOLA_RATINGS||{})[b.id]||{}).r||0) - (((window.NOLA_RATINGS||{})[a.id]||{}).r||0));
+      const mix = []; const seen = new Set(); for(const p of open){ const c = p.c[0]; if(!seen.has(c)){ seen.add(c); mix.push(p); } if(mix.length >= 5) break; }
+      const d = dayN ? plan.days.find(x => x.n === dayN) : null;
+      return {text:(d ? "Your plan for "+label+" (day "+dayN+"): "+(d.items||[]).slice(0,4).map(i => i.h).join(", ")+".\n" : "")+"Open "+label+", a little of everything:\n"+mix.map(p => "• "+p.n+" ("+(CATS[p.c[0]]||p.c[0])+") — "+stTxt(p, W)+(fmtDist(p)?" · "+fmtDist(p):"")).join("\n")+"\nOr tap Surprise me on Home for a mini-adventure.", ids:mix.map(p => p.id)};
+    }
+    const ps = findPlaces(q);
+    if(ps.length) return placeAnswer(q, ps);
+    const pa = planAnswer(q); if(pa) return pa;
+    const ha = helpAnswer(q); if(ha && !/open|recommend|best|where (can|should)/.test(q)) return ha;
+    if(kbHit && !CATMAP.some(([re]) => re.test(q) && /open|now|tonight|near|recommend|best|where (can|should)/.test(q))){ const t = kbHit[1](q); if(t) return {text:t, ids:[]}; }
+    const la = listAnswer(q); if(la) return la;
+    if(kbHit){ const t = kbHit[1](q); if(t) return {text:t, ids:[]}; }
+    if(ha) return ha;
+    const words = q.replace(/[^a-z ]/g," ").split(/\s+/).filter(w => w.length > 3 && !STOP.test(w));
+    const loose = P.filter(p => words.some(w => lc(hay(p)).includes(w))).slice(0, 5);
+    if(loose.length) return {text:"Here's what I found for that:\n"+loose.map(p => "• "+p.n+" — "+stTxt(p, W0())+(fmtDist(p)?" · "+fmtDist(p):"")).join("\n"), ids:loose.map(p => p.id)};
+    return {text:"I'm not sure about that one, honey. Try asking about a place (\"Is Preservation Hall open tomorrow?\"), a kind of thing (\"late-night food near us\"), the plan (\"what's on day 3?\"), getting around, tipping, safety, or New Orleans history and food.", ids:[]};
+  };
+
+  /* ---- Claude (claude.ai version): full context + New Orleans know-how + conversation memory ---- */
+  window.askClaudeInput = function(q, hist){
+    const N = W0(), ti = tripInfo();
+    const places = P.map(p => { const s = statusAt(p, N), r = (window.NOLA_RATINGS||{})[p.id], d = distInfo(p), sf = safetyOf(p);
+      return [p.id, p.n, p.c.join("/"), p.a, s.state==="open" ? "OPEN until "+(s.closeLabel||"?") : s.state==="later" ? "opens "+s.openLabel : s.state, (p.hrs&&p.hrs.hoursText||"").slice(0,110), r&&r.r ? r.r+"★" : "", d ? d.txt : "", sf.lv, p.ad||"", p.ph||"", (WHY[p.id]||"").slice(0,90)]; });
+    const days = (plan.days||[]).map(d => ({day:d.n, date:ti ? dayLabel(ti.dateOf(d.n)) : "", title:d.t||"", stops:(d.items||[]).map(i => (i.t||"")+" "+(i.h||"")+(i.p&&i.p[0]?" ["+i.p[0]+"]":"")).slice(0,10)}));
+    const sys = "You are 'Ask the Girls', the warm, witty helper in The NOLA Girls trip app (Golden Girls flavor, light touch). Travelers: Will, Emily, and their niece Lauren (21). Trip: Wed Nov 4 – Sun Nov 8, 2026, staying at the Olivier House Hotel, 828 Toulouse St in the French Quarter (504-525-8456).\n"
+      + "Answer ANY question about New Orleans (history, food, music, neighborhoods, customs, getting around, safety, weather, what to do) using your own knowledge, and ANY question about this app or the places in it using the APP DATA below.\n"
+      + "Rules: For places, hours, open/closed, addresses and phone numbers, trust APP DATA over memory; if something isn't in the data, you may use general knowledge but say it's worth confirming. Never invent exact hours, prices or phone numbers. When you mention a place from APP DATA, put its id in double brackets right after the name, e.g. Café du Monde [[cdm]]. Prefer places that are OPEN when the question is about now. Mention the safety color for anything yellow or red at night. Keep answers under 140 words unless asked for detail; use short bullets for lists. If the question is about how to use the app, explain the relevant feature (Holla Holla button = what's open now in this section; Explore collections; Map with safety colors; Trip plan; Saved kitchen table; Ink tattoo ideas and AI designer; Help has emergency numbers).\n"
+      + "NOW: New Orleans local time "+DOWL[N.dow]+" "+fmtM(N.mins)+(N.date?" ("+N.date+")":"")+(typeof WX!=="undefined" && WX ? "; weather "+WX.temp+"°F "+WXL(WX.code) : "")+".\n"
+      + "APP DATA — places as [id, name, type, area, status now, hours, google rating, distance, night safety, address, phone, why]:\n"+JSON.stringify(places)+"\nPLAN:\n"+JSON.stringify(days);
+    const msgs = [{role:"user", content:sys + "\n\nReply 'Ready.' and wait for questions."}, {role:"assistant", content:"Ready."}];
+    (hist||[]).slice(-8).forEach(([r, t]) => msgs.push({role:r === "user" ? "user" : "assistant", content:String(t).slice(0, 1200)}));
+    msgs.push({role:"user", content:q});
+    return msgs;
+  };
 })();
 
 </script>
