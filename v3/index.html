@@ -3475,21 +3475,27 @@ document.addEventListener("change", e=>{
   const fab = document.createElement("button"); fab.className = "ask-fab"; fab.type = "button"; fab.setAttribute("aria-label", "Ask the Girls a question"); fab.innerHTML = ICON_CHAT + '<span class="lbl">Ask</span>';
   document.body.appendChild(fab);
   let panel = null, speak = false; try{ speak = localStorage.getItem("nola-ask-speak")==="1"; }catch(e){}
-  const SUGG = ["What's open near me?","Beignets right now?","Live jazz tonight?","What's on our plan tomorrow?","Is Preservation Hall open?","Vegan food nearby?"];
+  const SUGG = ["What's open near me?","Uber to Preservation Hall","Order beignets to the hotel","Call Café du Monde","Live jazz tonight?","Where can I get oysters?","Lyft back to the hotel","What's on our plan tomorrow?"];
   function linkify(text){ return esc(text).replace(/\s*\[\[([a-z0-9-]+)\]\]/gi, (m,id)=> BY[id] ? '' : ''); }
-  function addMsg(who, text, ids){
+  function addMsg(who, text, ids, acts){
     const log = $(".ask-log", panel); const d = document.createElement("div"); d.className = "ask-msg " + who;
     const found = []; const clean = String(text).replace(/\s*\[\[([a-z0-9-]+)\]\]/gi, (m,id)=>{ if(BY[id] && !found.includes(id)) found.push(id); return ""; });
     d.textContent = clean;
     const all = [...new Set([...(ids||[]), ...found])].filter(id=>BY[id]).slice(0,8);
     if(all.length){ const c = document.createElement("div"); c.className = "ask-chips"; c.innerHTML = all.map(id=>'<button class="ask-chip" type="button" data-askopen="'+id+'">'+esc(BY[id].n)+'</button>').join(""); d.appendChild(c); }
+    if(acts && acts.length){ const a = document.createElement("div"); a.className = "ask-acts"; a.innerHTML = acts.map(x => x.copy ? '<button type="button" class="ask-act copy" data-askcopy="'+esc(x.copy)+'">'+esc(x.label)+'</button>' : '<a class="ask-act '+esc(x.kind||"")+'" href="'+esc(x.href)+'"'+(/^tel:/.test(x.href)?'':' target="_blank" rel="noopener"')+'>'+esc(x.label)+'</a>').join(""); d.appendChild(a); }
     log.appendChild(d); log.scrollTop = log.scrollHeight; return d;
   }
-  function say(t){ if(!speak || !window.speechSynthesis) return; try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(t).replace(/\[\[[^\]]+\]\]/g,"").slice(0,600)); const v = speechSynthesis.getVoices().find(v=>/en-US/i.test(v.lang) && /female|samantha|aria|jenny|zira/i.test(v.name)); if(v) u.voice = v; speechSynthesis.speak(u); }catch(e){} }
+  let voiceTurn = false, convo = false; try{ convo = localStorage.getItem("nola-ask-convo")==="1"; }catch(e){}
+  function listenAgain(){ if(convo && panel){ const m = $(".mic", panel); if(m && !m.classList.contains("on")) setTimeout(()=>m.click(), 350); } }
+  function say(t){ const want = speak || voiceTurn; voiceTurn = false; if(!want || !window.speechSynthesis){ listenAgain(); return; } try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(t).replace(/\[\[[^\]]+\]\]/g,"").slice(0,600)); const v = speechSynthesis.getVoices().find(v=>/en-US/i.test(v.lang) && /female|samantha|aria|jenny|zira/i.test(v.name)); if(v) u.voice = v; u.onend = listenAgain; speechSynthesis.speak(u); }catch(e){ listenAgain(); } }
   const HIST = [];
   async function ask(q){
     q = (q||"").trim(); if(!q) return;
     addMsg("me", q); const inp = $("#askq", panel); if(inp) inp.value = "";
+    if(/^(bye|goodbye|stop|stop listening|that's all|thats all|thank you that's all|end call|hang up)\b/i.test(q)){ convo = false; const c = $("#askconvo", panel); if(c) c.checked = false; try{ localStorage.setItem("nola-ask-convo","0"); }catch(_){} addMsg("bot", "Bye for now, honey. Tap the mic whenever you need me."); say("Bye for now, honey."); return; }
+    let act = null; try{ act = window.askAction ? window.askAction(q) : null; }catch(e){ act = null; }
+    if(act){ addMsg("bot", act.text, act.ids, act.actions); say(act.text); HIST.push(["user", q], ["assistant", act.text]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12); return; }
     if(SAMPLE){
       const b = addMsg("bot", "Thinking…");
       try{ const t = await claudeAnswer(q, t=>{ b.firstChild ? (b.firstChild.nodeValue = t.replace(/\s*\[\[[a-z0-9-]+\]\]/gi,"")) : (b.textContent = t); });
@@ -3497,7 +3503,7 @@ document.addEventListener("change", e=>{
       catch(e){ b.remove(); if(e && e.code==="not_granted"){ SAMPLE = null; } }
     }
     let a = null; try{ a = window.askEngine ? window.askEngine(q, HIST) : null; }catch(e){ a = null; }
-    a = a || localAnswer(q); addMsg("bot", a.text, a.ids); say(a.text); HIST.push(["user", q], ["assistant", a.text]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12);
+    a = a || localAnswer(q); addMsg("bot", a.text, a.ids, a.actions); say(a.text); HIST.push(["user", q], ["assistant", a.text]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12);
   }
   function fitPanel(){
     if(!panel || !window.visualViewport) return;
@@ -3514,6 +3520,7 @@ document.addEventListener("change", e=>{
       + '<div class="ask-log" aria-live="polite"></div>'
       + '<div class="ask-sugg">'+SUGG.map(s=>'<button class="ask-chip" type="button" data-asksugg="'+esc(s)+'">'+esc(s)+'</button>').join("")+'</div>'
       + '<label class="ask-speak"><input type="checkbox" id="askspeak"'+(speak?" checked":"")+'> Read answers out loud</label>'
+      + (SR ? '<label class="ask-convo"><input type="checkbox" id="askconvo"'+(convo?" checked":"")+'> Conversation mode: keep listening after each answer (say “bye” to stop)</label><div class="ask-live" aria-live="polite">● Listening…</div>' : '')
       + '<form class="ask-in"><input id="askq" type="text" placeholder="Ask anything about the trip…" aria-label="Your question" autocomplete="off">'+(SR?'<button class="ask-btn mic" type="button" aria-label="Ask by voice">'+ICON_MIC+'</button>':'')+'<button class="ask-btn" type="submit" aria-label="Send">'+ICON_SEND+'</button></form>';
     document.body.appendChild(panel);
     document.documentElement.classList.add("ask-open");
@@ -3521,6 +3528,7 @@ document.addEventListener("change", e=>{
     addMsg("bot", "Honey, ask me anything: what's open, where to eat, what's on the plan, hours, addresses. Tap the mic to just say it.");
     $(".ask-x", panel).onclick = open;
     $(".ask-in", panel).onsubmit = e=>{ e.preventDefault(); ask($("#askq", panel).value); };
+    if($("#askconvo", panel)) $("#askconvo", panel).onchange = e=>{ convo = e.target.checked; try{ localStorage.setItem("nola-ask-convo", convo?"1":"0"); }catch(_){} if(convo){ const m = $(".mic", panel); if(m) m.click(); } };
     $("#askspeak", panel).onchange = e=>{ speak = e.target.checked; try{ localStorage.setItem("nola-ask-speak", speak?"1":"0"); }catch(_){} if(!speak && window.speechSynthesis) speechSynthesis.cancel(); };
     const mic = $(".mic", panel);
     if(mic) mic.onclick = ()=>{
@@ -3529,7 +3537,8 @@ document.addEventListener("change", e=>{
         mic.classList.add("on"); const inp = $("#askq", panel); let final = "";
         r.onresult = ev=>{ let t = ""; for(const res of ev.results){ t += res[0].transcript; if(res.isFinal) final = t; } inp.value = t; };
         r.onerror = ev=>{ mic.classList.remove("on"); if(ev.error==="not-allowed") addMsg("bot", "I need microphone permission to hear you. Allow it in your browser, or just type."); };
-        r.onend = ()=>{ mic.classList.remove("on"); if((final||inp.value).trim()) ask(final || inp.value); };
+        r.onend = ()=>{ mic.classList.remove("on"); const live = $(".ask-live", panel); if(live) live.classList.remove("on"); if((final||inp.value).trim()){ voiceTurn = true; ask(final || inp.value); } };
+        { const live = $(".ask-live", panel); if(live) live.classList.add("on"); }
         r.start();
       }catch(e){ mic.classList.remove("on"); addMsg("bot", "Voice isn't available in this browser — type your question instead."); }
     };
@@ -4174,6 +4183,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     return {text:(onlyOpen ? "Open "+label : "Top picks")+(hit?" — "+kind:"")+":\n"+top.map(p => "• "+p.n+" — "+stTxt(p, W)+(fmtDist(p)?" · "+fmtDist(p):"")+(rating(p)?" · "+rating(p).split(" ")[0]:"")+(safetyOf(p).lv!=="green"?" · "+safetyOf(p).label.toLowerCase():"")).join("\n")+(shown.length>6?"\n…and "+(shown.length-6)+" more. Tap Holla Holla to see them all.":""), ids:top.map(p => p.id)};
   }
 
+  window.askFindPlaces = findPlaces;
   window.askEngine = function(qRaw, hist){
     let q = lc(qRaw).replace(/[’`]/g, "'").trim();
     /* follow-ups like "what about tomorrow?" reuse the last question's subject */
@@ -4324,6 +4334,221 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
   });
   addEventListener("scroll", ()=>close(false), {passive:true});
   addEventListener("resize", ()=>close(false));
+})();
+
+/* ---------- rides, calls and food delivery: Uber / Lyft / Uber Eats / DoorDash hand-offs, by voice or tap ---------- */
+(function(){
+  const HOTEL = {n:"Olivier House Hotel", ad:"828 Toulouse St, New Orleans, LA 70112", lat:29.95796, lon:-90.06731, ph:"504-525-8456"};
+  const enc = encodeURIComponent;
+  const destOf = p => { if(!p) return null; if(p === HOTEL) return HOTEL; const c = coordOf(p); return {n:p.n, ad:p.ad||"", lat:c ? c[0] : null, lon:c ? c[1] : null}; };
+  window.uberLink = d => "https://m.uber.com/ul/?action=setPickup&pickup=my_location" + (d && d.lat ? "&dropoff[latitude]="+d.lat+"&dropoff[longitude]="+d.lon+"&dropoff[nickname]="+enc(d.n)+"&dropoff[formatted_address]="+enc(d.ad||d.n) : "");
+  window.lyftLink = d => "https://lyft.com/ride?id=lyft" + (d && d.lat ? "&destination[latitude]="+d.lat+"&destination[longitude]="+d.lon : "");
+  const eatsLink = q => "https://www.ubereats.com/search?q=" + enc(q);
+  const dashLink = q => "https://www.doordash.com/search/store/" + enc(q) + "/";
+  const tel = ph => "tel:" + String(ph).replace(/[^0-9+]/g, "");
+  const lc = s => String(s||"").toLowerCase();
+  function placeIn(q){
+    const f = window.askFindPlaces ? window.askFindPlaces(q) : [];
+    if(f.length) return f[0];
+    const t = lc(q).replace(/['’]/g, "");
+    let best = null, sc = 0;
+    P.forEach(p => { const words = lc(p.n).replace(/['’]/g, "").split(/[^a-z0-9]+/).filter(w => w.length > 3 && !/^(the|street|park|house|tour|tours|cafe|café|walk|bar|new|orleans)$/.test(w)); const hit = words.filter(w => t.includes(w)).length; if(hit && hit/words.length > sc){ sc = hit/words.length; best = p; } });
+    return sc >= .5 ? best : null;
+  }
+  const isHome = q => /\b(hotel|home|olivier|back to (the )?(room|hotel)|our room)\b/.test(q);
+
+  window.askAction = function(qRaw){
+    const q = lc(qRaw).replace(/[’`]/g, "'");
+    /* rides */
+    if(/\b(uber|lyft|rideshare|ride share|cab|taxi|pick (me|us) up|get (me|us) (a )?(ride|car)|call (me |us )?(a |an )?(ride|car|uber|lyft|cab|taxi)|take (me|us) (to|home|back)|drive (me|us)|need a ride|car (to|home)|ride (to|home|back))\b/.test(q)){
+      const toHome = isHome(q);
+      const p = toHome ? null : placeIn(q.replace(/\b(uber|lyft|ride|car|cab|taxi|to|get|me|us|a|an|call|take|please|now)\b/g, " "));
+      const d = toHome ? HOTEL : destOf(p);
+      const lyftFirst = /lyft/.test(q) && !/uber/.test(q);
+      const acts = [];
+      const u = {label:"Open Uber" + (d ? " → " + d.n : ""), href:uberLink(d), kind:"uber"}, l = {label:"Open Lyft" + (d ? " → " + d.n : ""), href:lyftLink(d), kind:"lyft"};
+      if(/united cab|\bcab\b|taxi/.test(q)) acts.push({label:"Call United Cab", href:tel("504-522-9771"), kind:"call"});
+      lyftFirst ? acts.push(l, u) : acts.push(u, l);
+      let text;
+      if(d){
+        const s = p && window.safetyOf ? safetyOf(p) : null;
+        text = "Got it, honey. Tap below and " + (lyftFirst ? "Lyft" : "Uber") + " opens with pickup at your location and the drop-off set to " + d.n + (d.ad ? " (" + d.ad + ")" : "") + ". Check the price, then tap Request in their app." + (s && s.lv !== "green" ? "\nGood call taking a car: that area is " + s.label.toLowerCase() + "." : "") + (toHome ? "" : "\nFrom the Quarter, meet the car on Decatur, Rampart or Canal — many Quarter streets close to cars at night.");
+      } else text = "Where to? Say something like \"Uber to Preservation Hall\" or \"Lyft back to the hotel\". Or open the app and type it in:";
+      if(!d) acts.unshift({label:"Uber → Olivier House", href:uberLink(HOTEL), kind:"uber"});
+      return {text, ids:p ? [p.id] : [], actions:acts};
+    }
+    /* calls */
+    if(/^(please )?(call|phone|dial|ring)\b|\b(call|phone|dial) (the )?[a-z]/.test(q) && !/\bcall(ed)? (it|that)\b|what('s| is) .* called/.test(q)){
+      if(/\b911\b|emergency|ambulance/.test(q)) return {text:"Calling 911 for police, fire or an ambulance. Tell them you're in the French Quarter and give the nearest cross street.", ids:[], actions:[{label:"Call 911", href:"tel:911", kind:"sos"}]};
+      if(/police|nopd/.test(q)) return {text:"NOPD non-emergency line. For an emergency, call 911.", ids:[], actions:[{label:"Call NOPD 504-821-2222", href:tel("504-821-2222"), kind:"call"}, {label:"Call 911", href:"tel:911", kind:"sos"}]};
+      if(isHome(q)) return {text:"Calling the Olivier House front desk.", ids:[], actions:[{label:"Call Olivier House " + HOTEL.ph, href:tel(HOTEL.ph), kind:"call"}]};
+      const p = placeIn(q.replace(/\b(call|phone|dial|ring|the|please|for me|number)\b/g, " "));
+      if(p && p.ph) return {text:"Tap to call " + p.n + (p.phw ? " (" + p.phw + " answers)" : "") + ".", ids:[p.id], actions:[{label:"Call " + p.n + " · " + p.ph, href:tel(p.ph), kind:"call"}]};
+      if(p) return {text:p.n + " doesn't have a phone number." + (p.contact ? " " + p.contact : ""), ids:[p.id], actions:[]};
+    }
+    /* food delivery */
+    if(/\b(order|deliver|delivery|delivered|doordash|door dash|uber ?eats|grubhub|bring (me|us) (some )?|food (to|at) (the )?(hotel|room)|get (me|us) (some )?food|room service)\b/.test(q)){
+      const p = placeIn(q.replace(/\b(order|deliver|delivery|delivered|from|to|the|hotel|me|us|some|please|get|bring)\b/g, " "));
+      let item = p ? p.n : q.replace(/\b(can you|could you|please|order|get|bring|deliver(ed|y)?|me|us|some|from|to|the|hotel|room|via|on|with|doordash|door dash|uber ?eats|grubhub|food|i want|we want|i'd like|for|a|an)\b/g, " ").replace(/\s+/g, " ").trim();
+      if(!item || item.length < 3) item = "Creole food";
+      return {text:"Opening delivery for \"" + item + "\". Pick a place, then set the delivery address to:\n" + HOTEL.n + ", " + HOTEL.ad + " (add your room number).\nDelivery apps handle the order and payment in their own app.", ids:p ? [p.id] : [], actions:[{label:"Uber Eats: " + item, href:eatsLink(item), kind:"eats"}, {label:"DoorDash: " + item, href:dashLink(item), kind:"dash"}, {label:"Copy hotel address", copy:HOTEL.n + ", " + HOTEL.ad, kind:"copy"}]};
+    }
+    return null;
+  };
+
+  /* place details: ride and delivery buttons */
+  function rideRow(p){
+    const d = destOf(p); if(!d || !d.lat) return "";
+    const food = p.c.some(c => /eat|coffee/.test(c));
+    return '<div class="ride-row" role="group" aria-label="Get there or get it delivered"><a class="ride-btn uber" href="'+uberLink(d)+'" target="_blank" rel="noopener">Uber there</a><a class="ride-btn lyft" href="'+lyftLink(d)+'" target="_blank" rel="noopener">Lyft there</a>'
+      + (food ? '<a class="ride-btn eats" href="'+eatsLink(p.n)+'" target="_blank" rel="noopener">Uber Eats</a><a class="ride-btn dash" href="'+dashLink(p.n)+'" target="_blank" rel="noopener">DoorDash</a>' : '') + '</div>';
+  }
+  let busy = false;
+  new MutationObserver(()=>{ if(busy) return; busy = true; try{
+    const id = typeof S.sheet === "string" ? S.sheet : null, sh = document.querySelector("#sheet-root .sheet");
+    if(id && BY[id] && sh && !sh.querySelector(".ride-row")){ const anchor = sh.querySelector(".stickybar, .actions"); const html = rideRow(BY[id]); if(html){ if(anchor) anchor.insertAdjacentHTML("afterend", html); else sh.insertAdjacentHTML("beforeend", html); } }
+  } finally { busy = false; } }).observe(document.body, {childList:true, subtree:true});
+  document.addEventListener("click", e=>{ const c = e.target.closest("[data-askcopy]"); if(!c) return; e.preventDefault(); try{ navigator.clipboard.writeText(c.dataset.askcopy); c.textContent = "Copied ✓"; }catch(_){ c.textContent = c.dataset.askcopy; } });
+
+  const css = document.createElement("style");
+  css.textContent = `
+  .ride-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+  .ride-btn,.ask-act{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;padding:0 16px;border-radius:999px;font-weight:800;font-size:.88rem;text-decoration:none;border:2px solid #111}
+  .ride-btn.uber,.ask-act.uber{background:#000;color:#fff}
+  .ride-btn.lyft,.ask-act.lyft{background:#FF00BF;color:#fff;border-color:#B8008A}
+  .ride-btn.eats,.ask-act.eats{background:#06C167;color:#0B1B10;border-color:#04914D}
+  .ride-btn.dash,.ask-act.dash{background:#FF3008;color:#fff;border-color:#C42400}
+  .ask-act.call{background:#23172C;color:#F6EBDD;border-color:#23172C}
+  .ask-act.sos{background:#A8322D;color:#fff;border-color:#7A1F1A}
+  .ask-act.copy{background:#fff;color:#23172C;border-color:#23172C;cursor:pointer}
+  .ask-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .ask-convo{display:flex;align-items:center;gap:6px;font-size:.78rem;color:#5A4A66;padding:0 14px 10px}
+  .ask-live{font-size:.75rem;color:#A8322D;font-weight:800;padding:0 14px 6px;display:none}.ask-live.on{display:block}
+  `;
+  document.head.appendChild(css);
+})();
+
+/* ---------- "find anything": food or things the app doesn't track get Find nearby + delivery buttons ---------- */
+(function(){
+  const base = window.askEngine; if(!base) return;
+  const FOOD = /\b(pizza|burger|burgers|sushi|taco|tacos|oyster|oysters|seafood|crawfish|crab|shrimp|bbq|barbecue|dessert|desserts|ice cream|gelato|cake|cupcake|donut|doughnut|wings|steak|ramen|pho|thai|mexican|italian|chinese|indian|vietnamese|japanese|salad|sandwich|sandwiches|bagel|brunch|breakfast|lunch|dinner|snack|snacks|food|eat|hungry|pastry|pastries|pralines?|muffuletta|po.?boys?|gumbo|jambalaya|red beans|boudin|fried chicken|chicken|fries|vegan|vegetarian|gluten.free|coffee|tea|boba|smoothie|juice|cocktail|wine|beer|daiquiri)\b/;
+  const THING = /\b(pharmacy|drugstore|cvs|walgreens|atm|bank|grocery|groceries|store|market|nail|salon|barber|haircut|spa|massage|laundry|souvenir|souvenirs|gift|clothes|shoes|sunglasses|umbrella|phone charger|charger|post office|gas station|gym|yoga|bike rental|scooter|parking|restroom|bathroom|wifi|hotel|tattoo|piercing|thrift|bookstore|record store|music store|costume|wig|mask|beads|hat|hats|jewelry|art gallery|gallery|antique|antiques|liquor|wine shop|cigar|dispensary|vet|dog park|playground|church|mass)\b/;
+  const enc = encodeURIComponent;
+  const maps = t => "https://www.google.com/maps/search/?api=1&query=" + enc(t + " near me");
+  window.askEngine = function(qRaw, hist){
+    const a = base(qRaw, hist) || {text:"", ids:[]};
+    const q = String(qRaw||"").toLowerCase();
+    const food = q.match(FOOD), thing = q.match(THING);
+    const term = (food && food[0]) || (thing && thing[0]);
+    if(!term) return a;
+    const COVERED = /beignet|coffee|cafe|café|chicory|breakfast|brunch|jazz|music|cocktail|\bbars?\b|drink|wine|beer|vegan|vegetarian|dinner|lunch|eat|food|po.?boy|gumbo|jambalaya|crawfish|tattoo|museum|voodoo|swamp|river|cruise|antique|souvenir|shop/;
+    const guideHas = COVERED.test(term) && !/^Here's what I found|^Top picks:|^Open right now:/.test(a.text);
+    const placeHit = a.ids && a.ids.length === 1 && /^Right now|^Tomorrow|^On /.test(a.text) && !new RegExp("museum", "i").test((BY[a.ids[0]]||{}).n || "") ;
+    const weak = !guideHas && !placeHit || !a.ids || !a.ids.length || /^I'm not sure|^I couldn't find|^No /.test(a.text);
+    const what = q.replace(/\b(where|can|could|do|does|i|we|you|find|get|buy|grab|have|me|us|some|a|an|the|best|good|great|near|nearby|close|around|here|by|is|are|there|any|anywhere|to|for|want|need|looking|for|please|tonight|today|now|open|place|places|spot|spots)\b/g, " ").replace(/[^a-z0-9 '&-]/g, " ").replace(/\s+/g, " ").trim() || term;
+    const acts = [{label:"Find " + what + " nearby", href:maps(what), kind:"call"}];
+    if(food) acts.push({label:"Uber Eats: " + what, href:"https://www.ubereats.com/search?q=" + enc(what), kind:"eats"}, {label:"DoorDash: " + what, href:"https://www.doordash.com/search/store/" + enc(what) + "/", kind:"dash"});
+    if(/pharmacy|drugstore|cvs|walgreens|medicine/.test(q)) return {text:"Closest pharmacy to the Quarter: Walgreens, 900 Canal St (504-568-1271), open late but not 24 hours — call to check tonight's hours. Here's what's open near you:", ids:[], actions:[{label:"Call Walgreens 504-568-1271", href:"tel:5045681271", kind:"call"}].concat(acts)};
+    if(weak) return {text:(food ? "That's not in our guide, but here's how to find " + what + " right now:" : "Here's how to find " + what + " near you:"), ids:[], actions:acts};
+    return Object.assign({}, a, {actions:(a.actions||[]).concat(acts.slice(0, food ? 2 : 1))});
+  };
+})();
+
+/* ---------- activity log: what people view, tap, search and ask (this phone + the owner's shared log in claude.ai) ---------- */
+(function(){
+  const KEY = "nola-activity", MAX = 600;
+  let local = []; try{ local = JSON.parse(localStorage.getItem(KEY) || "[]"); }catch(e){ local = []; }
+  let queue = [], DB = null, UID = null, IS_OWNER = false, USER = null;
+  const now = () => Date.now();
+  const clip = (s, n) => String(s||"").replace(/\s+/g, " ").trim().slice(0, n||160);
+  function log(type, data){
+    const ev = Object.assign({t:type, ts:now(), at:S.tab || ""}, data||{});
+    local.push(ev); if(local.length > MAX) local.splice(0, local.length - MAX);
+    try{ localStorage.setItem(KEY, JSON.stringify(local)); }catch(e){}
+    queue.push(ev);
+  }
+  window.nolaLog = log;
+  /* claude.ai: each person writes their own batches under logs/<their id>; only the owner can read everyone's */
+  if(window.claude && typeof window.claude.use === "function"){
+    Promise.all([window.claude.use("db").catch(()=>null), window.claude.use("user").catch(()=>null)]).then(async ([db, user]) => {
+      if(!db || !user) return; DB = db; USER = user;
+      try{ UID = await user.id(); IS_OWNER = !!(user.isOwner && user.isOwner()); }catch(e){}
+    });
+  }
+  async function flush(){
+    if(!DB || !UID || !queue.length) return;
+    const batch = queue.splice(0, 60);
+    try{
+      await DB.doc("logs/" + UID + "/batches/" + batch[0].ts + "-" + Math.random().toString(36).slice(2, 6)).set({ts:batch[0].ts, n:batch.length, events:batch});
+      await DB.doc("logs/" + UID).set({last:now(), uid:UID});
+    }catch(e){ if(!e || e.code !== "permission_denied") queue = batch.concat(queue).slice(-300); }
+  }
+  setInterval(flush, 10000);
+  addEventListener("pagehide", flush);
+  document.addEventListener("visibilitychange", () => { if(document.visibilityState === "hidden") flush(); });
+
+  /* screens and places */
+  let lastRoute = "";
+  function route(){ const h = location.hash || "#home"; if(h === lastRoute) return; lastRoute = h; const m = h.match(/~place\.([a-z0-9-]+)/); if(m && BY[m[1]]) log("place", {id:m[1], name:BY[m[1]].n}); else log("view", {route:h.replace(/^#/, "")}); }
+  addEventListener("hashchange", route); setTimeout(route, 800);
+  if(typeof render === "function"){ const r0 = render; render = function(){ const o = r0.apply(this, arguments); setTimeout(route, 0); return o; }; }
+  /* taps on buttons and links */
+  document.addEventListener("click", e => {
+    const el = e.target.closest("a,button,[role=button],summary"); if(!el || el.closest(".log-view")) return;
+    const ds = Object.keys(el.dataset||{})[0];
+    const label = clip(el.getAttribute("aria-label") || el.textContent, 60);
+    const href = el.tagName === "A" ? el.getAttribute("href") || "" : "";
+    const kind = /uber\.com/.test(href) ? "uber" : /lyft\.com/.test(href) ? "lyft" : /^tel:/.test(href) ? "call" : /ubereats/.test(href) ? "ubereats" : /doordash/.test(href) ? "doordash" : /google\.com\/maps/.test(href) ? "maps" : href ? "link" : "button";
+    log("tap", {label, kind, act:ds ? ds + (el.dataset[ds] && el.dataset[ds].length < 40 ? ":" + el.dataset[ds] : "") : "", href:href && !/^tel:/.test(href) ? clip(href, 120) : (/^tel:/.test(href) ? href : "")});
+  }, true);
+  /* searches (after typing pauses) */
+  let st = null;
+  document.addEventListener("input", e => { const t = e.target; if(!t || !/^(uq|hq|nowq|q|askq)$/.test(t.id) || t.id === "askq") return; clearTimeout(st); st = setTimeout(() => { if(t.value.trim().length > 1) log("search", {box:t.id, q:clip(t.value, 80)}); }, 1200); });
+  /* chat: every question and answer */
+  new MutationObserver(muts => { muts.forEach(m => m.addedNodes.forEach(n => {
+    if(!n.classList || !n.classList.contains("ask-msg")) return;
+    const txt = n.childNodes[0] ? n.childNodes[0].textContent : n.textContent;
+    if(n.classList.contains("me")) log("ask", {q:clip(txt, 200)});
+    else if(!/^Thinking/.test(txt) && !/^Honey, ask me anything/.test(txt)) log("answer", {a:clip(txt, 220), actions:[...n.querySelectorAll(".ask-act")].map(a => clip(a.textContent, 40))});
+  })); }).observe(document.body, {childList:true, subtree:true});
+
+  /* the Activity log in Help */
+  const fmt = ts => { const d = new Date(ts); return d.toLocaleDateString([], {month:"short", day:"numeric"}) + " " + d.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}); };
+  const line = e => ({view:"Viewed " + e.route, place:"Opened " + e.name, tap:"Tapped " + (e.kind && e.kind !== "button" && e.kind !== "link" ? e.kind.toUpperCase() + ": " : "") + e.label, search:"Searched “" + e.q + "”", ask:"Asked “" + e.q + "”", answer:"Answer: " + clip(e.a, 120) + (e.actions && e.actions.length ? " [" + e.actions.join(", ") + "]" : "")})[e.t] || e.t;
+  function rows(list){ return list.slice().reverse().slice(0, 150).map(e => '<li class="lg-'+e.t+'"><time>'+fmt(e.ts)+'</time> '+esc(line(e))+'</li>').join(""); }
+  function summary(list){ const c = {}; list.forEach(e => { c[e.t] = (c[e.t]||0) + 1; }); const asks = list.filter(e => e.t === "ask").slice(-5).map(e => e.q); return '<p class="small">'+Object.entries(c).map(([k,v]) => v + " " + k + (v>1?"s":"")).join(" · ")+'</p>'+(asks.length ? '<p class="small"><b>Latest questions:</b> '+asks.map(q => "“"+esc(q)+"”").join(", ")+'</p>' : ''); }
+  if(typeof vHelp === "function"){ const vh = vHelp; vHelp = function(){ const h = vh.apply(this, arguments);
+    const box = '<details class="help-acc log-view" id="activity-log"><summary>Activity log</summary><div class="lg-in"><p class="small muted">This app keeps a simple log of what you view, tap, search and ask Ask the Girls, to help improve the trip guide. On the public website it stays on this phone. In the claude.ai version it is also saved privately for the app owner.</p>'
+      + '<h4>This phone ('+local.length+')</h4>' + summary(local) + '<ul class="lg-list">' + rows(local) + '</ul>'
+      + '<div class="ask-acts"><button type="button" class="btn" data-logcopy="1">Copy log</button><button type="button" class="btn" data-logclear="1">Clear this phone\'s log</button></div>'
+      + '<div id="lg-all"></div></div></details>';
+    const i = h.lastIndexOf('<div class="talk quip"'); return i > 0 ? h.slice(0, i) + box + h.slice(i) : h + box; }; }
+  async function loadAll(){
+    const slot = document.getElementById("lg-all"); if(!slot || slot.dataset.done) return; slot.dataset.done = "1";
+    if(!DB || !IS_OWNER){ slot.innerHTML = DB ? "" : '<p class="small muted">Everyone\'s activity shows here for the owner in the claude.ai version.</p>'; return; }
+    slot.innerHTML = '<p class="small muted">Loading everyone\'s activity…</p>';
+    try{
+      await flush();
+      const people = await DB.collection("logs").get();
+      const ids = people.docs.map(d => d.id);
+      let names = {}; try{ const ps = await USER.profiles(ids); ids.forEach(id => names[id] = (ps[id] && ps[id].name) || "Someone"); }catch(e){}
+      let html = '<h4>Everyone ('+ids.length+' '+(ids.length===1?"person":"people")+')</h4>';
+      for(const id of ids){
+        const bs = await DB.collection("logs/" + id + "/batches").orderBy("ts", "desc").limit(20).get();
+        const evs = bs.docs.flatMap(d => (d.data().events || [])).sort((a, b) => a.ts - b.ts);
+        html += '<details class="lg-person"><summary>'+esc(names[id] || "Someone")+(id === UID ? " (you)" : "")+' · '+evs.length+' recent</summary>'+summary(evs)+'<ul class="lg-list">'+rows(evs)+'</ul></details>';
+      }
+      slot.innerHTML = html;
+    }catch(e){ slot.innerHTML = '<p class="small muted">Couldn\'t load the shared log ('+esc(e && e.code || "error")+').</p>'; }
+  }
+  document.addEventListener("toggle", e => { if(e.target && e.target.id === "activity-log" && e.target.open) loadAll(); }, true);
+  document.addEventListener("click", e => {
+    if(e.target.closest("[data-logcopy]")){ e.preventDefault(); try{ navigator.clipboard.writeText(JSON.stringify(local, null, 1)); e.target.textContent = "Copied ✓"; }catch(_){} }
+    if(e.target.closest("[data-logclear]")){ e.preventDefault(); local = []; try{ localStorage.setItem(KEY, "[]"); }catch(_){} render(); }
+  });
+  const css = document.createElement("style");
+  css.textContent = `.lg-in{padding:0 16px 14px}.lg-in h4{margin:12px 0 4px;color:var(--ink)}.lg-list{list-style:none;margin:6px 0;padding:0;max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:10px;font-size:.8rem}.lg-list li{padding:6px 10px;border-bottom:1px solid var(--line);color:var(--ink)}.lg-list time{font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-right:6px}.lg-ask{background:rgba(224,182,90,.15)}.lg-person{margin:6px 0}.lg-person summary{cursor:pointer;font-weight:700;color:var(--ink)}`;
+  document.head.appendChild(css);
 })();
 
 </script>
