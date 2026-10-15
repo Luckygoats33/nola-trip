@@ -806,6 +806,19 @@ button.holla,.cakebtn,[data-ink]{min-height:44px}
 .nr-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border-radius:999px;border:1px solid #E2D1BE;background:#EFE1CF;color:#23172C;font-weight:800;font-size:.9rem;text-decoration:none}
 .nr-btn.gold{background:#D9A441;border-color:#B9852A;flex:1 1 100%}
 .nr-src{font-size:.75rem;color:#6B5A63;margin:6px 0 0}
+/* ---- flights ---- */
+.fl-card{background:var(--surface);border:1px solid var(--line);border-left:4px solid #D9A441;border-radius:16px;padding:14px 16px;display:grid;gap:10px;margin-bottom:14px}
+.fl-top{display:grid;gap:2px}
+.fl-k{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--coral)}
+.fl-who{font-family:var(--display);font-size:1.2rem;line-height:1.2}
+.fl-sub{font-size:.85rem;color:var(--muted)}
+.fl-leg{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center;background:var(--sunk);border-radius:12px;padding:10px 12px}
+.fl-no{font-family:var(--mono);font-size:.8rem;font-weight:500;background:var(--surface);border-radius:8px;padding:2px 8px}
+.fl-route{font-size:.88rem;min-width:0}
+.fl-st{grid-column:1 / -1;justify-self:start;font-weight:800;font-size:.85rem;min-height:44px;display:inline-flex;align-items:center;color:var(--coral)}
+.fl-acts{display:flex;flex-wrap:wrap;gap:8px}
+.fl-note{font-size:.8rem;color:var(--muted);margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
@@ -2939,7 +2952,7 @@ const HELP = [
   ["A place looks closed but should be open","Hours come from research done in October 2026 and can change. Check the place's Google link or call before going."],
   ["The map won't move","Tap <b>Tap here to move the map</b> first."],
   ["The app looks out of date","Close it and open it again with a connection; it updates itself."],
-  ["Something's missing","Tell Will, and it can be added to all three versions."]]]
+  ["Something's missing","Tell Tara, and it can be added to the app."]]]
 ];
 function vHelp(){
   let h = '<div class="head"><span class="eyebrow">How it works</span><h2>Help & guide</h2><p class="small muted">Everything the app can do, and how to use it.</p></div>';
@@ -3536,7 +3549,7 @@ document.addEventListener("change", e=>{
   }
   async function claudeAnswer(q, onText){
     const ctx = context();
-    const prompt = "You ARE Dorothy Zbornak from The Golden Girls. You are the AI assistant inside 'The NOLA Girls', a New Orleans trip app for Will, Emily and their niece Lauren (21).\n\nVOICE RULES — you must follow these exactly:\n- Speak in Dorothy's voice: dry, deadpan sarcasm with a sharp wit. Bea Arthur energy.\n- Complete, grammatically correct sentences. Declarative. Land with finality.\n- Use the three-beat structure: acknowledge sincerely, pause, deliver the kill shot in the same flat tone.\n- Never use bullet points, headers, or corporate language. Talk TO people, not at spreadsheets.\n- Keep answers under 100 words unless someone really messed up.\n- Reference the other Girls when relevant: 'Ma' for Sophia, 'Rose' with a deep breath first, 'Blanche' with a wry observation, 'Stanley' with contempt.\n- Use Dorothy's phrases naturally: 'Oh, please.' 'Excuse me?' 'The point is...' 'Let me tell you something...'\n- End with a mic drop, not a summary. Last line should be the sharpest.\n- When giving practical advice (safety, directions, hours), deliver it like a substitute teacher who cares but will not be argued with.\n- Never use exclamation points casually. Never hedge with 'I think' or 'maybe'. State.\n- Never laugh at your own jokes. The deadpan IS the joke.\n- Sign responses '— Dorothy' only when the tone warrants a dramatic exit.\n\nDATA RULES:\n- Use ONLY the app data below. Don't invent hours, prices or places.\n- Prefer places that are open now when the question is about now.\n- When you mention a place from the data, append its id in double brackets right after the name, like Café du Monde [[cdm]].\n\nAPP DATA (JSON):\n" + JSON.stringify(ctx) + "\n\nQUESTION: " + q;
+    const prompt = "You ARE Dorothy Zbornak from The Golden Girls. You are the AI assistant inside 'The NOLA Girls', a New Orleans trip app used by Tara and Emily; their niece Lauren (21) is on the trip too, and her 21st is part of it.\n\nVOICE RULES — you must follow these exactly:\n- Speak in Dorothy's voice: dry, deadpan sarcasm with a sharp wit. Bea Arthur energy.\n- Complete, grammatically correct sentences. Declarative. Land with finality.\n- Use the three-beat structure: acknowledge sincerely, pause, deliver the kill shot in the same flat tone.\n- Never use bullet points, headers, or corporate language. Talk TO people, not at spreadsheets.\n- Keep answers under 100 words unless someone really messed up.\n- Reference the other Girls when relevant: 'Ma' for Sophia, 'Rose' with a deep breath first, 'Blanche' with a wry observation, 'Stanley' with contempt.\n- Use Dorothy's phrases naturally: 'Oh, please.' 'Excuse me?' 'The point is...' 'Let me tell you something...'\n- End with a mic drop, not a summary. Last line should be the sharpest.\n- When giving practical advice (safety, directions, hours), deliver it like a substitute teacher who cares but will not be argued with.\n- Never use exclamation points casually. Never hedge with 'I think' or 'maybe'. State.\n- Never laugh at your own jokes. The deadpan IS the joke.\n- Sign responses '— Dorothy' only when the tone warrants a dramatic exit.\n\nDATA RULES:\n- Use ONLY the app data below. Don't invent hours, prices or places.\n- Prefer places that are open now when the question is about now.\n- When you mention a place from the data, append its id in double brackets right after the name, like Café du Monde [[cdm]].\n\nAPP DATA (JSON):\n" + JSON.stringify(ctx) + "\n\nQUESTION: " + q;
     const input = window.askClaudeInput ? window.askClaudeInput(q, HIST) : prompt;
     const r = await SAMPLE(input, {modelTier:"default", cache:false, onText:({text})=>onText(text)});
     return r.text;
@@ -4348,7 +4361,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     const places = P.map(p => { const s = statusAt(p, N), r = (window.NOLA_RATINGS||{})[p.id], d = distInfo(p), sf = safetyOf(p);
       return [p.id, p.n, p.c.join("/"), p.a, s.state==="open" ? "OPEN until "+(s.closeLabel||"?") : s.state==="later" ? "opens "+s.openLabel : s.state, (p.hrs&&p.hrs.hoursText||"").slice(0,110), r&&r.r ? r.r+"★" : "", d ? d.txt : "", sf.lv, p.ad||"", p.ph||"", (WHY[p.id]||"").slice(0,90)]; });
     const days = (plan.days||[]).map(d => ({day:d.n, date:ti ? dayLabel(ti.dateOf(d.n)) : "", title:d.t||"", stops:(d.items||[]).map(i => (i.t||"")+" "+(i.h||"")+(i.p&&i.p[0]?" ["+i.p[0]+"]":"")).slice(0,10)}));
-    const sys = "You are 'Ask the Girls', the warm, witty helper in The NOLA Girls trip app (Golden Girls flavor, light touch). Travelers: Will, Emily, and their niece Lauren (21). Trip: Wed Nov 4 – Sun Nov 8, 2026, staying at the Olivier House Hotel, 828 Toulouse St in the French Quarter (504-525-8456).\n"
+    const sys = "You are 'Ask the Girls', the warm, witty helper in The NOLA Girls trip app (Golden Girls flavor, light touch). App users: Tara and Emily. Travelers: Tara, Emily, and their niece Lauren (21). Trip: Wed Nov 4 – Sun Nov 8, 2026, staying at the Olivier House Hotel, 828 Toulouse St in the French Quarter (504-525-8456).\n"
       + "Answer ANY question about New Orleans (history, food, music, neighborhoods, customs, getting around, safety, weather, what to do) using your own knowledge, and ANY question about this app or the places in it using the APP DATA below.\n"
       + "Rules: For places, hours, open/closed, addresses and phone numbers, trust APP DATA over memory; if something isn't in the data, you may use general knowledge but say it's worth confirming. Never invent exact hours, prices or phone numbers. When you mention a place from APP DATA, put its id in double brackets right after the name, e.g. Café du Monde [[cdm]]. Prefer places that are OPEN when the question is about now. Mention the safety color for anything yellow or red at night. Keep answers under 140 words unless asked for detail; use short bullets for lists. If the question is about how to use the app, explain the relevant feature (Holla Holla button = what's open now in this section; Explore collections; Map with safety colors; Saved (Trip plan + kitchen table); Ink tattoo ideas and AI designer; Help has emergency numbers).\n"
       + "NOW: New Orleans local time "+DOWL[N.dow]+" "+fmtM(N.mins)+(N.date?" ("+N.date+")":"")+(typeof WX!=="undefined" && WX ? "; weather "+WX.temp+"°F "+WXL(WX.code) : "")+".\n"
@@ -5012,6 +5025,59 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     const t = termOf(q);
     if(t && !guideHas(t)) return {text:"I don't have " + t + " in our guide.", ids:[], find:t, actions:[]};
     return null;
+  };
+})();
+
+/* Flights: Emily's Southwest itinerary (no seat numbers on purpose), shown in Trip details and the Trip plan,
+   added once to Day 1, and answerable by Ask Dorothy. */
+(function(){
+  const HOTEL = "Olivier House Hotel, 828 Toulouse St, New Orleans, LA 70112";
+  const MSY = [29.9934, -90.2580];
+  const FLIGHTS = [{who:"Emily", date:"Wed, Nov 4", legs:[
+    {no:"WN 2997", code:"SWA2997", from:"Portland (PDX)", dep:"6:20 am PT", to:"Denver (DEN)", arr:"9:45 am MT", dur:"2h 25m"},
+    {no:"WN 1715", code:"SWA1715", from:"Denver (DEN)", dep:"10:50 am MT", to:"New Orleans (MSY)", arr:"2:25 pm CT", dur:"2h 35m"}],
+    layover:"1h 5m in Denver", lands:"2:25 pm", landsM:14*60+25}];
+  const escH = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const status = code => "https://www.flightaware.com/live/flight/" + code;
+  const uberFromAirport = "https://m.uber.com/ul/?action=setPickup&pickup[latitude]=" + MSY[0] + "&pickup[longitude]=" + MSY[1] + "&pickup[nickname]=" + encodeURIComponent("MSY Airport") + "&dropoff[latitude]=29.95796&dropoff[longitude]=-90.06731&dropoff[nickname]=" + encodeURIComponent("Olivier House Hotel") + "&dropoff[formatted_address]=" + encodeURIComponent(HOTEL);
+  const lyftFromAirport = "https://lyft.com/ride?id=lyft&pickup[latitude]=" + MSY[0] + "&pickup[longitude]=" + MSY[1] + "&destination[latitude]=29.95796&destination[longitude]=-90.06731";
+
+  function card(f){
+    return '<div class="fl-card"><div class="fl-top"><span class="fl-k">Flight · ' + escH(f.date) + '</span><b class="fl-who">' + escH(f.who) + ' lands at MSY ' + escH(f.lands) + '</b><span class="fl-sub">Southwest · Portland → Denver → New Orleans · layover ' + escH(f.layover) + '</span></div>'
+      + f.legs.map(l => '<div class="fl-leg"><span class="fl-no">' + escH(l.no) + '</span><span class="fl-route"><b>' + escH(l.dep) + '</b> ' + escH(l.from) + ' <span aria-hidden="true">→</span><span class="sr"> to </span> <b>' + escH(l.arr) + '</b> ' + escH(l.to) + '</span><a class="fl-st" href="' + status(l.code) + '" target="_blank" rel="noopener">Live status</a></div>').join("")
+      + '<div class="fl-acts"><a class="ci-btn gold" href="' + escH(uberFromAirport) + '" target="_blank" rel="noopener">Uber: airport → hotel</a><a class="ci-btn" href="' + escH(lyftFromAirport) + '" target="_blank" rel="noopener">Lyft</a></div>'
+      + '<p class="fl-note">About 25–35 minutes by car from MSY to the Olivier House. Rideshare pickup is outside baggage claim; follow the signs.</p></div>';
+  }
+  window.nolaFlightsCard = () => FLIGHTS.map(card).join("");
+
+  const _vI = vInfo2; vInfo2 = function(){ return window.nolaFlightsCard() + _vI.apply(this, arguments); };
+  const _vT = vTrip; vTrip = function(){ return window.nolaFlightsCard() + _vT.apply(this, arguments); };
+
+  /* add Emily's landing to Day 1 once (if someone deletes it, it stays deleted) */
+  function addToPlan(){
+    try{
+      if(localStorage.getItem("nola-flight-added") === "1" || !plan || !plan.days || (typeof readOnly !== "undefined" && readOnly)) return;
+      const d1 = plan.days.find(d => d.n === 1); if(!d1) return;
+      if(!(d1.items || []).some(i => i.k === "emily-lands")){
+        d1.items.push({k:"emily-lands", t:"14:25", h:"Emily lands at MSY", d:"Southwest WN 1715 from Denver (left Portland 6:20 am). About 25–35 min by car to the hotel; Uber and Lyft pick up outside baggage claim.", p:[], key:true, sun:false});
+        savePlan();
+      }
+      localStorage.setItem("nola-flight-added", "1");
+    }catch(e){}
+  }
+  setTimeout(addToPlan, 2500);
+
+  /* Ask Dorothy: "when does Emily land?" "what's her flight?" */
+  const prev = window.askAction;
+  window.askAction = function(q){
+    const s = String(q || "").toLowerCase();
+    if(/\b(emily|her|flight|flights|plane|land|lands|landing|arrive|arrives|arrival|airport|msy)\b/.test(s) && /\b(emily|flight|flights|plane|land|lands|landing|arriv|airport|msy|pick (her|emily) up)\b/.test(s) && !/\b(uber|lyft) to\b/.test(s)){
+      const f = FLIGHTS[0];
+      return {text:"Emily's on Southwest, " + f.date + ". WN 2997 leaves Portland at 6:20 am, lands Denver 9:45 am; WN 1715 leaves Denver 10:50 am and lands at MSY at 2:25 pm. Figure she's at the hotel around 3:15 to 3:30.", ids:[], actions:[
+        {label:"Live status: WN 1715", href:status("SWA1715"), kind:"call"},
+        {label:"Uber: airport → hotel", href:uberFromAirport, kind:"call"}]};
+    }
+    return prev ? prev(q) : null;
   };
 })();
 
