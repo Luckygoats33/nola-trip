@@ -745,11 +745,6 @@ button.holla,.cakebtn,[data-ink]{min-height:44px}
 /* both gold buttons on one row, each label on one line; text scales with the phone width */
 .ask-panel .ask-sugg{flex-direction:row;justify-content:center;align-items:stretch;gap:6px;padding:0 10px 10px}
 .ask-panel .ask-sugg .ask-chip{flex:1 1 0;width:auto;min-width:0;max-width:240px;white-space:nowrap;padding:8px 6px!important;font-size:clamp(.74rem,3.75vw,1rem)!important;letter-spacing:-.01em}
-/* Hear Dorothy button under answers */
-.ask-hear{display:inline-flex;align-items:center;gap:6px;margin-top:8px;min-height:34px;padding:4px 12px;border-radius:999px;border:1px solid #B9852A;background:#FFF4DC;color:#5A3D0A;font-size:.8rem;font-weight:800;cursor:pointer;position:relative}
-.ask-hear::after{content:"";position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
-.ask-hear.on{background:#D9A441;color:#23172C}
-.ask-hear svg{flex-shrink:0}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
@@ -4642,61 +4637,6 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
   };
 })();
 
-
-/* Hear Dorothy: tap the button under any answer and Dorothy reads it out. Free: uses the phone's own voices, tuned low, slow and deadpan. Never speaks unless tapped. */
-(function(){
-  if(!window.speechSynthesis) return;
-  function spoken(t){
-    let x = String(t||"").replace(/\[\[[^\]]+\]\]/g, "");
-    const lines = x.split("\n").map(l => l.trim()).filter(Boolean);
-    const items = lines.filter(l => /^[•\-*]/.test(l));
-    if(items.length > 3){ const head = lines.filter(l => !/^[•\-*]/.test(l) && !/^Or tap/i.test(l)); x = head.concat(items.slice(0, 3)).join("\n") + "\nAnd " + (items.length - 3) + " more on your screen."; }
-    x = x.replace(/^[•\-*]\s*/gm, "").replace(/(\d(?:\.\d)?)\s*★/g, "$1 stars").replace(/★/g, "")
-      .replace(/~\s*/g, "about ").replace(/\bmin\b/g, "minute").replace(/\bmins\b/g, "minutes")
-      .replace(/\s+[·|—–]\s+/g, ", ").replace(/[·|]/g, ",").replace(/\s—\s?|—/g, ", ")
-      .replace(/\b(\d{3})-(\d{3})-(\d{4})\b/g, "$1, $2, $3").replace(/\bSt\b\.?/g, "Street").replace(/\bAve\b\.?/g, "Avenue")
-      .replace(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/g, d => ({Mon:"Monday",Tue:"Tuesday",Wed:"Wednesday",Thu:"Thursday",Fri:"Friday",Sat:"Saturday",Sun:"Sunday"})[d]).replace(/\bNov\b\.?/g, "November").replace(/\bOct\b\.?/g, "October")
-      .replace(/(\d)\s*(am|pm)?\s*[–-]\s*(\d|midnight|noon)/gi, (m, a, ap, b) => a + (ap ? " " + ap : "") + " to " + b).replace(/(day)\s*[–-]\s*/g, "$1 to ")
-      .replace(/,?\s*LA\s+\d{5}\b/g, "").replace(/\b(\d+)\s+minute\b/g, (m, n) => n + (n === "1" ? " minute" : " minutes")).replace(/(\d) minutes walk/g, "$1-minute walk")
-      .replace(/\s*\(([^)]*)\)/g, ", $1,").replace(/,\s*,/g, ",").replace(/,\s*\./g, ".")
-      .replace(/https?:\/\/\S+/g, "").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, "")
-      .replace(/\n+/g, ". ").replace(/:\s*\./g, ":").replace(/\.\s*\./g, ".").replace(/,\s*\./g, ".").replace(/\s{2,}/g, " ").trim();
-    if(x.length > 650){ const cut = x.slice(0, 650); const end = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("? "), cut.lastIndexOf("! ")); x = (end > 200 ? cut.slice(0, end + 1) : cut) + " The rest is on your screen."; }
-    return x;
-  }
-  const GIRL = {pitch:0.72, rate:0.9};
-  function bestVoice(){
-    const vs = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang));
-    const score = v => (/premium|enhanced|neural|natural/i.test(v.name)?6:0) + (/google us english/i.test(v.name)?3:0) + (/google/i.test(v.name)?1:0)
-      + (/ava|zoe|allison|susan|samantha|jenny|aria|sonia|libby|joanna|nicky|karen|moira|fiona|tessa|serena|kate/i.test(v.name)?3:0)
-      + (/en-US/i.test(v.lang)?1:0) - (/zira|david|mark|fred|albert|junior|novelty|whisper|bells|bubbles|boing|cellos|jester|organ|trinoids|zarvox|bahh|bad news|good news|superstar|wobble|grandpa|grandma|rocko|eddy|reed|shelley|flo|sandy/i.test(v.name)?8:0)
-      - (/(^|W)(male|man)|daniel|alex|tom|aaron|arthur|gordon|rishi|oliver|guy|ryan|christopher|eric|roger|steffan|brian/i.test(v.name)?5:0);
-    return vs.sort((a, b) => score(b) - score(a))[0] || null;
-  }
-  try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices(); }catch(e){}
-  let playing = null;
-  function stop(){ try{ speechSynthesis.cancel(); }catch(e){} if(playing){ playing.classList.remove("on"); playing.setAttribute("aria-pressed","false"); playing.querySelector("span").textContent = "Hear Dorothy"; } playing = null; }
-  function speak(btn, text){
-    if(playing === btn){ stop(); return; }
-    stop();
-    const parts = spoken(text).match(/[^.!?]+[.!?]*/g) || [];
-    if(!parts.length) return;
-    playing = btn; btn.classList.add("on"); btn.setAttribute("aria-pressed","true"); btn.querySelector("span").textContent = "Stop";
-    const v = bestVoice();
-    parts.forEach((p, i) => { const u = new SpeechSynthesisUtterance(p.trim()); if(v){ u.voice = v; u.lang = v.lang; } else u.lang = "en-US"; u.pitch = GIRL.pitch; u.rate = GIRL.rate;
-      if(i === parts.length - 1){ u.onend = () => { if(playing === btn) stop(); }; u.onerror = u.onend; } speechSynthesis.speak(u); });
-  }
-  const ICON = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
-  function addBtn(m){
-    if(m.dataset.hear || !m.classList.contains("bot")) return; m.dataset.hear = "1";
-    const t = m.firstChild && m.firstChild.nodeType === 3 ? m.firstChild.nodeValue : ""; if(!t || t.length < 4) return;
-    const b = document.createElement("button"); b.type = "button"; b.className = "ask-hear"; b.setAttribute("aria-pressed","false"); b.setAttribute("aria-label","Hear Dorothy read this answer");
-    b.innerHTML = ICON + "<span>Hear Dorothy</span>"; b.onclick = () => speak(b, t); m.appendChild(b);
-  }
-  new MutationObserver(ms => { ms.forEach(r => r.addedNodes.forEach(n => { if(n.nodeType !== 1) return; if(n.classList.contains("ask-msg")) addBtn(n); n.querySelectorAll && n.querySelectorAll(".ask-msg.bot").forEach(addBtn); })); }).observe(document.body, {childList:true, subtree:true});
-  document.addEventListener("click", e => { if(e.target.closest && e.target.closest(".ask-x")) stop(); }, true);
-  window.addEventListener("pagehide", stop);
-})();
 
 </script>
 
