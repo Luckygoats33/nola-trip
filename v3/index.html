@@ -782,6 +782,30 @@ button.holla,.cakebtn,[data-ink]{min-height:44px}
 .ci-banner .ci-btn.gold{background:#D9A441;color:#23172C;border-color:#D9A441}
 .ci-banner .ci-btn::after{content:"";position:absolute}
 .ci-x{all:unset;cursor:pointer;position:absolute;top:8px;right:8px;width:44px;height:44px;display:grid;place-items:center;font-size:1.5rem;color:#F6EBDD}
+/* ---- find anything nearby: results + detail card ---- */
+.nr-list{display:grid;gap:8px;margin-top:10px}
+.nr-item{all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:grid;gap:2px;padding:10px 34px 10px 12px;border-radius:12px;background:#fff;border:1px solid #E2D1BE;color:#23172C;min-height:52px}
+.nr-item:hover,.nr-item:focus-visible{border-color:#D9A441;box-shadow:0 0 0 2px rgba(217,164,65,.35)}
+.nr-n{font-weight:800;font-size:.95rem;line-height:1.25}
+.nr-m{font-size:.8rem;color:#6B5A63}
+.nr-a{font-size:.78rem;color:#6B5A63}
+.nr-go{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:1.4rem;color:#B9852A}
+.nr-card{position:absolute;inset:0;z-index:5;background:#FFFAF3;color:#23172C;overflow-y:auto;padding:14px 18px 24px;display:grid;align-content:start;gap:10px;animation:nrIn .2s ease-out}
+@keyframes nrIn{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion: reduce){ .nr-card{animation:none} }
+.nr-back{all:unset;cursor:pointer;justify-self:start;min-height:44px;display:inline-flex;align-items:center;font-weight:800;color:#7B2446;padding-right:10px}
+.nr-back:focus-visible{outline:3px solid #D9A441;outline-offset:2px;border-radius:8px}
+.nr-k{font-family:var(--mono,monospace);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:#7B2446}
+.nr-t{font-family:var(--display,Georgia,serif);font-size:1.5rem;line-height:1.15;margin:0}
+.nr-d{font-weight:700}
+.nr-ad{color:#6B5A63}
+.nr-h{display:grid;gap:2px;background:#F6EBDD;border-radius:12px;padding:10px 12px}
+.nr-h span{white-space:pre-line;font-size:.9rem}
+.nr-load{font-size:.85rem;color:#6B5A63}
+.nr-acts{display:flex;flex-wrap:wrap;gap:8px}
+.nr-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border-radius:999px;border:1px solid #E2D1BE;background:#EFE1CF;color:#23172C;font-weight:800;font-size:.9rem;text-decoration:none}
+.nr-btn.gold{background:#D9A441;border-color:#B9852A;flex:1 1 100%}
+.nr-src{font-size:.75rem;color:#6B5A63;margin:6px 0 0}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
@@ -3581,6 +3605,14 @@ document.addEventListener("change", e=>{
     addMsg("me", q); const inp = $("#askq", panel); if(inp) inp.value = "";
     if(/^(bye|goodbye|stop|stop listening|that's all|thats all|thank you that's all|end call|hang up)\b/i.test(q)){ convo = false; const c = $("#askconvo", panel); if(c) c.checked = false; try{ localStorage.setItem("nola-ask-convo","0"); }catch(_){} addMsg("bot", "Bye for now, honey. Tap the mic whenever you need me."); say("Bye for now, honey."); return; }
     let act = null; try{ act = (window.askAction ? window.askAction(q) : null) || (window.askFind ? window.askFind(q) : null); }catch(e){ act = null; }
+    if(act && !act.find && /^That's not in our guide/.test(act.text||"")){ const lb = ((act.actions||[])[0]||{}).label||"", mm = lb.match(/^Find (.+) nearby$/); if(mm) act.find = mm[1]; }
+    if(act && act.find && window.nolaFindNearby){
+      const wait = addMsg("bot", "Looking around for " + act.find + "…");
+      let found = null; try{ found = await window.nolaFindNearby(act.find); }catch(_){ found = null; }
+      if(wait) wait.remove();
+      if(found && found.results.length){ const d = addMsg("bot", found.text, [], found.actions); window.nolaRenderResults(d, found.results); HIST.push(["user", q], ["assistant", found.text + " " + found.results.map(r => r.name).join(", ")]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12); return; }
+      act = Object.assign({}, act, {text:"I couldn't find " + act.find + " close by. Try one of these:", actions:(act.actions && act.actions.length ? act.actions : [{label:"Search maps for " + act.find, href:"https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(act.find + " near me"), kind:"call"}])});
+    }
     if(act){ addMsg("bot", act.text, act.ids, act.actions); say(act.text); HIST.push(["user", q], ["assistant", act.text]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12); return; }
     if(SAMPLE){
       const b = addMsg("bot", "Thinking…");
@@ -4855,6 +4887,132 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
   render = function(){ const r = _render.apply(this, arguments); try{ if(S.tab === "help"){ const sos = document.querySelector("#main .sos"); if(sos && !sos.querySelector("[data-ciloc]")){ const b = document.createElement("button"); b.type = "button"; b.className = "ci-btn gold"; b.dataset.ciloc = "1"; b.textContent = "Send my location to someone"; b.style.marginTop = "10px"; sos.appendChild(b); } } }catch(e){} return r; };
 
   start();
+})();
+
+/* Find anything nearby: when the guide doesn't have it, search free OpenStreetMap data (Photon + Nominatim,
+   no keys, no cost), show real places in the chat, and open a detail card with directions, rides and calls. */
+(function(){
+  const BB = {w:-90.25, s:29.85, e:-89.90, n:30.08};
+  const escH = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const lc = s => String(s || "").toLowerCase();
+  const sing = w => w.replace(/ies$/, "y").replace(/(ch|sh|x|ss)es$/, "$1").replace(/([^s])s$/, "$1");
+  const SKIPKEY = /^(place|boundary|highway|landuse|railway|natural|waterway|route|building)$/;
+  const SKIPVAL = /^(university|school|college|museum|yes|house|residential|apartments|bus_stop|parking|parking_space)$/;
+  const KIND = {bakery:"Bakery", fast_food:"Quick bite", restaurant:"Restaurant", cafe:"Café", ice_cream:"Ice cream", confectionery:"Sweets", bar:"Bar", pub:"Pub", nightclub:"Club", beauty:"Beauty salon", hairdresser:"Hair salon", pharmacy:"Pharmacy", chemist:"Pharmacy", supermarket:"Grocery", convenience:"Corner store", alcohol:"Liquor store", atm:"ATM", bank:"Bank", clinic:"Clinic", doctors:"Doctor", hospital:"Hospital", laundry:"Laundromat", dry_cleaning:"Dry cleaner", clothes:"Clothing", shoes:"Shoes", gift:"Gift shop", books:"Bookstore", tattoo:"Tattoo", fuel:"Gas station", deli:"Deli", seafood:"Seafood", toilets:"Restroom", cinema:"Movies", theatre:"Theater", spa:"Spa", massage:"Massage", nails:"Nail salon"};
+  const FOODV = /bakery|fast_food|restaurant|cafe|ice_cream|confectionery|deli|seafood|bar|pub|food_court|pastry/;
+  const kindOf = v => KIND[v] || (v ? v.replace(/_/g, " ").replace(/^./, c => c.toUpperCase()) : "Place");
+
+  async function getJSON(url, ms){
+    const c = new AbortController(), t = setTimeout(() => c.abort(), ms || 7000);
+    try{ const r = await fetch(url, {signal:c.signal}); return r.ok ? await r.json() : null; }catch(e){ return null; } finally{ clearTimeout(t); }
+  }
+  function origin(){ try{ const o = originPt(); if(o) return o; }catch(e){} return {pt:[29.95796, -90.06731], from:"your hotel"}; }
+
+  async function search(term){
+    const o = origin(), q = encodeURIComponent(term);
+    const [ph, nm] = await Promise.all([
+      getJSON("https://photon.komoot.io/api/?q=" + q + "&bbox=" + [BB.w, BB.s, BB.e, BB.n].join(",") + "&lat=" + o.pt[0] + "&lon=" + o.pt[1] + "&limit=15&lang=en"),
+      getJSON("https://nominatim.openstreetmap.org/search?q=" + q + "&format=jsonv2&limit=15&bounded=1&viewbox=" + [BB.w, BB.n, BB.e, BB.s].join(",") + "&addressdetails=1")
+    ]);
+    const out = [];
+    (ph && ph.features || []).forEach(f => { const p = f.properties || {}; if(!p.name || SKIPKEY.test(p.osm_key) || SKIPVAL.test(p.osm_value)) return;
+      out.push({name:p.name, v:p.osm_value, lat:f.geometry.coordinates[1], lon:f.geometry.coordinates[0], addr:[p.housenumber && p.street ? p.housenumber + " " + p.street : p.street, p.city].filter(Boolean).join(", "), osm:(p.osm_type || "N")[0].toUpperCase() + p.osm_id}); });
+    (Array.isArray(nm) ? nm : []).forEach(x => { if(!x.name || SKIPKEY.test(x.category) || SKIPVAL.test(x.type)) return; const a = x.address || {};
+      out.push({name:x.name, v:x.type, lat:+x.lat, lon:+x.lon, addr:[a.house_number && a.road ? a.house_number + " " + a.road : a.road, a.city || a.town || a.village].filter(Boolean).join(", "), osm:(x.osm_type || "node")[0].toUpperCase() + x.osm_id}); });
+    /* only places that are really that thing: the word is in the name or the kind of place */
+    const words = lc(term).split(/\s+/).filter(w => w.length >= 3 && !/^(the|and|for|with|good|best|near|place|places|shop|store|spot)$/.test(w)).map(sing);
+    const rel = r => !words.length || words.some(w => lc(r.name).includes(w) || lc(r.v).replace(/_/g, " ").includes(w) || (w === "nail" && r.v === "beauty") || (w === "drug" && r.v === "pharmacy") || (w === "grocery" && /supermarket|convenience|greengrocer/.test(r.v)));
+    const seen = {};
+    return out.filter(rel).map(r => Object.assign(r, {m:meters(o.pt, [r.lat, r.lon])}))
+      .sort((a, b) => a.m - b.m)
+      .filter(r => { const k = lc(r.name).replace(/[^a-z0-9]/g, ""); if(seen[k]) return false; seen[k] = 1; return true; })
+      .slice(0, 6).map(r => Object.assign(r, {from:o.from, kind:kindOf(r.v), food:FOODV.test(r.v)}));
+  }
+
+  window.nolaFindNearby = async function(term){
+    const results = await search(term);
+    if(!results.length) return null;
+    const near = results[0].from === "you" ? "near you" : "near your hotel";
+    const acts = results.some(r => r.food) ? [{label:"Uber Eats: " + term, href:"https://www.ubereats.com/search?q=" + encodeURIComponent(term), kind:"call"}, {label:"DoorDash: " + term, href:"https://www.doordash.com/search/store/" + encodeURIComponent(term) + "/", kind:"call"}] : [];
+    return {text:"Not in our guide, but I found these " + near + ". Tap one for hours and directions:", results, actions:acts};
+  };
+
+  /* result list inside a chat bubble */
+  window.nolaRenderResults = function(bubble, results){
+    if(!bubble) return;
+    const list = document.createElement("div"); list.className = "nr-list";
+    results.forEach((r, i) => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "nr-item";
+      b.innerHTML = '<span class="nr-n">' + escH(r.name) + '</span><span class="nr-m">' + escH(r.kind) + ' · ' + escH(travel(r.m).txt) + ' · ' + escH(miles(r.m)) + '</span>' + (r.addr ? '<span class="nr-a">' + escH(r.addr) + '</span>' : '') + '<span class="nr-go" aria-hidden="true">›</span>';
+      b.setAttribute("aria-label", r.name + ", " + r.kind + ", " + travel(r.m).txt + ". Open details");
+      b.onclick = () => openCard(r);
+      list.appendChild(b);
+    });
+    const acts = bubble.querySelector(".ask-acts");
+    bubble.insertBefore(list, acts || null);
+    const log = bubble.parentElement; if(log) log.scrollTop = log.scrollHeight;
+  };
+
+  const DAYS = {Mo:"Mon", Tu:"Tue", We:"Wed", Th:"Thu", Fr:"Fri", Sa:"Sat", Su:"Sun", PH:"Holidays"};
+  const t12 = (h, m) => { h = +h % 24; const ap = h < 12 ? "am" : "pm", hh = h % 12 || 12; return hh + (m !== "00" ? ":" + m : "") + " " + ap; };
+  const prettyHours = h => String(h).replace(/\b(Mo|Tu|We|Th|Fr|Sa|Su|PH)\b/g, d => DAYS[d]).replace(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/g, (x, a, b, c, d) => t12(a, b) + "–" + t12(c, d)).replace(/,(?=\S)/g, ", ").replace(/([A-Z][a-z]{2})-([A-Z][a-z]{2})/g, "$1–$2").replace(/\boff\b/g, "closed").split(/;\s*/).join("\n");
+
+  async function openCard(r){
+    const panel = document.querySelector(".ask-panel"); if(!panel) return;
+    panel.querySelectorAll(".nr-card").forEach(x => x.remove());
+    const dest = encodeURIComponent(r.addr ? r.name + ", " + r.addr : r.lat + "," + r.lon);
+    const ll = r.lat.toFixed(6) + "," + r.lon.toFixed(6);
+    const uber = "https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=" + r.lat + "&dropoff[longitude]=" + r.lon + "&dropoff[nickname]=" + encodeURIComponent(r.name) + (r.addr ? "&dropoff[formatted_address]=" + encodeURIComponent(r.addr) : "");
+    const lyft = "https://lyft.com/ride?id=lyft&destination[latitude]=" + r.lat + "&destination[longitude]=" + r.lon;
+    const c = document.createElement("div"); c.className = "nr-card"; c.setAttribute("role", "dialog"); c.setAttribute("aria-label", r.name);
+    c.innerHTML = '<button class="nr-back" type="button">‹ Back to results</button>'
+      + '<div class="nr-k">' + escH(r.kind) + '</div><h3 class="nr-t">' + escH(r.name) + '</h3>'
+      + '<div class="nr-d">' + escH(travel(r.m).txt) + ' · ' + escH(miles(r.m)) + ' from ' + escH(r.from) + '</div>'
+      + (r.addr ? '<div class="nr-ad">' + escH(r.addr) + '</div>' : '')
+      + '<div class="nr-more"><span class="nr-load">Checking hours and phone…</span></div>'
+      + '<div class="nr-acts"><a class="nr-btn gold" href="https://www.google.com/maps/dir/?api=1&destination=' + dest + '&destination_place_id=&travelmode=' + (r.m <= 2600 ? "walking" : "driving") + '" target="_blank" rel="noopener">Directions</a>'
+      + '<a class="nr-btn" href="https://maps.apple.com/?daddr=' + ll + '&q=' + encodeURIComponent(r.name) + '" target="_blank" rel="noopener">Apple Maps</a>'
+      + '<a class="nr-btn" href="' + escH(uber) + '" target="_blank" rel="noopener">Uber</a><a class="nr-btn" href="' + escH(lyft) + '" target="_blank" rel="noopener">Lyft</a></div>'
+      + '<p class="nr-src">Info from OpenStreetMap. Hours can change, so call ahead if it matters.</p>';
+    c.querySelector(".nr-back").onclick = () => c.remove();
+    panel.appendChild(c);
+    c.querySelector(".nr-back").focus();
+    const j = await getJSON("https://nominatim.openstreetmap.org/lookup?osm_ids=" + encodeURIComponent(r.osm) + "&format=jsonv2&extratags=1", 6000);
+    const x = Array.isArray(j) && j[0] ? (j[0].extratags || {}) : {};
+    const ph = x.phone || x["contact:phone"], web = x.website || x["contact:website"], hrs = x.opening_hours;
+    const more = c.querySelector(".nr-more"); if(!more) return;
+    more.innerHTML = (hrs ? '<div class="nr-h"><b>Hours</b><span>' + escH(prettyHours(hrs)) + '</span></div>' : '')
+      + (ph || web ? '<div class="nr-acts">' + (ph ? '<a class="nr-btn" href="tel:' + escH(ph.replace(/[^\d+]/g, "")) + '">Call ' + escH(ph) + '</a>' : '') + (web ? '<a class="nr-btn" href="' + escH(/^https?:/.test(web) ? web : "https://" + web) + '" target="_blank" rel="noopener">Website</a>' : '') + '</div>' : '')
+      || '<span class="nr-load">No hours or phone listed. Directions will still get you there.</span>';
+  }
+  document.addEventListener("keydown", e => { if(e.key === "Escape"){ const c = document.querySelector(".nr-card"); if(c){ c.remove(); e.stopPropagation(); } } }, true);
+
+  /* spot "where can I get X" / "X near me" questions the guide can't answer */
+  const VAGUE = /^(something|anything|stuff|things?|places?|fun|food|eat|to eat|a bite|drinks?|a drink|dinner|lunch|breakfast|brunch|snacks?|open|to do|go|music|help)$/;
+  function termOf(q){
+    let s = lc(q).replace(/[’`]/g, "'").replace(/[?!.]+$/, "").trim();
+    let m = s.match(/(?:where (?:can|could|do|should|would) (?:i|we|you) (?:get|find|buy|grab|eat|have|pick up)|where(?:'s| is| are) (?:the |a |an )?(?:nearest|closest)|(?:^| )find (?:me |us )?|i(?:'m| am)? (?:want|need|craving)|craving|looking for|is there (?:a|an|any)|are there (?:any)?|get me|take me to (?:a|an|the nearest))\s+(.+)$/);
+    if(!m) m = s.match(/^(.+?)\s+(?:near me|nearby|close by|around here|near us|near the hotel)$/);
+    if(!m) return null;
+    let t = m[1].replace(/\s+(?:near(?:by| me| here| us| the hotel)?|around(?: here)?|close by|in (?:the )?(?:french )?quarter|in (?:new orleans|nola)|tonight|today|right now|now|open now|that'?s open|to go|please)\b.*$/, "")
+      .replace(/^(?:a|an|some|the|good|great|best|nearby|nearest|closest|cheap|decent)\s+/g, "").replace(/^(?:a|an|some|the)\s+/, "").trim();
+    if(!t || t.length < 3 || VAGUE.test(t) || /^(what|whats|what's|anything|something|stuff|places?|things?|everything|somewhere|open|where|who|when|how|why|is |are |any )/.test(t) || t.split(" ").length > 4) return null;
+    return t;
+  }
+  function guideHas(t){
+    const ws = lc(t).split(/\s+/).filter(w => w.length >= 3).map(sing);
+    if(!ws.length) return true;
+    return P.some(p => { const h = lc(p.n + " " + JSON.stringify([p.c, p.tags, p.w, p.why, p.note, p.desc, p.x])); return ws.every(w => new RegExp("\\b" + w.replace(/[^a-z0-9 ]/g, "") + "s?\\b").test(h)); });
+  }
+  window.askTermOf = termOf;
+  const prevFind = window.askFind;
+  window.askFind = function(q){
+    const r = prevFind ? prevFind(q) : null;
+    if(r) return r;
+    const t = termOf(q);
+    if(t && !guideHas(t)) return {text:"I don't have " + t + " in our guide.", ids:[], find:t, actions:[]};
+    return null;
+  };
 })();
 
 </script>
