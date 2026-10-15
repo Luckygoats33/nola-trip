@@ -751,6 +751,37 @@ button.holla,.cakebtn,[data-ink]{min-height:44px}
 .ask-fab svg{width:22px!important;height:22px!important}
 .ask-fab.fab-away{transform:translateY(24px) scale(.6);opacity:0;pointer-events:none}
 @media (prefers-reduced-motion: reduce){ .ask-fab{transition:none} }
+/* ---- auto check-in ---- */
+.ci-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:grid;gap:12px;margin-bottom:14px}
+.ci-row{display:flex;gap:14px;align-items:center;justify-content:space-between}
+.ci-row b{display:block;font-family:var(--display);font-size:1.05rem}
+.ci-row span{display:block;font-size:.85rem;color:var(--muted);margin-top:2px}
+.ci-switch{all:unset;cursor:pointer;flex-shrink:0;width:52px;height:32px;border-radius:999px;background:var(--sunk);border:1px solid var(--line);position:relative;transition:background .2s}
+.ci-switch i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
+.ci-switch[aria-checked="true"]{background:#2E8B4E;border-color:#2E8B4E}
+.ci-switch[aria-checked="true"] i{transform:translateX(20px)}
+.ci-switch:focus-visible{outline:3px solid #D9A441;outline-offset:3px}
+.ci-switch::after{content:"";position:absolute;inset:-8px}
+.ci-acts{display:flex;flex-wrap:wrap;gap:8px}
+.ci-btn{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);font-weight:800;font-size:.88rem;text-decoration:none}
+.ci-btn.gold{background:#D9A441;border-color:#B9852A;color:#23172C}
+.ci-btn.ghost{background:transparent}
+.ci-btn:focus-visible{outline:3px solid #D9A441;outline-offset:2px}
+.ci-banner{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top,0px));z-index:9500;max-width:520px;margin:0 auto;background:#23172C;color:#F6EBDD;border:2px solid #D9A441;border-radius:18px;padding:14px 16px 16px;display:grid;gap:6px;box-shadow:0 12px 32px rgba(0,0,0,.45);animation:ciIn .35s ease-out;transition:opacity .8s}
+.ci-banner.fade{opacity:0}
+@keyframes ciIn{from{transform:translateY(-120%)}to{transform:none}}
+@media (prefers-reduced-motion: reduce){ .ci-banner{animation:none} }
+.ci-k{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#D9A441}
+.ci-t{font-family:var(--display);font-size:1.25rem;line-height:1.2;padding-right:36px}
+.ci-s{font-size:.88rem;opacity:.9}
+.ci-n{display:grid;gap:1px;background:rgba(217,164,65,.12);border-radius:12px;padding:8px 12px;margin-top:2px}
+.ci-n span{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:#D9A441}
+.ci-n small{font-size:.8rem;opacity:.85}
+.ci-banner .ci-acts{margin-top:6px}
+.ci-banner .ci-btn{background:rgba(246,235,221,.1);border-color:rgba(246,235,221,.3);color:#F6EBDD;min-height:40px;padding:6px 14px}
+.ci-banner .ci-btn.gold{background:#D9A441;color:#23172C;border-color:#D9A441}
+.ci-banner .ci-btn::after{content:"";position:absolute}
+.ci-x{all:unset;cursor:pointer;position:absolute;top:8px;right:8px;width:44px;height:44px;display:grid;place-items:center;font-size:1.5rem;color:#F6EBDD}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
@@ -2863,7 +2894,7 @@ const HELP = [
   ["The kitchen table","Everything anyone saved with the cheesecake. Filter by person, or <b>Everyone's in</b> to see what all three of you want."],
   ["Saved designs","Tattoo designs you saved, ready to show an artist."],
   ["Passport","Earn stamps by marking places visited (jazz, beignets, cats, history and more). Rose gets very excited about every one."],
-  ["Journal","Places you've marked visited, with your heart ratings. <b>Remove from journal</b> undoes one."]]],
+  ["Journal","Every place you've been, with your heart ratings and notes. Turn on <b>Auto check-in</b> at the top and GPS adds a place after you've spent about a minute there (while the app is open), fills in passport stamps, and pops up what's next on the plan. <b>Undo</b> on the pop-up or <b>Remove from journal</b> takes one back. <b>Share recap</b> texts your trip so far; <b>Send my location</b> texts where you are, with a map link."]]],
  ["ink","Ink: tattoo ideas",[
   ["Design concepts","100 AI-made concepts. Use the style buttons (New Orleans, 90s, Retro, Art deco, Gangsta cats, Aristocrat cats, Old-school flash, Y2K & cute, Voodoo & mystic) to narrow them down."],
   ["Look closer","Tap an image to see it large. <b>Previous</b> and <b>Next</b> stay inside the style you picked."],
@@ -4657,6 +4688,173 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     clearTimeout(idle); idle = setTimeout(show, 900);
   }, {passive:true});
   window.addEventListener("hashchange", show);
+})();
+
+/* Auto check-in: while the app is open, GPS notices when you've spent a minute at a place, adds it to the
+   Journal and Passport, and shows what's next. Plus Share recap and Send my location. Nothing leaves the phone
+   unless you tap Share or Send. */
+(function(){
+  const KEY = "nola-autocheck", SKIP = "nola-autocheck-skip", DWELL = 60000, MAX_ACC = 80;
+  const pref = () => { try{ return localStorage.getItem(KEY); }catch(e){ return null; } };
+  const setPref = v => { try{ localStorage.setItem(KEY, v); }catch(e){} };
+  const skipped = () => { try{ return JSON.parse(sessionStorage.getItem(SKIP) || "[]"); }catch(e){ return []; } };
+  const skip = id => { try{ sessionStorage.setItem(SKIP, JSON.stringify(skipped().concat(id))); }catch(e){} };
+  const escH = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const big = p => /nature|river/.test((p.c || []).join(" ")) || /park|cemetery|forest|garden|lakefront|plantation|alley|square|street/i.test(p.n);
+  const radiusOf = p => big(p) ? 130 : 55;
+
+  let watchId = null, cand = null, here = null;
+
+  function nearestPlace(lat, lon, maxM){
+    let best = null;
+    for(const p of P){ const c = coordOf(p); if(!c) continue; const m = meters([lat, lon], c); if(m <= (maxM || radiusOf(p)) && (!best || m < best.m)) best = {p, m}; }
+    return best;
+  }
+
+  function onPos(pos){
+    const c = pos.coords; here = {lat:c.latitude, lon:c.longitude, acc:c.accuracy, ts:Date.now()};
+    try{ LOC = {lat:here.lat, lon:here.lon, acc:here.acc, ts:here.ts}; }catch(e){}
+    if(c.accuracy > MAX_ACC) return;
+    const hit = nearestPlace(here.lat, here.lon);
+    if(!hit){ cand = null; return; }
+    const id = hit.p.id;
+    if((myVisited() || {})[id] || skipped().includes(id)){ cand = null; return; }
+    if(!cand || cand.id !== id){ cand = {id, since:Date.now()}; return; }
+    if(Date.now() - cand.since >= DWELL){ cand = null; checkIn(id); }
+  }
+
+  function start(){
+    if(watchId !== null || pref() !== "1" || !navigator.geolocation) return;
+    try{ watchId = navigator.geolocation.watchPosition(onPos, err => { if(err && err.code === 1){ setPref("0"); stop(); if(typeof render === "function") render(); toast("Location is off for this app, so auto check-in is paused."); } }, {enableHighAccuracy:true, maximumAge:15000, timeout:30000}); }catch(e){ watchId = null; }
+  }
+  function stop(){ if(watchId !== null){ try{ navigator.geolocation.clearWatch(watchId); }catch(e){} } watchId = null; cand = null; }
+  document.addEventListener("visibilitychange", () => document.visibilityState === "visible" ? start() : stop());
+
+  /* what's next: the next stop on today's plan, or else the closest open place you haven't been to */
+  function nextUp(fromId){
+    const N = nolaNow(), ts = typeof tripStatus === "function" ? tripStatus() : null;
+    if(ts && ts.day && plan && plan.days){
+      const d = plan.days.find(x => x.n === ts.day);
+      const it = d && (d.items || []).find(i => i.t && toM(i.t) > N.mins - 20 && !(i.p || []).includes(fromId) && !(i.p || []).some(pid => (myVisited() || {})[pid]));
+      if(it){ const pl = (it.p || []).map(x => BY[x]).find(Boolean); return {label:it.h, when:fmtM(toM(it.t)), place:pl}; }
+    }
+    const vis = myVisited() || {}, at = coordOf(BY[fromId]) || (here ? [here.lat, here.lon] : null);
+    let open = P.filter(p => p.id !== fromId && !vis[p.id] && coordOf(p));
+    try{ const W = {dow:N.dow, mins:N.mins}; open = open.filter(p => { const s = statusAt(p, W); return s && s.state === "open"; }); }catch(e){}
+    if(at) open.sort((a, b) => meters(at, coordOf(a)) - meters(at, coordOf(b)));
+    return open[0] ? {label:open[0].n, when:"open now", place:open[0]} : null;
+  }
+  const walkFrom = (a, p) => { const c = coordOf(p); if(!a || !c) return ""; const m = meters(a, c); return travel(m).txt; };
+
+  function checkIn(id){
+    const p = BY[id]; if(!p) return;
+    const before = stampsFor(myVisited() || {}).map(s => s.k);
+    const _t = toast; toast = () => {}; try{ toggleVisit(id); }catch(e){ toast = _t; return; } toast = _t;
+    const v = myVisited() || {}; if(!v[id]) return;
+    try{ v[id].auto = 1; persistPicks(); }catch(e){}
+    const won = stampsFor(v).filter(s => !before.includes(s.k));
+    const nx = nextUp(id);
+    banner(p, won[0], nx);
+    try{ navigator.vibrate && navigator.vibrate([90, 50, 90]); }catch(e){}
+    try{
+      if("Notification" in window && Notification.permission === "granted" && document.visibilityState !== "visible" && navigator.serviceWorker && navigator.serviceWorker.ready)
+        navigator.serviceWorker.ready.then(r => r.showNotification("You made it to " + p.n + "!", {body:(won[0] ? "Stamp earned: " + won[0].t + ". " : "") + (nx ? "Next up: " + nx.label + " (" + nx.when + ")" : ""), tag:"checkin", icon:"../icon.svg"}));
+    }catch(e){}
+  }
+
+  function banner(p, stamp, nx){
+    document.querySelectorAll(".ci-banner").forEach(b => b.remove());
+    const at = coordOf(p);
+    const b = document.createElement("div"); b.className = "ci-banner"; b.setAttribute("role", "status");
+    b.innerHTML = '<button class="ci-x" type="button" aria-label="Close">×</button>'
+      + '<div class="ci-k">Checked in</div><b class="ci-t">You made it to ' + escH(p.n) + '!</b>'
+      + (stamp ? '<div class="ci-s">Passport stamp: <b>' + escH(stamp.g + " " + stamp.t) + '</b></div>' : '<div class="ci-s">Added to your journal.</div>')
+      + (nx ? '<div class="ci-n"><span>Next up</span><b>' + escH(nx.label) + '</b><small>' + escH(nx.when) + (nx.place && nx.place.id !== p.id ? " · " + escH(walkFrom(at, nx.place)) : "") + '</small></div>' : '')
+      + '<div class="ci-acts">'
+      + (nx && nx.place ? '<a class="ci-btn gold" href="' + escH(dirUrl(nx.place)) + '" target="_blank" rel="noopener">Directions</a>' + (typeof uberLink === "function" ? '<a class="ci-btn" href="' + escH(uberLink(nx.place)) + '" target="_blank" rel="noopener">Uber</a>' : '') : nx ? '<a class="ci-btn gold" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(nx.label + ", New Orleans, LA") + '" target="_blank" rel="noopener">Directions</a>' : '')
+      + '<button class="ci-btn" type="button" data-ci="loc">Send my location</button>'
+      + '<button class="ci-btn ghost" type="button" data-ci="undo">Undo</button></div>';
+    b.querySelector(".ci-x").onclick = () => b.remove();
+    b.querySelector('[data-ci="undo"]').onclick = () => { skip(p.id); try{ if((myVisited() || {})[p.id]) toggleVisit(p.id); }catch(e){} b.remove(); toast("Undone. I won't check you in here again today."); };
+    b.querySelector('[data-ci="loc"]').onclick = () => sendLocation();
+    document.body.appendChild(b);
+    setTimeout(() => { if(b.isConnected) b.classList.add("fade"); }, 25000);
+    setTimeout(() => b.remove(), 26000);
+  }
+
+  /* share */
+  async function shareText(title, text){
+    if(navigator.share){ try{ await navigator.share({title, text}); return; }catch(e){ if(e && e.name === "AbortError") return; } }
+    try{ await navigator.clipboard.writeText(text); toast("Copied. Paste it into a text."); }catch(e){ toast("Couldn't share from this browser."); }
+  }
+  function recapText(){
+    const v = myVisited() || {}, ids = Object.keys(v).filter(id => BY[id]).sort((a, b) => v[a].t - v[b].t);
+    const stamps = stampsFor(v);
+    const byDay = {};
+    ids.forEach(id => { const k = new Date(v[id].t).toLocaleDateString("en-US", {weekday:"short", month:"short", day:"numeric", timeZone:"America/Chicago"}); (byDay[k] = byDay[k] || []).push(BY[id].n + (v[id].r ? " " + "♥".repeat(v[id].r) : "") + (v[id].n ? ' ("' + v[id].n + '")' : "")); });
+    let t = "The NOLA Girls in New Orleans ⚜\n" + ids.length + " place" + (ids.length === 1 ? "" : "s") + " so far · " + stamps.length + " of " + STAMPS.length + " passport stamps\n";
+    Object.keys(byDay).forEach(k => { t += "\n" + k + ": " + byDay[k].join(", "); });
+    if(stamps.length) t += "\n\nStamps: " + stamps.map(s => s.t).join(", ");
+    if(!ids.length) t += "\nNothing checked in yet. Stay tuned.";
+    return t;
+  }
+  window.nolaShareRecap = () => shareText("Our New Orleans recap", recapText());
+  function sendLocation(){
+    if(!navigator.geolocation){ toast("Location isn't available in this browser."); return; }
+    toast("Finding you…");
+    navigator.geolocation.getCurrentPosition(pos => {
+      const c = pos.coords, hit = nearestPlace(c.latitude, c.longitude, 90);
+      const map = "https://maps.google.com/?q=" + c.latitude.toFixed(5) + "," + c.longitude.toFixed(5);
+      const text = (hit ? "I'm at " + hit.p.n + (hit.p.ad ? ", " + hit.p.ad : "") + ". " : "Here's where I am: ") + map;
+      if(navigator.share) shareText("My location", text);
+      else { try{ location.href = "sms:?&body=" + encodeURIComponent(text); }catch(e){ shareText("My location", text); } }
+    }, err => toast(err && err.code === 1 ? "Location is off for this app. Turn it on in your phone's settings to send it." : "Couldn't find you just now. Try again outside."), {enableHighAccuracy:true, timeout:15000, maximumAge:20000});
+  }
+  window.nolaSendLocation = sendLocation;
+
+  /* the control card on Journal and Passport */
+  function card(){
+    const on = pref() === "1";
+    return '<div class="ci-card">'
+      + '<div class="ci-row"><div><b>Auto check-in</b><span>' + (on ? "On. When you spend a minute at a place, it's added here, stamps fill in, and I'll tell you what's next." : "Let GPS add places as you visit them, earn stamps, and show what's next. Works while the app is open.") + '</span></div>'
+      + '<button class="ci-switch" type="button" role="switch" aria-checked="' + on + '" data-citoggle="1" aria-label="Auto check-in"><i></i></button></div>'
+      + '<div class="ci-acts"><button class="ci-btn gold" type="button" data-cishare="1">Share recap</button><button class="ci-btn" type="button" data-ciloc="1">Send my location</button></div></div>';
+  }
+  const _vJ = vJournal, _vP = vPassport;
+  vJournal = function(){ return card() + _vJ().replace("Your journal is empty. Open any place and tap Mark visited.", "Your journal is empty. Turn on auto check-in and places fill in as you go, or open any place and tap Mark visited."); };
+  vPassport = function(){ return card() + _vP().replace("Mark places visited from their details to earn stamps.", "Stamps fill in as you check in (or tap Mark visited on a place)."); };
+
+  document.addEventListener("click", e => {
+    const t = e.target.closest && e.target.closest("[data-citoggle],[data-cishare],[data-ciloc],a[href$='#sendloc']");
+    if(!t) return;
+    e.preventDefault(); e.stopPropagation();
+    if(t.dataset.cishare){ window.nolaShareRecap(); return; }
+    if(t.dataset.ciloc || /#sendloc$/.test(t.getAttribute("href") || "")){ sendLocation(); return; }
+    if(t.dataset.citoggle){
+      if(pref() === "1"){ setPref("0"); stop(); toast("Auto check-in is off."); if(typeof render === "function") render(); return; }
+      if(!navigator.geolocation){ toast("Location isn't available in this browser."); return; }
+      navigator.geolocation.getCurrentPosition(() => {
+        setPref("1"); start(); toast("Auto check-in is on. Go see something.");
+        try{ if("Notification" in window && Notification.permission === "default") Notification.requestPermission(); }catch(_){}
+        if(typeof render === "function") render();
+      }, err => toast(err && err.code === 1 ? "Location was declined, so auto check-in stays off." : "Couldn't get your location here. Try the public site link on your phone."), {enableHighAccuracy:true, timeout:15000, maximumAge:60000});
+    }
+  }, true);
+
+  /* Ask Dorothy: "send my location" / "share our recap" */
+  const prevAct = window.askAction;
+  window.askAction = function(q){
+    const s = String(q || "").toLowerCase();
+    if(/\b(send|share|text)\b.*\b(my )?(location|where i am|spot)\b|\bwhere i am\b.*\b(send|share)/.test(s)) return {text:"Tap below and I'll put your spot in a text. Pick who gets it.", ids:[], actions:[{label:"Send my location", href:"#sendloc", kind:"call"}]};
+    if(/\b(share|send)\b.*\b(recap|journal|passport|trip so far)\b/.test(s)){ return {text:"Here's your recap so far:\n" + recapText(), ids:[], actions:[{label:"Share recap", copy:recapText()}]}; }
+    return prevAct ? prevAct(q) : null;
+  };
+
+  /* Help: the safety box gets a Send my location button */
+  const _render = render;
+  render = function(){ const r = _render.apply(this, arguments); try{ if(S.tab === "help"){ const sos = document.querySelector("#main .sos"); if(sos && !sos.querySelector("[data-ciloc]")){ const b = document.createElement("button"); b.type = "button"; b.className = "ci-btn gold"; b.dataset.ciloc = "1"; b.textContent = "Send my location to someone"; b.style.marginTop = "10px"; sos.appendChild(b); } } }catch(e){} return r; };
+
+  start();
 })();
 
 </script>
