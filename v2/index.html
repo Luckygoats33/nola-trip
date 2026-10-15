@@ -1581,7 +1581,7 @@ function vSaved(){
     .sort((a,b)=>score(b)-score(a) || a.p.n.localeCompare(b.p.n));
   const inPlan = id => plan.days.filter(d=>d.items.some(it=>it.p.includes(id))).map(d=>"Day "+d.n);
   let h = '<div class="head"><span class="eyebrow">The kitchen table</span><h2>Saved</h2><p class="muted small">Everything anyone saved, ranked by the group\'s votes. '+(shared?'Everyone sees everyone\'s votes.':'Votes stay on this phone here. Use the claude.ai link to vote as a group.')+'</p></div>';
-  if(!rows.length) return h + '<div class="empty">Nothing saved yet. Tap the cheesecake on any place in Today, Explore, or the Map.</div>';
+  if(!rows.length) return h + '<div class="empty">Nothing saved yet. Tap the cheesecake on any place on Home, in Explore, or on the Map.</div>';
   const tally = {must:rows.filter(r=>r.must.length).length, inplan:rows.filter(r=>inPlan(r.p.id).length).length};
   h += '<div class="summary"><div class="sum"><b>'+rows.length+'</b><span>Saved</span></div><div class="sum soon"><b>'+tally.must+'</b><span>Someone\'s must-do</span></div><div class="sum open"><b>'+tally.inplan+'</b><span>Already in the plan</span></div></div>';
   h += rows.map(r=>{
