@@ -1,4 +1,4 @@
-/* NOLA accounts: sign-up bar, magic link / 6-digit code, and cloud sync of this device's saves.
+/* NOLA accounts: sign-up bar, magic link / email code, and cloud sync of this device's saves.
    Design: the app keeps using localStorage exactly as before (works offline and signed out).
    This file mirrors the synced keys to Supabase when signed in, and pulls them back on sign-in. */
 (function(){
@@ -152,7 +152,7 @@
       '<h2 id="nform-h"></h2><div class="small">We\'ll email you a sign-in link. No password.</div>'+
       '<div id="nf-namewrap"><label for="nf-name">Name</label><input id="nf-name" name="name" autocomplete="name"></div>'+
       '<label for="nf-email">Email</label><input id="nf-email" name="email" type="email" autocomplete="email" inputmode="email" required>'+
-      '<div id="nf-codewrap" hidden><label for="nf-code">Got a 6-digit code in the email? Type it here (optional)</label><input id="nf-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}"></div>'+
+      '<div id="nf-codewrap" hidden><label for="nf-code">Or type the code from your email (optional)</label><input id="nf-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" pattern="[0-9]{6,10}"></div>'+
       '<div class="row"><button type="button" class="x" id="nf-cancel">Cancel</button><button type="submit" class="go" id="nf-go">Send my link</button></div>'+
       '<div class="msg" id="nf-msg" aria-live="polite"></div><p class="nf-switch"><span id="nf-swtxt"></span> <a href="#" id="nf-sw"></a></p></form></div>');
     document.body.appendChild(modal);
@@ -191,18 +191,25 @@
         }
         stage = "code"; go.textContent = "Verify code";
         modal.querySelector("#nf-codewrap").hidden = false; modal.querySelector("#nf-code").focus();
-        msg.textContent = "Check " + email + " and tap the link in it. If the email also shows a 6-digit code, you can type it here instead.";
+        msg.textContent = "Check " + email + " and tap the link in it. Or type the code from your email here.";
       } else {
-        var code = f.querySelector("#nf-code").value.trim();
-        if (!/^\d{6}$/.test(code)) { msg.textContent = "Enter the 6 digits from the email."; return; }
+        var code = f.querySelector("#nf-code").value.replace(/\s+/g, "");
+        if (!/^\d{6,10}$/.test(code)) { msg.textContent = "Enter the code from your email (numbers only)."; return; }
         go.disabled = true; msg.textContent = "Checking…";
-        var v = await sb.auth.verifyOtp({ email: email, token: code, type: "email" });
+        var v = await verifyCode(email, code);
         go.disabled = false;
         if (v.error) { msg.textContent = "That code didn't work: " + v.error.message; return; }
         msg.textContent = "You're in!";
       }
     });
   }
+  // Supabase codes are 6-10 digits; try the current type first, then the legacy ones
+  async function verifyCode(email, code){
+    var types = ["email", "signup", "magiclink"], v;
+    for (var i = 0; i < types.length; i++) { v = await sb.auth.verifyOtp({ email: email, token: code, type: types[i] }); if (!v.error) return v; }
+    return v;
+  }
+  window.NolaAccount.verifyCode = verifyCode;
   function closeForm(){ if (modal) { modal.remove(); modal = null; } }
 
   function helpSignOut(){

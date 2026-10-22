@@ -25,12 +25,12 @@ form{display:grid;gap:8px;max-width:360px} input{padding:10px;border-radius:10px
   function signInForm(note){
     app.innerHTML = '<div class="card"><h2>Admin sign-in</h2><p class="muted">'+(note||"Only "+esc(C.admin)+" can see everyone. The database enforces this; anyone else sees only their own data.")+'</p>'+
       '<form id="f"><input id="e" type="email" placeholder="email" value="'+esc(C.admin)+'" required><button class="go">Email me a link + code</button>'+
-      '<input id="c" inputmode="numeric" maxlength="6" placeholder="6-digit code" hidden><div id="m" class="muted"></div></form></div>';
+      '<input id="c" inputmode="numeric" autocomplete="one-time-code" maxlength="10" pattern="[0-9]{6,10}" placeholder="the code from your email" hidden><div id="m" class="muted"></div></form></div>';
     var f=document.getElementById("f"), c=document.getElementById("c"), m=document.getElementById("m"), sent=false;
     f.onsubmit=async function(e){ e.preventDefault(); var em=document.getElementById("e").value.trim().toLowerCase();
       if(!sent){ var r=await sb.auth.signInWithOtp({email:em,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:false}});
         if(r.error){ m.textContent=r.error.message; return; } sent=true; c.hidden=false; c.focus(); f.querySelector("button").textContent="Verify code"; m.textContent="Check your email."; }
-      else { var v=await sb.auth.verifyOtp({email:em,token:c.value.trim(),type:"email"}); if(v.error) m.textContent=v.error.message; } };
+      else { var code=c.value.replace(/\s+/g,""); if(!/^\d{6,10}$/.test(code)){ m.textContent="Enter the code from your email (numbers only)."; return; } var v; for(const t of ["email","signup","magiclink"]){ v=await sb.auth.verifyOtp({email:em,token:code,type:t}); if(!v.error) break; } if(v.error) m.textContent=v.error.message; } };
   }
   async function load(session){
     document.getElementById("out").hidden = !session;
