@@ -19,7 +19,7 @@ form{display:grid;gap:8px;max-width:360px} input{padding:10px;border-radius:10px
 <script src="config.js"></script>
 <script>
 (function(){
-  var C = window.NOLA_SUPABASE, sb = window.supabase.createClient(C.url, C.key), app = document.getElementById("app");
+  var C = window.NOLA_SUPABASE, sb = window.supabase.createClient(C.url, C.key, {auth:{flowType:"implicit",detectSessionInUrl:true}}), app = document.getElementById("app");
   function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
   function when(t){ return t ? new Date(t).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}) : "—"; }
   function signInForm(note){

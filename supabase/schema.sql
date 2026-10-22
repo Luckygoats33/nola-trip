@@ -95,3 +95,6 @@ create policy likes_delete on public.likes for delete to authenticated using ((s
 revoke all on public.profiles, public.lists, public.list_items, public.likes from anon;
 grant select, update on public.profiles to authenticated;
 grant select, insert, update, delete on public.lists, public.list_items, public.likes to authenticated;
+
+-- 2026-10-21: first-run welcome flag
+alter table public.profiles add column if not exists welcomed_at timestamptz;

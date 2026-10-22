@@ -1,6 +1,14 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script>/* auth return: grab Supabase sign-in params before the app's router rewrites the URL hash */
+(function(){ try{ var h=location.hash.replace(/^#/,""), q=location.search.replace(/^\?/,""), hp=new URLSearchParams(h), qp=new URLSearchParams(q), o={};
+  ["access_token","refresh_token","expires_in","expires_at","token_type","type","error","error_code","error_description"].forEach(function(k){ if(hp.get(k)) o[k]=hp.get(k); });
+  ["code","token_hash","type","error","error_code","error_description"].forEach(function(k){ if(qp.get(k) && !o[k]) o[k]=qp.get(k); });
+  if(o.access_token||o.code||o.token_hash||o.error){ sessionStorage.setItem("nola-auth-return", JSON.stringify(o));
+    ["code","token_hash","type","error","error_code","error_description"].forEach(function(k){ qp.delete(k); });
+    var qs=qp.toString(); history.replaceState(null,"",location.pathname+(qs?"?"+qs:"")); } }catch(e){} })();</script>
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="V3 New · New Orleans trip hub: what is open now, a real map, the plan, saved places, and tattoo ideas.">
@@ -2524,7 +2532,7 @@ document.addEventListener("keydown", e=>{
 (function(){ const gh=/github\.io$/.test(location.hostname);
   const u = gh ? {1:"/nola-trip/v1/", 2:"/nola-trip/", 3:"/nola-trip/v3/"} : {1:"https://claude.ai/artifact/9NshHFg66F77sbsgAuWgJy", 2:"https://claude.ai/artifact/8yff42c7e6u81psANnuHfQ", 3:"https://claude.ai/artifact/8RHHe6W9CEt16ZjTSmPCQg"};
   [1,2,3].forEach(n=>{ const a=document.getElementById("vlink"+n); if(!a || a.getAttribute("aria-current")) return; a.href=u[n]; if(!gh){ a.target="_blank"; a.rel="noopener"; } }); })();
-try{ if("serviceWorker" in navigator && /github\.io$/.test(location.hostname)) navigator.serviceWorker.register("../sw.js", {scope:"../"}); }catch(e){}
+try{ if("serviceWorker" in navigator && /github\.io$/.test(location.hostname)) navigator.serviceWorker.register("../sw.js", {scope:"../", updateViaCache:"none"}).then(function(r){ try{ r.update(); }catch(_){} }); }catch(e){}
 /* keep "right now" fresh while it's on screen */
 setInterval(()=>{
   const a = document.activeElement;

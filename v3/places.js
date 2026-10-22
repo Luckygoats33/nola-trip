@@ -50,8 +50,9 @@
     return { name: x.name, key: x.category, v: x.type, lat: +x.lat, lon: +x.lon,
       addr: [a.house_number && a.road ? a.house_number + " " + a.road : a.road, a.city || a.town || a.village].filter(Boolean).join(", "),
       osm: (x.osm_type || "node")[0].toUpperCase() + x.osm_id }; }).filter(Boolean); }
-  function photon(q, extra){ var bb = extra ? "-90.15,29.90,-89.95,30.05" : [BB.w, BB.s, BB.e, BB.n].join(","); return getJSON("https://photon.komoot.io/api/?q=" + encodeURIComponent(q) + "&lat=" + NOLA[0] + "&lon=" + NOLA[1] +
-    "&bbox=" + bb + "&limit=15&lang=en" + (extra || "")).then(fromPhoton); }
+  function photon(q, extra){ return photon1(q, extra).then(function(r){ return r || new Promise(function(ok){ setTimeout(ok, 700); }).then(function(){ return photon1(q, extra); }).then(function(r2){ return r2 || []; }); }); }
+  function photon1(q, extra){ var bb = extra ? "-90.15,29.90,-89.95,30.05" : [BB.w, BB.s, BB.e, BB.n].join(","); return getJSON("https://photon.komoot.io/api/?q=" + encodeURIComponent(q) + "&lat=" + NOLA[0] + "&lon=" + NOLA[1] +
+    "&bbox=" + bb + "&limit=15&lang=en" + (extra || "")).then(function(j){ return j ? fromPhoton(j) : null; }); }
   function nominatim(q){ return getJSON("https://nominatim.openstreetmap.org/search?q=" + encodeURIComponent(q) + "&format=jsonv2&limit=10&addressdetails=1&bounded=1&viewbox=" +
     [BB.w, BB.n, BB.e, BB.s].join(",")).then(fromNominatim); }
   var BARISH = /\b(bar|pub|lounge|tavern|saloon|club)\b/;
