@@ -114,9 +114,13 @@
 
   /* ---------- top bar + sign-up form ---------- */
   var css = ".nbar{position:sticky;top:0;z-index:50;margin:0 -16px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));box-sizing:border-box;flex-wrap:wrap;text-align:center;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 12px;background:#23172C;color:#FFF4EF;font:600 14px/1.2 system-ui,sans-serif}"+
-    ".nbar button{font:inherit}.nbar-cta{background:#FF6B5B;color:#fff;border:0;border-radius:999px;padding:8px 16px;cursor:pointer}"+
+    ".nbar button{font:inherit}.nbar-cta{background:#FF6B5B;color:#fff;border:0;border-radius:999px;padding:8px 16px;min-height:44px;cursor:pointer;white-space:nowrap}"+
     "body.has-nbar .top{top:calc(var(--nbar-h,44px) + env(safe-area-inset-top,0px))}"+
-    ".nmodal{position:fixed;inset:0;z-index:2147483000;background:rgba(35,23,44,.55);display:flex;align-items:center;justify-content:center;padding:16px}"+
+    ".nmodal{position:fixed;inset:0;z-index:2147483000;background:rgba(35,23,44,.55);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}"+
+    "#nmodal{align-items:flex-start;padding-top:max(16px,calc(env(safe-area-inset-top) + 12px))}#nmodal .nform{max-height:calc(100dvh - 32px);overflow:auto}@media(min-height:700px) and (min-width:700px){#nmodal{align-items:center}}"+
+    ".nf-tabs{position:sticky;top:-20px;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin:-6px -6px 12px;background:#e9dde0;border-radius:12px}"+
+    ".nf-tabs button{min-height:44px;border:0;border-radius:9px;background:transparent;color:#23172C;font:600 15px system-ui,sans-serif;cursor:pointer}.nf-tabs button[aria-selected=true]{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);color:#c2412f}"+
+    ".nf-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}"+
     ".nform{background:#FFF4EF;color:#23172C;border-radius:16px;padding:20px;width:100%;max-width:380px;font:15px/1.4 system-ui,sans-serif;box-shadow:0 10px 40px rgba(0,0,0,.3)}"+
     ".nform h2{margin:0 0 6px;font-size:1.2rem}.nform label{display:block;margin:10px 0 4px;font-weight:600;font-size:.9rem}"+
     ".nform input{width:100%;box-sizing:border-box;padding:10px;border:1px solid #c9b8bf;border-radius:10px;font:inherit}"+
@@ -128,7 +132,7 @@
     ".nwel{max-width:440px;max-height:88vh;overflow:auto}.nwel h2{font-size:1.45rem;margin:2px 0 10px}.nwel h3{font-size:.95rem;margin:12px 0 4px}.nwel ul{margin:0;padding-left:1.1em}.nwel li{margin:3px 0}"+
     ".nw-kick{font-family:var(--mono,monospace);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#FF6B5B}.nw-out{margin:12px 0 0;font-size:.9rem}"+
     ".nhelp{margin:0 0 16px;padding:12px 14px;border:1px solid var(--line,#c9b8bf);border-radius:14px}.nhelp p{margin:6px 0 10px}.nhelp a{margin-left:10px;color:inherit}"+
-    ".nbar-in{background:none;border:0;color:#FFF4EF;text-decoration:underline;padding:8px 4px;cursor:pointer;font-weight:500}.nf-switch{margin:10px 0 0;font-size:.9rem;text-align:center}.nf-switch a,.nform .msg a{color:#c2412f;font-weight:600}"+
+    ".nbar-in{background:none;border:0;color:#FFF4EF;text-decoration:underline;padding:8px 4px;min-height:44px;cursor:pointer;font-weight:600;white-space:nowrap}@media(max-width:420px){.nbar>span{flex-basis:100%}.nbar{gap:2px 8px;padding-top:6px;padding-bottom:4px}}.nf-switch{margin:10px 0 0;font-size:.9rem;text-align:center}.nf-switch a,.nform .msg a{color:#c2412f;font-weight:600}"+
     ".nme{font:12px system-ui;opacity:.75;text-align:center;padding:6px}.nme a{color:inherit}";
   function el(h){ var d = document.createElement("div"); d.innerHTML = h.trim(); return d.firstChild; }
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
@@ -149,12 +153,13 @@
     if (modal) return;
     mode = mode === "signin" ? "signin" : "join";
     modal = el('<div class="nmodal" id="nmodal" role="dialog" aria-modal="true" aria-labelledby="nform-h"><form class="nform" id="nform" novalidate>'+
-      '<h2 id="nform-h"></h2><div class="small">We\'ll email you a sign-in link. No password.</div>'+
+      '<div class="nf-tabs" role="tablist" aria-label="Sign in or join"><button type="button" role="tab" id="nf-tab-signin" data-m="signin">Sign in</button><button type="button" role="tab" id="nf-tab-join" data-m="join">Join the trip</button></div>'+
+      '<h2 id="nform-h" class="nf-vh"></h2><div class="small">We\'ll email you a sign-in link. No password.</div>'+
       '<div id="nf-namewrap"><label for="nf-name">Name</label><input id="nf-name" name="name" autocomplete="name"></div>'+
       '<label for="nf-email">Email</label><input id="nf-email" name="email" type="email" autocomplete="email" inputmode="email" required>'+
       '<div id="nf-codewrap" hidden><label for="nf-code">Or type the code from your email (optional)</label><input id="nf-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" pattern="[0-9]{6,10}"></div>'+
       '<div class="row"><button type="button" class="x" id="nf-cancel">Cancel</button><button type="submit" class="go" id="nf-go">Send my link</button></div>'+
-      '<div class="msg" id="nf-msg" aria-live="polite"></div><p class="nf-switch"><span id="nf-swtxt"></span> <a href="#" id="nf-sw"></a></p></form></div>');
+      '<div class="msg" id="nf-msg" aria-live="polite"></div></form></div>');
     document.body.appendChild(modal);
     var f = modal.querySelector("form"), msg = modal.querySelector("#nf-msg"), go = modal.querySelector("#nf-go"), stage = "send";
     function setMode(m){
@@ -162,12 +167,11 @@
       modal.querySelector("#nf-codewrap").hidden = true;
       modal.querySelector("#nform-h").textContent = m === "join" ? "Join the trip" : "Sign in";
       modal.querySelector("#nf-namewrap").hidden = m !== "join";
-      modal.querySelector("#nf-swtxt").textContent = m === "join" ? "Already a user?" : "New here?";
-      modal.querySelector("#nf-sw").textContent = m === "join" ? "Sign in" : "Join the trip instead";
+      ["signin", "join"].forEach(function(k){ var t = modal.querySelector("#nf-tab-" + k); t.setAttribute("aria-selected", String(k === m)); t.tabIndex = k === m ? 0 : -1; });
       f.dataset.mode = m;
       (m === "join" ? modal.querySelector("#nf-name") : modal.querySelector("#nf-email")).focus();
     }
-    modal.querySelector("#nf-sw").addEventListener("click", function(e){ e.preventDefault(); setMode(mode === "join" ? "signin" : "join"); });
+    modal.querySelectorAll(".nf-tabs button").forEach(function(t){ t.addEventListener("click", function(){ if (t.dataset.m !== mode) setMode(t.dataset.m); }); });
     msg.addEventListener("click", function(e){ if (e.target.id === "nf-tojoin") { e.preventDefault(); setMode("join"); } });
     modal.querySelector("#nf-cancel").addEventListener("click", closeForm);
     modal.addEventListener("click", function(e){ if (e.target === modal) closeForm(); });
