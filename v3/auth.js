@@ -13,7 +13,7 @@
 
   var LS = window.localStorage;
   var rawSet = LS.setItem.bind(LS);
-  var SYNC = { "nola-picks":1, "nola-votes":1, "nola-visited":1, "nola-plan":1, "nola-checks":1, "nola-my-ink":1, "nola-trip":1, "nola-searches":1 };
+  var SYNC = { "nola-picks":1, "nola-votes":1, "nola-visited":1, "nola-plan":1, "nola-checks":1, "nola-my-ink":1, "nola-trip":1, "nola-searches":1, "nola-ext-places":1 };
   var session = null, pulling = false, timers = {};
 
   function j(s, d){ try { var v = JSON.parse(s); return v == null ? d : v; } catch(e){ return d; } }
@@ -45,6 +45,7 @@
     if (k === "nola-checks") return upsertSingleton("checklist", "Checklist", j(v, {}));
     if (k === "nola-my-ink") return upsertSingleton("ink", "My ink", { items: j(v, []) });
     if (k === "nola-trip") { var r = await sb.from("profiles").update({ trip: j(v, {}), updated_at: new Date().toISOString() }).eq("id", me); if (r.error) throw r.error; return; }
+    if (k === "nola-ext-places") return upsertSingleton("custom", "Places from the map", j(v, {}));
     if (k === "nola-searches") {
       var list = j(v, []);
       await sb.from("lists").delete().eq("user_id", me).eq("kind", "search");
@@ -77,6 +78,8 @@
     if (by.itinerary && by.itinerary.data && by.itinerary.data.days) next["nola-plan"] = JSON.stringify(by.itinerary.data);
     if (by.checklist) next["nola-checks"] = JSON.stringify(by.checklist.data || {});
     if (by.ink) next["nola-my-ink"] = JSON.stringify((by.ink.data || {}).items || []);
+    var xp = j(LS.getItem("nola-ext-places"), {}), cx = by.custom && by.custom.title === "Places from the map" ? (by.custom.data || {}) : {};
+    Object.keys(cx).forEach(function(id){ if (!xp[id]) xp[id] = cx[id]; }); next["nola-ext-places"] = JSON.stringify(xp);
     if (prof.trip && Object.keys(prof.trip).length) next["nola-trip"] = JSON.stringify(prof.trip);
     var srch = lists.filter(function(l){ return l.kind === "search"; }).map(function(l){ return l.data; });
     var localS = j(LS.getItem("nola-searches"), []); localS.forEach(function(s){ if (!srch.some(function(x){ return x.q === s.q; })) srch.push(s); });
@@ -84,7 +87,7 @@
     var changed = false; pulling = true;
     Object.keys(next).forEach(function(k){ if (LS.getItem(k) !== next[k]) { rawSet(k, next[k]); changed = true; } });
     pulling = false;
-    if (!LS.getItem(flag)) { rawSet(flag, "1"); ["nola-picks","nola-votes","nola-visited","nola-searches"].forEach(function(k){ push(k).catch(warn); }); }
+    if (!LS.getItem(flag)) { rawSet(flag, "1"); ["nola-picks","nola-votes","nola-visited","nola-searches","nola-ext-places"].forEach(function(k){ push(k).catch(warn); }); }
     return changed;
   }
 
@@ -110,7 +113,7 @@
   }
 
   /* ---------- top bar + sign-up form ---------- */
-  var css = ".nbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 12px;background:#23172C;color:#FFF4EF;font:600 14px/1.2 system-ui,sans-serif}"+
+  var css = ".nbar{position:sticky;top:0;z-index:50;margin:0 -16px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));box-sizing:border-box;flex-wrap:wrap;text-align:center;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 12px;background:#23172C;color:#FFF4EF;font:600 14px/1.2 system-ui,sans-serif}"+
     ".nbar button{font:inherit}.nbar-cta{background:#FF6B5B;color:#fff;border:0;border-radius:999px;padding:8px 16px;cursor:pointer}"+
     "body.has-nbar .top{top:calc(var(--nbar-h,44px) + env(safe-area-inset-top,0px))}"+
     ".nmodal{position:fixed;inset:0;z-index:2147483000;background:rgba(35,23,44,.55);display:flex;align-items:center;justify-content:center;padding:16px}"+
