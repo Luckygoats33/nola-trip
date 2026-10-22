@@ -1,0 +1,68 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NOLA admin</title><link rel="icon" href="../icon.svg" type="image/svg+xml"><meta name="robots" content="noindex">
+<style>
+body{margin:0;font:15px/1.45 system-ui,sans-serif;background:#FFF4EF;color:#23172C}
+header{position:sticky;top:0;background:#23172C;color:#FFF4EF;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+header h1{margin:0;font-size:1.1rem} header a,header button{color:#FFF4EF;background:none;border:1px solid #FFF4EF55;border-radius:999px;padding:4px 12px;font:inherit;cursor:pointer;text-decoration:none}
+main{max-width:960px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:14px;padding:14px 16px;margin:12px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin:0;font-size:1.05rem}.muted{color:#7a6670;font-size:.85rem}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0}.stats span{background:#f3e8eb;border-radius:999px;padding:2px 10px;font-size:.85rem}
+details{margin-top:6px}summary{cursor:pointer;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.chips span{background:#FFE2DC;border-radius:999px;padding:2px 9px;font-size:.82rem}
+pre{white-space:pre-wrap;word-break:break-word;background:#f7f1f3;padding:8px;border-radius:8px;font-size:.78rem;max-height:240px;overflow:auto}
+form{display:grid;gap:8px;max-width:360px} input{padding:10px;border-radius:10px;border:1px solid #c9b8bf;font:inherit} .go{background:#FF6B5B;color:#fff;border:0;border-radius:10px;padding:10px;font:600 15px system-ui;cursor:pointer}
+</style></head><body>
+<header><h1>NOLA trip · admin</h1><div><a href="./">← back to the hub</a> <button id="out" hidden>sign out</button></div></header>
+<main id="app"><p class="muted">Loading…</p></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+(function(){
+  var C = window.NOLA_SUPABASE, sb = window.supabase.createClient(C.url, C.key), app = document.getElementById("app");
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+  function when(t){ return t ? new Date(t).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}) : "—"; }
+  function signInForm(note){
+    app.innerHTML = '<div class="card"><h2>Admin sign-in</h2><p class="muted">'+(note||"Only "+esc(C.admin)+" can see everyone. The database enforces this; anyone else sees only their own data.")+'</p>'+
+      '<form id="f"><input id="e" type="email" placeholder="email" value="'+esc(C.admin)+'" required><button class="go">Email me a link + code</button>'+
+      '<input id="c" inputmode="numeric" maxlength="6" placeholder="6-digit code" hidden><div id="m" class="muted"></div></form></div>';
+    var f=document.getElementById("f"), c=document.getElementById("c"), m=document.getElementById("m"), sent=false;
+    f.onsubmit=async function(e){ e.preventDefault(); var em=document.getElementById("e").value.trim().toLowerCase();
+      if(!sent){ var r=await sb.auth.signInWithOtp({email:em,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:false}});
+        if(r.error){ m.textContent=r.error.message; return; } sent=true; c.hidden=false; c.focus(); f.querySelector("button").textContent="Verify code"; m.textContent="Check your email."; }
+      else { var v=await sb.auth.verifyOtp({email:em,token:c.value.trim(),type:"email"}); if(v.error) m.textContent=v.error.message; } };
+  }
+  async function load(session){
+    document.getElementById("out").hidden = !session;
+    if(!session) return signInForm();
+    if(session.user.email !== C.admin) return signInForm("You're signed in as "+esc(session.user.email)+", which isn't the admin account.");
+    app.innerHTML='<p class="muted">Loading everyone…</p>';
+    var r = await Promise.all([
+      sb.from("profiles").select("*").order("created_at"),
+      sb.from("lists").select("*").order("updated_at",{ascending:false}),
+      sb.from("list_items").select("*").order("position"),
+      sb.from("likes").select("*").order("created_at",{ascending:false})]);
+    var err = r.find(function(x){return x.error;}); if(err){ app.innerHTML='<div class="card">Error: '+esc(err.error.message)+'</div>'; return; }
+    var P=r[0].data, L=r[1].data, I=r[2].data, K=r[3].data;
+    var html='<p class="muted">'+P.length+' people · '+L.length+' lists · '+K.length+' likes/votes/visits</p>';
+    P.forEach(function(p){
+      var ls=L.filter(function(x){return x.user_id===p.id;}), ks=K.filter(function(x){return x.user_id===p.id;});
+      var last=[p.updated_at].concat(ls.map(function(x){return x.updated_at;}),ks.map(function(x){return x.created_at;})).filter(Boolean).sort().pop();
+      var by=function(k){return ks.filter(function(x){return x.kind===k;});};
+      html+='<div class="card"><h2>'+esc(p.name||"(no name)")+'</h2><div class="muted">'+esc(p.email)+' · joined '+when(p.created_at)+' · last activity '+when(last)+'</div>'+
+        '<div class="stats"><span>♥ '+by("like").length+' liked</span><span>🗳 '+by("vote").length+' votes</span><span>✓ '+by("visited").length+' visited</span><span>📋 '+ls.length+' lists</span><span>🔎 '+ls.filter(function(x){return x.kind==="search";}).length+' saved searches</span></div>';
+      if(by("like").length) html+='<div class="chips">'+by("like").map(function(x){return '<span>'+esc(x.item_ref)+'</span>';}).join("")+'</div>';
+      if(p.trip && Object.keys(p.trip).length) html+='<details><summary>Trip details</summary><pre>'+esc(JSON.stringify(p.trip,null,2))+'</pre></details>';
+      ls.forEach(function(l){ var its=I.filter(function(i){return i.list_id===l.id;});
+        html+='<details><summary>'+esc(l.kind)+': '+esc(l.title||"")+' <span class="muted">('+when(l.updated_at)+')</span></summary>'+
+          (its.length?'<div class="chips">'+its.map(function(i){return '<span>'+esc(i.item_ref)+(i.note?' — '+esc(i.note):'')+'</span>';}).join("")+'</div>':'')+
+          '<pre>'+esc(JSON.stringify(l.data,null,2))+'</pre></details>'; });
+      if(by("vote").length||by("visited").length) html+='<details><summary>Votes & visits</summary><pre>'+esc(JSON.stringify(ks.filter(function(x){return x.kind!=="like";}).map(function(x){return [x.kind,x.item_ref,x.value];})))+'</pre></details>';
+      html+='</div>';
+    });
+    app.innerHTML=html;
+  }
+  document.getElementById("out").onclick=function(){ sb.auth.signOut(); };
+  sb.auth.onAuthStateChange(function(e,s){ setTimeout(function(){ load(s); },0); });
+})();
+</script></body></html>
