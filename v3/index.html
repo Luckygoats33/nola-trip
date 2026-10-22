@@ -849,6 +849,21 @@ button.holla,.cakebtn,[data-ink]{min-height:44px}
 .fl-note{font-size:.8rem;color:var(--muted);margin:0}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
+/* fix6 review: never let a wide child push the page sideways on 360px phones; 44px map zoom buttons */
+#main{grid-template-columns:minmax(0,1fr)} #main>.view{min-width:0;grid-template-columns:minmax(0,1fr)}
+@media (max-width:400px){ .tiles,.girls{grid-template-columns:repeat(2,minmax(0,1fr))!important} .hero{min-width:0} }
+.leaflet-touch .leaflet-bar a{width:44px!important;height:44px!important;line-height:44px!important}
+/* fix6: bottom nav in brand colors (burgundy + brass), WCAG AA labels, clear active pill, iPhone safe area */
+@media (max-width:899px){
+  #tabs.tabs{background:var(--burg,#7B2446);border-top:2px solid var(--brass,#D9A441);box-shadow:0 -6px 20px rgba(35,23,44,.28);padding:6px 6px calc(8px + env(safe-area-inset-bottom,0px))}
+  #tabs .tab,#tabs .tab span{color:#FFF4EA!important}
+  #tabs .tab svg{stroke:#FFF4EA;stroke-width:2.2}
+  #tabs .tab[aria-selected="true"]{background:var(--brass,#D9A441)!important;color:#23172C!important;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+  #tabs .tab[aria-selected="true"] span,#tabs .tab[aria-selected="true"] svg{color:#23172C!important;stroke:#23172C}
+  #tabs .tab .n{background:#FFF4EA!important;color:#7B2446!important}
+  #tabs .tab:focus-visible{outline:3px solid #FFF4EA;outline-offset:-3px}
+  :root[data-mode="night"] #tabs.tabs{background:#2A1A33;border-top-color:var(--brass,#D9A441)}
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
@@ -3057,7 +3072,7 @@ if(!tourSeen) setTimeout(()=>{ if(!S.sheet && tourStep<0 && S.tab==="home" && lo
 if(location.hash==="#tour") setTimeout(()=>tourShow(0, "full"), 700);
 else if(!tourSeen && location.hash==="") {}
 
-VIEWKEYS.push("home","trip","col","time","birthday","all","girl","help");
+VIEWKEYS.push("home","trip","col","time","birthday","all","girl","help","admin");
 const NAV_OF = {girl:"home", col:"explore", time:"explore", birthday:"explore", river:"explore", all:"explore", now:"home", info:"home", plan:"saved", trip:"saved"};
 try{ const t2 = localStorage.getItem("nola2-tab"); S.tab = VIEWKEYS.includes(t2) && !["col","girl","time","all"].includes(t2) ? t2 : "home"; }catch(e){ S.tab = "home"; }
 if(location.hash && VIEWKEYS.includes(location.hash.slice(1))) S.tab = location.hash.slice(1);
@@ -3289,6 +3304,7 @@ vSheet = function(){
   const p = BY[S.sheet]; if(!p) return "";
   const N = S.when || nolaNow(), x = p.hrs, v = myVisited()[p.id];
   let h = '<div class="sheet-top"><div><span class="eyebrow">'+esc(p.c.map(c=>CATS[c]).filter(Boolean).join(" · "))+'</span><h2 id="sheet-title">'+esc(p.n)+'</h2></div><button class="close" data-close="1" aria-label="Close">×</button></div>';
+  { const mine = new Set(myPicks()).has(p.id); h += '<div class="sheet-save-row"><button class="btn primary sheet-save" data-heart="'+p.id+'" aria-pressed="'+mine+'">'+(mine?'♥ Saved':'♡ Save')+'</button>'+(readOnly?'':'<button class="btn sheet-plan" data-addto="'+p.id+'">+ Add to plan</button>')+'</div>'; }
   if(WHY[p.id]) h += '<div class="whybox"><p><b>Why you\'ll love it:</b> '+esc(WHY[p.id])+'</p></div>';
   if(p.story) h += '<p class="story"><b>What happened here:</b> '+esc(p.story)+'</p>';
   if(p.c.includes("tattoo")) h += bookingBlock(p);
@@ -5336,5 +5352,6 @@ html body nav.vswitch.vswitch{display:none!important}
 <script src="rides.js"></script>
 <script src="config.js"></script>
 <script src="auth.js"></script>
+<script src="admin.js"></script>
 </body>
 </html>

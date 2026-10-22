@@ -182,8 +182,9 @@
       try {
         var byName = {}; mapList().forEach(function(p){ byName[p.n] = p; });
         LCL.eachLayer(function(mk){ var t = mk.getTooltip && mk.getTooltip(), p = t && byName[t.getContent()]; if (!p) return;
-          mk.off("click"); mk.options.bubblingMouseEvents = false;
-          mk.bindPopup(function(){ return pinHtml(p); }, { className: "mpopw", maxWidth: 300, autoPanPadding: [16, 60] }); });
+          /* fix6: a pin opens the place's info sheet (as before fix5); the sheet carries Save + Add to plan */
+          mk.off("click"); mk.options.bubblingMouseEvents = false; if (mk.unbindPopup) mk.unbindPopup();
+          mk.on("click", function(ev){ if (ev && ev.originalEvent && L.DomEvent) L.DomEvent.stopPropagation(ev); S.sheet = p.id; render(); var c = document.querySelector(".sheet .close"); if (c) c.focus(); }); });
       } catch(e){ console.warn(e); }
       return r;
     };

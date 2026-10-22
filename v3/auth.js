@@ -230,7 +230,7 @@
   function helpSignOut(){
     var main = document.getElementById("main"); if (!main || typeof S === "undefined" || S.tab !== "help") return;
     var old = main.querySelector(".nhelp"); if (!session) { if (old) old.remove(); return; } if (old) return;
-    var u = session.user, b = el('<div class="nhelp"><div class="nw-kick">Your account</div><p>Signed in as <b>'+esc(nameOf(u))+'</b> ('+esc(u.email)+'). Your likes, plan, lists and saved searches sync to this account.</p><button type="button" class="nbar-cta" id="nhelp-out">Sign out</button>'+(u.email === CFG.admin ? ' <a href="admin.html">Admin</a>' : '')+'</div>');
+    var u = session.user, b = el('<div class="nhelp"><div class="nw-kick">Your account</div><p>Signed in as <b>'+esc(nameOf(u))+'</b> ('+esc(u.email)+'). Your likes, plan, lists and saved searches sync to this account.</p><button type="button" class="nbar-cta" id="nhelp-out">Sign out</button>'+(u.email === CFG.admin ? ' <a href="#admin" data-tab="admin">Admin</a>' : '')+'</div>');
     var sec = main.querySelector(".view") || main; sec.insertBefore(b, sec.firstChild);
     b.querySelector("#nhelp-out").addEventListener("click", function(){ window.NolaAccount.signOut(); });
   }
@@ -238,13 +238,15 @@
     var old = document.getElementById("nme"); if (old) old.remove();
     if (!session) return;
     var u = session.user, nm = (u.user_metadata && u.user_metadata.name) || u.email;
-    var f = el('<div class="nme" id="nme">Signed in as '+esc(nm)+' · <a href="#" id="nme-out">sign out</a>'+(u.email === CFG.admin ? ' · <a href="admin.html">admin</a>' : '')+'</div>');
+    var f = el('<div class="nme" id="nme">Signed in as '+esc(nm)+' · <a href="#" id="nme-out">sign out</a>'+(u.email === CFG.admin ? ' · <a href="#admin" data-tab="admin">admin</a>' : '')+'</div>');
     document.body.appendChild(f);
     f.querySelector("#nme-out").addEventListener("click", function(e){ e.preventDefault(); window.NolaAccount.signOut(); });
   }
 
   async function onSession(s, evt){
     var had = uid(); session = s;
+    window.NolaAccount.email = s && s.user && s.user.email ? String(s.user.email).toLowerCase() : null; window.NolaAccount.isAdmin = !!window.NolaAccount.email && window.NolaAccount.email === String(CFG.admin || "").toLowerCase();
+    if (typeof window.nolaAuthChanged === "function") { try { window.nolaAuthChanged(); } catch(e){ warn(e); } }
     if (s) { hideBar(); closeForm(); }
     else mountBar();
     helpSignOut();
