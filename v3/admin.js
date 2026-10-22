@@ -47,6 +47,8 @@
 
   /* ---------- view ---------- */
   var A = { savedMode: "mine", data: null, loading: false, err: null, sec: "align", person: "all", cat: "all", open: {} };
+  /* fix7: Saved > All trip plans also waits on this data, so re-render there too (was Admin tab only, which left Saved > All stuck on "Loading everyone…") */
+  function needsData(){ return typeof S !== "undefined" && (S.tab === "admin" || (S.tab === "saved" && A.savedMode === "all")); }
   function amAdmin(){ return !!(window.NolaAccount && window.NolaAccount.isAdmin); }
   function e(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function place(id){ return (typeof BY !== "undefined" && BY[id]) || null; }
@@ -65,9 +67,9 @@
       summary.forEach(function(s){ Object.assign(names, s.mapNames); });
       A.data = { summary: summary, names: names };
     } catch (x) { A.err = (x && x.message) || String(x); }
-    A.loading = false; if (S.tab === "admin") render();
+    A.loading = false; A.at = Date.now(); if (needsData()) render();
   }
-  window.NolaAdminSetData = function(d){ var summary = summarize(d.profiles, d.lists, d.list_items, d.likes), names = {}; summary.forEach(function(s){ Object.assign(names, s.mapNames); }); A.data = { summary: summary, names: names }; if (S.tab === "admin") render(); };
+  window.NolaAdminSetData = function(d){ var summary = summarize(d.profiles, d.lists, d.list_items, d.likes), names = {}; summary.forEach(function(s){ Object.assign(names, s.mapNames); }); A.data = { summary: summary, names: names }; if (needsData()) render(); };
   function chip(attr, val, cur, label){ return '<button class="chip" ' + attr + '="' + e(val) + '" aria-pressed="' + (cur === val) + '">' + label + '</button>'; }
   function vAdmin(){
     var h = '<div class="head"><span class="eyebrow">Only you can see this</span><h2>Admin</h2><p class="muted small">Who saved what, and where the group lines up.</p></div>';
@@ -144,7 +146,7 @@
     var el = ev.target.closest && ev.target.closest("[data-admsec],[data-admperson],[data-admcat],[data-admopen],[data-admsolo],[data-admreload],[data-admsaved]"); if (!el) return;
     var d = el.dataset;
     if (d.admsolo){ ev.preventDefault(); A.open.solo = !A.open.solo; }
-    if (d.admsaved) A.savedMode = d.admsaved; if (d.admsec) A.sec = d.admsec; if (d.admperson) A.person = d.admperson; if (d.admcat) A.cat = d.admcat;
+    if (d.admsaved){ A.savedMode = d.admsaved; if (d.admsaved === "all" && A.data && (!A.at || Date.now() - A.at > 30000)) { A.data = null; } } if (d.admsec) A.sec = d.admsec; if (d.admperson) A.person = d.admperson; if (d.admcat) A.cat = d.admcat;
     if (d.admopen) A.open[d.admopen] = !A.open[d.admopen]; if (d.admreload){ A.err = null; load(); }
     render();
   });

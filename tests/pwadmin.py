@@ -59,6 +59,9 @@ def photon(route):
     return route.fulfill(status=200,content_type="application/json",body='{"features":[]}')
 def likes(uid): return sorted(r["item_ref"] for r in DB["likes"] if r["user_id"]==uid and r["kind"]=="like")
 
+USERS["M"]=("dddddddd-4444-4444-4444-00000000000d","willw33@msn.com",None)
+DB["profiles"].append({"id":USERS["M"][0],"email":"willw33@msn.com","name":None,"trip":{},"welcomed_at":None,"created_at":"2026-10-22T01:00:00Z"})
+for r in ["jewel","cure","mfth","cdm"]: DB["likes"].append({"user_id":USERS["M"][0],"item_ref":r,"kind":"like","value":None,"created_at":"2026-10-22T01:00:00Z"})
 # sample data (mock only; never touches the real database)
 Aid,Bid,Wid=USERS["A"][0],USERS["B"][0],USERS["W"][0]
 def like(u,r): DB["likes"].append({"id":"l"+str(len(DB["likes"])),"user_id":u,"item_ref":r,"kind":"like","created_at":"2026-10-22T00:00:00Z"})
@@ -147,7 +150,7 @@ with sync_playwright() as p:
     ck("admin: top picks box", pg.locator(".adm-top").count()==1)
     pg.screenshot(path=OUT+"admin-align-390.png", full_page=False)
     pg.locator('[data-admsec="people"]').click(); WAIT(400)
-    ck("admin: people list shows all 3 with emails", lambda: pg.locator(".adm-person").count()==3 and "alice@example.com" in pg.inner_text("#main"))
+    ck("admin: people list shows all 3 with emails", lambda: pg.locator(".adm-person").count()==4 and "alice@example.com" in pg.inner_text("#main"))
     pg.locator('[data-admopen="%s"]'%Aid).click(); WAIT(400)
     t=pg.inner_text("#main")
     ck("admin: expand shows grouped saves + plan", "saved (kitchen table)" in t.lower() and "in their plan" in t.lower() and "Preservation Hall" in t)
@@ -170,11 +173,26 @@ with sync_playwright() as p:
     tg.nth(1).click(); WAIT(1200)
     t=pg.inner_text("#main")
     ck("admin Saved all: grouped by person + group picks", "All trip plans" in t and "bob@example.com" in t and "alice@example.com" in t and "Group picks" in t)
-    ck("group picks: % and count and names", "100%" in t and "3 of 3" in t and "67%" in t)
+    ck("group picks: % and count and names", "100%" in t and "4 of 4" in t and "50%" in t)
     pg.evaluate("document.getElementById('group-picks').scrollIntoView({block:'start'}); window.scrollBy(0,-70)"); WAIT(300)
     pg.screenshot(path=OUT+"group-picks-390.png")
     pg.locator(".adm-savedtoggle button").nth(0).click(); WAIT(400)
     ck("admin Saved: back to mine", "All trip plans" not in pg.inner_text("#main") or pg.locator(".adm-savedtoggle [aria-selected=true]").inner_text()=="My trip plans")
     ck("no page errors", not errs or print(errs))
+    # fix7 regression: fresh admin session goes STRAIGHT to Saved > All trip plans (no Admin tab visit first)
+    c2=b.new_context(viewport={"width":390,"height":844}); p2=c2.new_page(); p2.route("**/*.supabase.co/**",handler)
+    p2.add_init_script("localStorage.setItem('nola3-tour-done','1')")
+    p2.goto(B+"?t=%d#access_token="%time.time_ns()+tok("W")+"&refresh_token=r&expires_in=3600&expires_at=%d&token_type=bearer&type=magiclink"%exp)
+    for i in range(10):
+        p2.wait_for_timeout(1500)
+        try:
+            if p2.evaluate("!!(window.NolaAccount&&window.NolaAccount.isAdmin&&typeof render==='function')"): break
+        except Exception: pass
+    p2.wait_for_timeout(2500)
+    p2.evaluate("S.tab='saved'; render()"); p2.wait_for_timeout(500); p2.locator(".adm-savedtoggle button").nth(1).click()
+    ck("fix7: Saved>All (first visit) leaves Loading and shows likes-only user", lambda: "willw33@msn.com" in p2.inner_text("#main") and "Loading everyone" not in p2.inner_text("#main"))
+    ck("fix7: likes-only user (0 lists, no name) shows 4 saved, 0 lists", lambda: "willw33" in p2.inner_text("#main") and "0 lists" in p2.inner_text("#main") and "4 saved" in p2.inner_text("#main"))
+    ck("fix7: Group picks counts the likes-only user (cdm 4 of 4)", lambda: "4 of 4" in p2.inner_text("#main"))
+    c2.close()
     b.close()
 print("\n".join(res))
