@@ -13,7 +13,7 @@
 
   var LS = window.localStorage;
   var rawSet = LS.setItem.bind(LS);
-  var SYNC = { "nola-picks":1, "nola-votes":1, "nola-visited":1, "nola-plan":1, "nola-checks":1, "nola-my-ink":1, "nola-trip":1, "nola-searches":1, "nola-ext-places":1 };
+  var SYNC = {}; (window.nolaUserKeys || ["nola-picks","nola-votes","nola-visited","nola-plan","nola-checks","nola-my-ink","nola-trip","nola-searches","nola-ext-places"]).forEach(function(k){ SYNC[k] = 1; });
   var session = null, pulling = false, timers = {};
 
   function j(s, d){ try { var v = JSON.parse(s); return v == null ? d : v; } catch(e){ return d; } }
@@ -22,8 +22,12 @@
   /* ---------- push: mirror local writes to the account ---------- */
   LS.setItem = function(k, v){
     rawSet(k, v);
-    if (SYNC[k] && uid() && !pulling) { clearTimeout(timers[k]); timers[k] = setTimeout(function(){ push(k).catch(warn); }, 800); }
+    if (SYNC[k] && uid() && !pulling && LS.getItem("nola-owner") === uid()) { rawSet("nola-dirty-" + uid(), "1"); clearTimeout(timers[k]); timers[k] = setTimeout(function(){ push(k).then(clean, warn); }, 800); }
   };
+  function clean(){ if (!Object.keys(timers).some(function(k){ return timers[k]; })) LS.removeItem("nola-dirty-" + uid()); }
+  async function flush(){ var ks = Object.keys(timers); ks.forEach(function(k){ clearTimeout(timers[k]); timers[k] = null; });
+    for (var i = 0; i < ks.length; i++) await push(ks[i]).catch(warn); if (uid()) LS.removeItem("nola-dirty-" + uid()); }
+  window.NolaAccount.signOut = async function(){ try { await flush(); } catch(e){ warn(e); } await sb.auth.signOut(); };
   function warn(e){ console.warn("[nola sync]", e && e.message || e); }
 
   async function upsertSingleton(kind, title, data){
@@ -36,8 +40,9 @@
     await sb.from("likes").delete().eq("user_id", uid()).eq("kind", kind);
     if (rows.length) { var r = await sb.from("likes").insert(rows); if (r.error) throw r.error; }
   }
-  async function push(k){
-    var v = LS.getItem(k), me = uid(); if (!me) return;
+  async function push(k, val){
+    var v = val !== undefined ? val : LS.getItem(k), me = uid(); if (!me) return; timers[k] = null;
+    if (val === undefined && LS.getItem("nola-owner") !== me) return;   // never push another owner's data
     if (k === "nola-picks") return replaceLikes("like", j(v, []).map(function(id){ return { user_id: me, item_ref: String(id), kind: "like" }; }));
     if (k === "nola-votes") { var o = j(v, {}); return replaceLikes("vote", Object.keys(o).map(function(id){ return { user_id: me, item_ref: id, kind: "vote", value: o[id] }; })); }
     if (k === "nola-visited") { var w = j(v, {}); return replaceLikes("visited", Object.keys(w).map(function(id){ return { user_id: me, item_ref: id, kind: "visited", value: w[id] }; })); }
@@ -53,42 +58,48 @@
     }
   }
 
-  /* ---------- pull + first-sign-in migration ---------- */
-  async function pull(){
-    var me = uid(); if (!me) return;
+  /* ---------- pull: the account's data REPLACES the local cache (never merged with another owner) ---------- */
+  async function fetchCloud(me){
     var res = await Promise.all([
       sb.from("profiles").select("trip,name").eq("id", me).maybeSingle(),
       sb.from("lists").select("kind,title,data").eq("user_id", me),
       sb.from("likes").select("item_ref,kind,value").eq("user_id", me)
     ]);
-    var prof = res[0].data || {}, lists = res[1].data || [], likes = res[2].data || [];
-    var cloudEmpty = !lists.length && !likes.length && !(prof.trip && Object.keys(prof.trip).length);
-    var flag = "nola-migrated-" + me;
-    if (cloudEmpty) {
-      // first sign-in on an empty account: upload whatever this device already has
-      for (var k in SYNC) if (LS.getItem(k) != null) await push(k).catch(warn);
-      rawSet(flag, "1"); return false;
-    }
-    // merge: union likes/votes/visited; for plan/trip/checks/ink prefer the account, but keep local if the account lacks it
-    var next = {};
-    var picks = new Set(j(LS.getItem("nola-picks"), [])), votes = j(LS.getItem("nola-votes"), {}), vis = j(LS.getItem("nola-visited"), {});
-    likes.forEach(function(l){ if (l.kind === "like") picks.add(l.item_ref); if (l.kind === "vote") votes[l.item_ref] = l.value; if (l.kind === "visited") vis[l.item_ref] = l.value == null ? true : l.value; });
-    next["nola-picks"] = JSON.stringify(Array.from(picks)); next["nola-votes"] = JSON.stringify(votes); next["nola-visited"] = JSON.stringify(vis);
-    var by = {}; lists.forEach(function(l){ by[l.kind] = l; });
+    if (res[1].error || res[2].error) throw (res[1].error || res[2].error);
+    return { prof: res[0].data || {}, lists: res[1].data || [], likes: res[2].data || [] };
+  }
+  function cloudToLocal(c){
+    var next = {}, picks = [], votes = {}, vis = {}, by = {};
+    c.likes.forEach(function(l){ if (l.kind === "like") picks.push(l.item_ref); if (l.kind === "vote") votes[l.item_ref] = l.value; if (l.kind === "visited") vis[l.item_ref] = l.value == null ? true : l.value; });
+    if (picks.length) next["nola-picks"] = JSON.stringify(picks);
+    if (Object.keys(votes).length) next["nola-votes"] = JSON.stringify(votes);
+    if (Object.keys(vis).length) next["nola-visited"] = JSON.stringify(vis);
+    c.lists.forEach(function(l){ by[l.kind] = l; });
     if (by.itinerary && by.itinerary.data && by.itinerary.data.days) next["nola-plan"] = JSON.stringify(by.itinerary.data);
     if (by.checklist) next["nola-checks"] = JSON.stringify(by.checklist.data || {});
     if (by.ink) next["nola-my-ink"] = JSON.stringify((by.ink.data || {}).items || []);
-    var xp = j(LS.getItem("nola-ext-places"), {}), cx = by.custom && by.custom.title === "Places from the map" ? (by.custom.data || {}) : {};
-    Object.keys(cx).forEach(function(id){ if (!xp[id]) xp[id] = cx[id]; }); next["nola-ext-places"] = JSON.stringify(xp);
-    if (prof.trip && Object.keys(prof.trip).length) next["nola-trip"] = JSON.stringify(prof.trip);
-    var srch = lists.filter(function(l){ return l.kind === "search"; }).map(function(l){ return l.data; });
-    var localS = j(LS.getItem("nola-searches"), []); localS.forEach(function(s){ if (!srch.some(function(x){ return x.q === s.q; })) srch.push(s); });
-    next["nola-searches"] = JSON.stringify(srch);
+    if (by.custom && by.custom.title === "Places from the map") next["nola-ext-places"] = JSON.stringify(by.custom.data || {});
+    if (c.prof.trip && Object.keys(c.prof.trip).length) next["nola-trip"] = JSON.stringify(c.prof.trip);
+    var srch = c.lists.filter(function(l){ return l.kind === "search"; }).map(function(l){ return l.data; });
+    if (srch.length) next["nola-searches"] = JSON.stringify(srch);
+    return next;
+  }
+  // returns true when the visible cache changed (caller reloads so the app re-reads it)
+  async function pull(){
+    var me = uid(); if (!me) return false;
+    var switched = window.nolaSwapOwner ? window.nolaSwapOwner(me) : false;
+    if (LS.getItem("nola-dirty-" + me) && !switched) { await flush(); }   // unsynced offline edits by this same user go up first
+    var c = await fetchCloud(me), next = cloudToLocal(c);
+    var cloudEmpty = !Object.keys(next).length, guest = window.nolaGuestData ? window.nolaGuestData() : {};
+    if (cloudEmpty && Object.keys(guest).length) {
+      // one-time claim: data made while signed out goes to the FIRST account that signs in with an empty account, then the guest copy is deleted
+      for (var k in guest) await push(k, guest[k]);
+      next = guest; window.nolaClearGuest(); rawSet("nola-guest-claimed-by", me);
+    }
     var changed = false; pulling = true;
-    Object.keys(next).forEach(function(k){ if (LS.getItem(k) !== next[k]) { rawSet(k, next[k]); changed = true; } });
-    pulling = false;
-    if (!LS.getItem(flag)) { rawSet(flag, "1"); ["nola-picks","nola-votes","nola-visited","nola-searches","nola-ext-places"].forEach(function(k){ push(k).catch(warn); }); }
-    return changed;
+    Object.keys(SYNC).forEach(function(k){ var v = next[k]; if (v == null) { if (LS.getItem(k) != null) { LS.removeItem(k); changed = true; } } else if (LS.getItem(k) !== v) { rawSet(k, v); changed = true; } });
+    pulling = false; sessionStorage.removeItem("nola-needs-pull");
+    return changed || switched;
   }
 
   /* ---------- saved searches (Explore search box) ---------- */
@@ -221,7 +232,7 @@
     var old = main.querySelector(".nhelp"); if (!session) { if (old) old.remove(); return; } if (old) return;
     var u = session.user, b = el('<div class="nhelp"><div class="nw-kick">Your account</div><p>Signed in as <b>'+esc(nameOf(u))+'</b> ('+esc(u.email)+'). Your likes, plan, lists and saved searches sync to this account.</p><button type="button" class="nbar-cta" id="nhelp-out">Sign out</button>'+(u.email === CFG.admin ? ' <a href="admin.html">Admin</a>' : '')+'</div>');
     var sec = main.querySelector(".view") || main; sec.insertBefore(b, sec.firstChild);
-    b.querySelector("#nhelp-out").addEventListener("click", function(){ sb.auth.signOut(); });
+    b.querySelector("#nhelp-out").addEventListener("click", function(){ window.NolaAccount.signOut(); });
   }
   function footer(){
     var old = document.getElementById("nme"); if (old) old.remove();
@@ -229,7 +240,7 @@
     var u = session.user, nm = (u.user_metadata && u.user_metadata.name) || u.email;
     var f = el('<div class="nme" id="nme">Signed in as '+esc(nm)+' · <a href="#" id="nme-out">sign out</a>'+(u.email === CFG.admin ? ' · <a href="admin.html">admin</a>' : '')+'</div>');
     document.body.appendChild(f);
-    f.querySelector("#nme-out").addEventListener("click", function(e){ e.preventDefault(); sb.auth.signOut(); });
+    f.querySelector("#nme-out").addEventListener("click", function(e){ e.preventDefault(); window.NolaAccount.signOut(); });
   }
 
   async function onSession(s, evt){
@@ -239,10 +250,16 @@
     helpSignOut();
     footer();
     if (s && s.user.id !== had) {
-      try { var changed = await pull(); if (changed && !sessionStorage.getItem("nola-pulled")) { sessionStorage.setItem("nola-pulled", "1"); location.reload(); } }
+      var pk = "nola-pulled-" + s.user.id, owned = LS.getItem("nola-owner") === s.user.id;
+      try { if (!owned || !sessionStorage.getItem(pk)) { var changed = await pull(); sessionStorage.setItem(pk, "1");
+        if (changed && !sessionStorage.getItem("nola-reloaded-" + s.user.id)) { sessionStorage.setItem("nola-reloaded-" + s.user.id, "1"); sessionStorage.removeItem("nola-greeted"); location.reload(); return "reload"; } } }
       catch(e){ warn(e); }
     }
-    if (!s) { sessionStorage.removeItem("nola-pulled"); sessionStorage.removeItem("nola-greeted"); }
+    if (!s) {
+      sessionStorage.removeItem("nola-greeted"); if (had) { sessionStorage.removeItem("nola-pulled-" + had); sessionStorage.removeItem("nola-reloaded-" + had); }
+      // signed out: drop this account's data from the device and show the guest state
+      if (window.nolaSwapOwner && window.nolaSwapOwner("guest")) { location.reload(); return "reload"; }
+    }
   }
 
   /* handle the email link: implicit (#access_token), PKCE (?code) or token_hash, captured by the inline script in <head> */
@@ -288,10 +305,10 @@
     var t = document.createElement("div"); t.id = "nbar-toast"; t.hidden = true; t.setAttribute("role", "status"); document.body.appendChild(t);
     decorateSearch(); new MutationObserver(function(){ decorateSearch(); helpSignOut(); }).observe(document.getElementById("main") || document.body, { childList: true, subtree: true });
     consumeReturn().then(function(fresh){
-      return sb.auth.getSession().then(function(r){ var s = r.data.session || fresh; onSession(s, "INITIAL");
-        if (s && (fresh || !sessionStorage.getItem("nola-greeted"))) { sessionStorage.setItem("nola-greeted", "1"); greet(s).catch(warn); } });
+      return sb.auth.getSession().then(function(r){ var s = r.data.session || fresh; return onSession(s, "INITIAL").then(function(rv){ if (rv === "reload") return;
+        if (s && (fresh || !sessionStorage.getItem("nola-greeted"))) { sessionStorage.setItem("nola-greeted", "1"); greet(s).catch(warn); } }); });
     });
-    sb.auth.onAuthStateChange(function(evt, s){ if (evt === "INITIAL_SESSION") return; var was = uid(); setTimeout(function(){ onSession(s, evt); if (evt === "SIGNED_IN" && s && s.user.id !== was && !sessionStorage.getItem("nola-greeted")) { sessionStorage.setItem("nola-greeted", "1"); greet(s).catch(warn); } }, 0); });
+    sb.auth.onAuthStateChange(function(evt, s){ if (evt === "INITIAL_SESSION") return; var was = uid(); setTimeout(function(){ onSession(s, evt).then(function(rv){ if (rv === "reload") return; if (evt === "SIGNED_IN" && s && s.user.id !== was && !sessionStorage.getItem("nola-greeted")) { sessionStorage.setItem("nola-greeted", "1"); greet(s).catch(warn); } }); }, 0); });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })();

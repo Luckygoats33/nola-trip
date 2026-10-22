@@ -165,10 +165,79 @@
     return oldFind ? oldFind(term) : null;
   };
 
+
+  /* ---------- map: Save / Add to plan on every pin, and tap anywhere to save the nearest real place ---------- */
+  function pinHtml(p){
+    var mine = typeof myPicks === "function" && new Set(myPicks()).has(p.id), ro = typeof readOnly !== "undefined" && readOnly;
+    return '<div class="mpop"><div class="mpop-n">' + esc(p.n) + '</div>' + (p.ad ? '<div class="mpop-a">' + esc(p.ad) + '</div>' : '') +
+      '<div class="mpop-b"><button type="button" class="mbtn save" data-heart="' + esc(p.id) + '" aria-pressed="' + mine + '">' + (mine ? "♥ Saved" : "♡ Save") + '</button>' +
+      (ro ? '' : '<button type="button" class="mbtn" data-addto="' + esc(p.id) + '">+ Add to plan</button>') +
+      '<button type="button" class="mbtn ghost" data-open="' + esc(p.id) + '">Details</button></div></div>';
+  }
+  function hookMarkers(){
+    if (typeof LCL === "undefined" || !LCL || typeof updateMarkers !== "function" || updateMarkers._x) return;
+    var orig = updateMarkers;
+    updateMarkers = function(){
+      var r = orig.apply(this, arguments);
+      try {
+        var byName = {}; mapList().forEach(function(p){ byName[p.n] = p; });
+        LCL.eachLayer(function(mk){ var t = mk.getTooltip && mk.getTooltip(), p = t && byName[t.getContent()]; if (!p) return;
+          mk.off("click"); mk.options.bubblingMouseEvents = false;
+          mk.bindPopup(function(){ return pinHtml(p); }, { className: "mpopw", maxWidth: 300, autoPanPadding: [16, 60] }); });
+      } catch(e){ console.warn(e); }
+      return r;
+    };
+    updateMarkers._x = 1;
+  }
+  async function reverse(lat, lon){
+    var j = await getJSON("https://photon.komoot.io/reverse?lat=" + lat + "&lon=" + lon + "&limit=5&lang=en&radius=0.08");
+    var c = fromPhoton(j || {}).filter(function(r){ return r.name; }).map(function(r){ r.m = meters(NOLA, [r.lat, r.lon]); r.d0 = meters([lat, lon], [r.lat, r.lon]); return r; })
+      .sort(function(a, b){ return a.d0 - b.d0; });
+    return c[0] || null;
+  }
+  var tapRes = {};
+  function hookTap(){
+    if (typeof LMAP === "undefined" || !LMAP || LMAP._xtap) return; LMAP._xtap = 1;
+    LMAP.on("click", async function(e){
+      var t = e.originalEvent && e.originalEvent.target; if (t && t.classList && t.classList.contains("leaflet-interactive")) return;
+      var lat = +e.latlng.lat.toFixed(6), lon = +e.latlng.lng.toFixed(6), key = lat + "," + lon;
+      var pop = L.popup({ className: "mpopw", maxWidth: 300 }).setLatLng(e.latlng).setContent('<div class="mpop"><div class="mpop-a">Looking up what\'s here…</div></div>').openOn(LMAP);
+      var r = await reverse(lat, lon);
+      var spot = { name: "Saved spot", v: "spot", key: "spot", lat: lat, lon: lon, addr: r && r.addr || "", osm: "S" + key.replace(/[^0-9]/g, "") };
+      spot.m = meters(NOLA, [lat, lon]);
+      tapRes[key] = { r: r, spot: spot };
+      var ro = typeof readOnly !== "undefined" && readOnly, h = '<div class="mpop">';
+      if (r) h += '<div class="mpop-k">Nearest place</div><div class="mpop-n">' + esc(r.name) + '</div><div class="mpop-a">' + esc(kindOf(r)) + (r.addr ? " · " + esc(r.addr) : "") + '</div>' +
+        '<div class="mpop-b"><button type="button" class="mbtn save" data-xtap="' + key + '" data-which="r" data-act="heart">♡ Save</button>' + (ro ? "" : '<button type="button" class="mbtn" data-xtap="' + key + '" data-which="r" data-act="addto">+ Add to plan</button>') + '</div>';
+      else h += '<div class="mpop-a">No named place right here.</div>';
+      h += '<div class="mpop-b"><button type="button" class="mbtn ghost" data-xtap="' + key + '" data-which="s" data-act="heart">📍 Save this spot</button></div></div>';
+      if (LMAP.hasLayer && pop.isOpen()) pop.setContent(h);
+    });
+  }
+  document.addEventListener("click", function(e){
+    var b = e.target.closest && e.target.closest("[data-xtap]"); if (!b) return;
+    e.preventDefault(); e.stopPropagation();
+    var t = tapRes[b.dataset.xtap]; if (!t) return; var r = b.dataset.which === "r" ? t.r : t.spot; if (!r) return;
+    var id = register(r);
+    if (b.dataset.act === "heart") { if (!new Set(myPicks()).has(id)) togglePick(id); b.textContent = "♥ Saved"; b.setAttribute("aria-pressed", "true"); try { LMAP.closePopup(); } catch(_){} return; }
+    var fake = document.createElement("button"); fake.dataset.addto = id; try { LMAP.closePopup(); } catch(_){} planClick(fake);
+  }, true);
+  // keep popup heart labels fresh after a save
+  // Leaflet stops clicks inside popups from bubbling, so pin buttons are handled here (capture phase)
+  document.addEventListener("click", function(e){
+    var b = e.target.closest && e.target.closest(".mpop [data-heart], .mpop [data-addto], .mpop [data-open]"); if (!b) return;
+    e.preventDefault(); e.stopPropagation(); try { LMAP.closePopup(); } catch(_){}
+    if (b.dataset.heart) { togglePick(b.dataset.heart); return; }
+    if (b.dataset.addto) { var f = document.createElement("button"); f.dataset.addto = b.dataset.addto; planClick(f); return; }
+    S.sheet = b.dataset.open; render();
+  }, true);
+  if (typeof ensureMap === "function") { var _em = ensureMap; ensureMap = function(){ var r = _em.apply(this, arguments); hookMarkers(); hookTap(); try { updateMarkers(); } catch(_){} return r; }; }
   var st = document.createElement("style");
   st.textContent = ".xbox{margin:10px 0 14px;padding:10px 12px;border:1px dashed var(--line,#c9b8bf);border-radius:14px}" +
     ".xh{font-family:var(--mono,monospace);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--coral,#FF6B5B);margin-bottom:6px}" +
     ".xres{padding:8px 0;border-top:1px solid var(--line,#e5d8dc)}.xres:first-of-type{border-top:0}.xn{font-weight:700}.xm{font-size:.85rem;color:var(--muted,#7a6670)}" +
+    ".mpopw .leaflet-popup-content{margin:12px 14px;min-width:220px}.mpop-k{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c2412f}.mpop-n{font-weight:700;font-size:1rem}.mpop-a{font-size:.85rem;color:#6b5a63;margin-top:2px}" +
+    ".mpop-b{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.mbtn{min-height:44px;min-width:44px;padding:0 14px;border-radius:999px;border:1px solid #23172C;background:#fff;color:#23172C;font:600 14px system-ui,sans-serif;cursor:pointer}.mbtn.save{background:#FF6B5B;border-color:#FF6B5B;color:#fff}.mbtn.ghost{border-style:dashed}" +
     ".xb{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.xsrc{font-size:.72rem;color:var(--muted,#7a6670);margin-top:6px}";
   document.head.appendChild(st);
   if (n) try { render(); } catch(e){}

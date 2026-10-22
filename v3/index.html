@@ -8,6 +8,27 @@
   if(o.access_token||o.code||o.token_hash||o.error){ sessionStorage.setItem("nola-auth-return", JSON.stringify(o));
     ["code","token_hash","type","error","error_code","error_description"].forEach(function(k){ qp.delete(k); });
     var qs=qp.toString(); history.replaceState(null,"",location.pathname+(qs?"?"+qs:"")); } }catch(e){} })();</script>
+<script>/* per-account local cache: the app's save keys always hold ONLY the current owner's data
+   (a signed-in user id, or "guest"). Runs before the app reads localStorage. */
+(function(){ try{
+  var KEYS=["nola-picks","nola-votes","nola-visited","nola-plan","nola-checks","nola-my-ink","nola-trip","nola-searches","nola-ext-places"];
+  var LS=localStorage, GP="nola-guest-";
+  function hasAny(){ return KEYS.some(function(k){ return LS.getItem(k)!=null; }); }
+  window.nolaUserKeys=KEYS;
+  window.nolaSessionUid=function(){ try{ var t=JSON.parse(LS.getItem("sb-vfawvxxlnnmztkwrgvrr-auth-token")||"null"); return t&&t.user&&t.user.id||null; }catch(e){ return null; } };
+  /* switch the visible keys to a new owner. Guest data is parked (for a one-time claim); account data is never kept for another owner. */
+  window.nolaSwapOwner=function(next){
+    var cur=LS.getItem("nola-owner"); if(cur==null){ cur=next; LS.setItem("nola-owner",cur); }
+    if(cur===next) return false;
+    if(cur==="guest" && hasAny()){ KEYS.forEach(function(k){ var v=LS.getItem(k); if(v!=null) LS.setItem(GP+k,v); else LS.removeItem(GP+k); }); }
+    KEYS.forEach(function(k){ LS.removeItem(k); });
+    if(next==="guest"){ KEYS.forEach(function(k){ var v=LS.getItem(GP+k); if(v!=null){ LS.setItem(k,v); LS.removeItem(GP+k); } }); }
+    LS.setItem("nola-owner",next); sessionStorage.setItem("nola-needs-pull","1"); return true;
+  };
+  window.nolaGuestData=function(){ var o={}; KEYS.forEach(function(k){ var v=LS.getItem(GP+k); if(v!=null) o[k]=v; }); return o; };
+  window.nolaClearGuest=function(){ KEYS.forEach(function(k){ LS.removeItem(GP+k); }); };
+  window.nolaSwapOwner(window.nolaSessionUid()||"guest");
+}catch(e){} })();</script>
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -4486,7 +4507,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
   const enc = encodeURIComponent;
   const destOf = p => { if(!p) return null; if(p === HOTEL) return HOTEL; const c = coordOf(p); return {n:p.n, ad:p.ad||"", lat:c ? c[0] : null, lon:c ? c[1] : null}; };
   window.uberLink = d => "https://m.uber.com/ul/?action=setPickup&pickup=my_location" + (d && d.lat ? "&dropoff[latitude]="+d.lat+"&dropoff[longitude]="+d.lon+"&dropoff[nickname]="+enc(d.n)+"&dropoff[formatted_address]="+enc(d.ad||d.n) : "");
-  window.lyftLink = d => "https://lyft.com/ride?id=lyft" + (d && d.lat ? "&destination[latitude]="+d.lat+"&destination[longitude]="+d.lon : "");
+  window.lyftLink = d => "https://ride.lyft.com/ridetype?id=lyft" + (d && d.lat ? "&destination[latitude]="+d.lat+"&destination[longitude]="+d.lon : "");
   const eatsLink = q => "https://www.ubereats.com/search?q=" + enc(q);
   const dashLink = q => "https://www.doordash.com/search/store/" + enc(q) + "/";
   const tel = ph => "tel:" + String(ph).replace(/[^0-9+]/g, "");
@@ -4984,7 +5005,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     const dest = encodeURIComponent(r.addr ? r.name + ", " + r.addr : r.lat + "," + r.lon);
     const ll = r.lat.toFixed(6) + "," + r.lon.toFixed(6);
     const uber = "https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=" + r.lat + "&dropoff[longitude]=" + r.lon + "&dropoff[nickname]=" + encodeURIComponent(r.name) + (r.addr ? "&dropoff[formatted_address]=" + encodeURIComponent(r.addr) : "");
-    const lyft = "https://lyft.com/ride?id=lyft&destination[latitude]=" + r.lat + "&destination[longitude]=" + r.lon;
+    const lyft = "https://ride.lyft.com/ridetype?id=lyft&destination[latitude]=" + r.lat + "&destination[longitude]=" + r.lon;
     const c = document.createElement("div"); c.className = "nr-card"; c.setAttribute("role", "dialog"); c.setAttribute("aria-label", r.name);
     c.innerHTML = '<button class="nr-back" type="button">‹ Back to results</button>'
       + '<div class="nr-k">' + escH(r.kind) + '</div><h3 class="nr-t">' + escH(r.name) + '</h3>'
@@ -5048,7 +5069,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
   const escH = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const status = code => "https://www.flightaware.com/live/flight/" + code;
   const uberFromAirport = "https://m.uber.com/ul/?action=setPickup&pickup[latitude]=" + MSY[0] + "&pickup[longitude]=" + MSY[1] + "&pickup[nickname]=" + encodeURIComponent("MSY Airport") + "&dropoff[latitude]=29.95796&dropoff[longitude]=-90.06731&dropoff[nickname]=" + encodeURIComponent("Olivier House Hotel") + "&dropoff[formatted_address]=" + encodeURIComponent(HOTEL);
-  const lyftFromAirport = "https://lyft.com/ride?id=lyft&pickup[latitude]=" + MSY[0] + "&pickup[longitude]=" + MSY[1] + "&destination[latitude]=29.95796&destination[longitude]=-90.06731";
+  const lyftFromAirport = "https://ride.lyft.com/ridetype?id=lyft&pickup[latitude]=" + MSY[0] + "&pickup[longitude]=" + MSY[1] + "&destination[latitude]=29.95796&destination[longitude]=-90.06731";
 
   function card(f){
     return '<div class="fl-card"><div class="fl-top"><span class="fl-k">Flight · ' + escH(f.date) + '</span><b class="fl-who">' + escH(f.who) + ' lands at MSY ' + escH(f.lands) + '</b><span class="fl-sub">Southwest · Portland → Denver → New Orleans · layover ' + escH(f.layover) + '</span></div>'
@@ -5312,6 +5333,7 @@ html body nav.vswitch.vswitch{display:none!important}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="places.js"></script>
+<script src="rides.js"></script>
 <script src="config.js"></script>
 <script src="auth.js"></script>
 </body>
