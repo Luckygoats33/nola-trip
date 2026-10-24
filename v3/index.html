@@ -707,7 +707,8 @@ button,a,.chip,.tab,.plink,.btn,.mood,.tile,.colcard,summary{touch-action:manipu
 .cal-ev.flight{background:var(--accent-soft)}
 .cal-more{font-size:.68rem;color:var(--muted)}
 .cal-editrow{align-items:center}
-.cal-help{margin:0;flex:1 1 200px;font-size:.82rem;line-height:1.35;color:var(--muted)}
+.cal-editpair{display:flex;align-items:center;gap:10px;flex:1 1 100%;min-width:0}
+.cal-help{margin:0;flex:1;min-width:0;font-size:.78rem;line-height:1.3;color:var(--muted)}
 .pcard-acts{display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-end}
 .card-top .pcard-acts{margin-left:auto}
 .pcard-trip{white-space:nowrap}
@@ -1750,8 +1751,9 @@ function vPlan(cal){
     h += '<div class="row" role="group" aria-label="Day">'+plan.days.map(x=>'<button class="chip" data-day="'+x.n+'" aria-pressed="'+(x.n===S.day)+'">Day '+x.n+(ti?' · '+esc(fmtD(ti.dateOf(x.n),{weekday:"short"})):'')+'</button>').join("")
        + (ed?'<button class="chip" data-addday="1">+ Add a day</button>':'')+'</div>';
   }
-  h += '<div class="row cal-editrow"><button class="btn'+(ed?' primary':'')+'" data-editplan="1"'+(readOnly?' disabled':'')+'>'+(ed?'Done editing':'Edit this day')+'</button>'
+  h += '<div class="row cal-editrow"><div class="cal-editpair"><button class="btn'+(ed?' primary':'')+'" data-editplan="1"'+(readOnly?' disabled':'')+'>'+(ed?'Done editing':'Edit this day')+'</button>'
      + (cal?'<p class="cal-help">Edit this day with the controls below, or tap a day above to add something to your calendar.</p>':'')
+     + '</div>'
      + (ed?'<button class="btn" data-reset="1">'+(S.confirmReset?'Tap again to reset':'Reset to flights only')+'</button>':'')
      + (cal&&ed?'<button class="chip" data-addday="1">+ Add a day</button>':'')+'</div>';
   h += '<article class="day"><div class="day-head"><div>'
