@@ -686,15 +686,19 @@ button,a,.chip,.tab,.plink,.btn,.mood,.tile,.colcard,summary{touch-action:manipu
 .tour.tour-up{bottom:auto;top:calc(64px + env(safe-area-inset-top,0px))}
 .tour-acts{flex-wrap:wrap}
 
-/* ---- header search (catalog + map) ---- */
+/* ---- header account (top right) ---- */
 @keyframes askPulse{0%{box-shadow:0 0 0 0 rgba(168,50,45,.55)}70%{box-shadow:0 0 0 8px rgba(168,50,45,0)}100%{box-shadow:0 0 0 0 rgba(168,50,45,0)}}
-.gsearch-row{flex:1 1 240px;min-width:0;position:relative;z-index:20}
-.gsearch{position:relative;flex:1 1 180px;min-width:0;display:flex}
-.gsearch .field{width:100%;min-height:44px;background:var(--surface);border-radius:999px;padding-left:16px}
-.gs-panel{position:absolute;z-index:40;top:calc(100% + 6px);left:0;width:min(440px,92vw);max-height:min(68vh,540px);overflow:auto;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(20,12,28,.28);padding:8px 10px 12px}
-.gs-panel .res{margin:6px 0}
-.gs-panel .xh{margin:8px 0 4px}
-.gs-panel .xm{font-size:.85rem;color:var(--muted);margin:0 0 6px}
+.who-row{flex:1 1 auto;margin-left:auto;justify-content:flex-end;align-items:center;min-width:0;position:relative;z-index:20}
+.nwho{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0;max-width:100%}
+.nwho:not(.nwho-guest){background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 14px;min-height:44px}
+.nwho-id{display:grid;justify-items:end;min-width:0;line-height:1.15;text-align:right}
+.nwho-name{font-weight:800;font-size:.9rem;color:var(--ink);max-width:min(280px,46vw);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nwho-mail{font-size:.72rem;color:var(--muted);max-width:min(280px,46vw);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nwho-out,.nwho-in{box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font:700 .78rem/1 system-ui,sans-serif;white-space:nowrap}
+.nwho-out{background:transparent;color:var(--coral);border:0;min-height:44px;padding:8px 12px}
+:root[data-mode="night"] .nwho-out{color:var(--brass)}
+.nwho-in{background:#FF6B5B;color:#fff;border:0;min-height:44px;padding:8px 14px}
+.nwho-in:focus-visible,.nwho-out:focus-visible{outline:3px solid #E0B65A;outline-offset:2px}
 .open-head{background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--leaf);border-radius:18px;padding:16px 18px;margin:4px 0 12px}
 .open-head h2{margin:4px 0}
 .cal-week{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
@@ -737,8 +741,7 @@ button,a,.chip,.tab,.plink,.btn,.mood,.tile,.colcard,summary{touch-action:manipu
 .open-head p{margin:0}
 @media (max-width:899px){
   .top-row{flex-wrap:wrap}
-  .gsearch-row{flex:1 1 100%;order:3}
-  .gs-panel{width:min(100%,92vw)}
+  .who-row{flex:1 1 100%;order:3}
 }
 /* safety zones sit on the map, above the scroll shield, without covering zoom */
 .mapwrap{position:relative}
@@ -924,7 +927,7 @@ button.nola-install::after,.nm::after,.plink::after,.rt-g::after,.rt a::after,.s
   <header class="top">
     <nav class="vswitch" aria-label="App version"><span>Version</span><a id="vlink1">V1 · Classic</a><a id="vlink2">V2</a><a id="vlink3" aria-current="page">V3 · New</a></nav>
     <div class="top-row"><div class="v2brand"><span class="kick">New Orleans · Our adventure</span><h1 class="logo2">The <b>NOLA</b> Girls</h1></div>
-      <div class="row gsearch-row"><form class="gsearch" id="gsearch" role="search" action="#" onsubmit="return false"><label class="sr" for="gs">Search places</label><input class="field search" id="gs" type="search" placeholder="Search places…" autocomplete="off" enterkeyhint="search" aria-label="Search places in the guide and on the map" aria-controls="gs-panel" aria-expanded="false"><div id="gs-panel" class="gs-panel" hidden></div></form><span class="sync" id="sync">Saved on this device</span></div></div>
+      <div class="row who-row"><div class="nwho" id="nwho" hidden></div><span class="sync" id="sync">Saved on this device</span></div></div>
     <div class="iron" aria-hidden="true"></div>
     <div class="tabs" role="tablist" id="tabs"></div>
   </header>
@@ -3212,7 +3215,7 @@ const HELP = [
   ["The 3-second version","Use the bar at the bottom to move around. Tap any place to see why it's worth it, when it's open, and how to get there. Tap the cheesecake to save it to the kitchen table."],
   ["Take the tour","Tap <b>Take the full tour</b> at the top of this page for a step-by-step walk through every screen. It moves around the app for you; tap <b>Next</b> to go on or <b>×</b> to stop."]]],
  ["top","The top of the screen",[
-  ["Search","The search bar at the top looks through the guide and live places on the map. Tap a result for details, or <b>Save</b> to keep it. It stays on every screen."],
+  ["Who's signed in","The top right shows who is logged in: your name, and your email under it when that isn't the same as the name. <b>Sign out</b> sits beside it. Signed out, that spot is <b>Sign in</b>, which opens the same form as the bar at the top of the page."],
   ["Open now","The <b>Open now</b> chip on Home and Explore lists only what you can walk into this minute, with a time picker if you want to look ahead. The Map tab has the same filter."],
   ["The logo","Tap <b>The NOLA Girls</b> any time to jump back to Home."],
   ["Add to home screen","The <b>Add to home screen</b> button at the top of every screen puts the app on your home screen. It opens full screen and keeps working with weak signal. On iPhone: Safari → Share → Add to Home Screen."],
@@ -3284,12 +3287,12 @@ function vHelp(){
 const TOURS = {
  quick: [
   {go:"home", sel:"#tabs", g:"Rose", t:"Get around with the bottom bar", b:"<b>Home</b> is your start, <b>Map</b> shows everything nearby, <b>Explore</b> has collections and search, <b>Calendar</b> is the day-by-day trip, and <b>Saved</b> is the kitchen table."},
-  {go:"home", sel:"#gs", g:"Blanche", t:"Search up top", b:"The search bar looks through the guide and the live map. Tap a result for hours and address, or <b>Save</b> to keep it. The <b>Open now</b> chip on Home lists only what's open this minute."},
+  {go:"home", sel:"#nwho", g:"Blanche", t:"Who's signed in", b:"The top right shows your name and email when you're signed in, with <b>Sign out</b> beside them. Signed out, <b>Sign in</b> there opens the same form as the bar above. Search lives on <b>Explore</b> and <b>Open now</b>."},
   {go:"home", sel:'#tabs [data-tab="help"]', g:"Dorothy", t:"Stuck? Tap Help", b:"<b>Help</b> on the bottom bar has the full guide and a longer tour of everything. Tap the logo any time to come back Home.", last:'<button class="btn" type="button" data-tourfull="1">Take the full tour</button>'}
  ],
  full: [
   {go:"home", sel:"#main .hero", g:"Sophia", t:"Welcome to The NOLA Girls", b:"Picture it: Wed Nov 4 to Sun Nov 8, home base at the Olivier House on Toulouse St. This card shows the New Orleans time, the countdown and the weather. The app knows what's open at any hour, so you never walk up to a locked door."},
-  {go:"home", sel:"#gs", g:"Blanche", t:"Search", b:"Type a place, a food, or a neighborhood. Matches from the guide come first, then real places from the map, each with <b>Save</b> and <b>Add to trip</b>. For only what's open this minute, tap <b>Open now</b> on Home or Explore."},
+  {go:"home", sel:"#nwho", g:"Blanche", t:"Who's signed in", b:"The top right is your account: the name you joined with, and your email when it isn't the same. <b>Sign out</b> is right there. To look up a place, open <b>Explore</b> and use the search box."},
   {go:"home", sel:"#tabs", g:"Rose", t:"The bottom bar", b:"Six buttons get you everywhere: <b>Home</b>, <b>Map</b>, <b>Explore</b>, <b>Calendar</b>, <b>Saved</b>, and <b>Help</b>. The gold one is where you are. The logo at the top always brings you back Home."},
   {go:"home", sel:"#main .talk", g:"Blanche", t:"The girls have opinions", b:"Dorothy, Blanche, Rose and Sophia chime in on every screen. Tap <b>Another one</b> for a new line. They're also a shortcut to good picks, as you'll see."},
   {go:"home", sel:"#main .tile", g:"Rose", t:"Quick tiles", b:"<b>Calendar</b> (it turns into <b>Today</b> once you're there), <b>Near me</b> (about a 15-minute walk), <b>Hidden gems</b>, and <b>Tonight</b>. One tap each."},
@@ -4045,7 +4048,7 @@ document.addEventListener("change", e=>{
         b.remove(); addMsg("bot", t); say(t); HIST.push(["user", q], ["assistant", t]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12); return; }
       catch(e){ b.remove(); if(e && e.code==="not_granted"){ SAMPLE = null; } }
     }
-    const fall = pending || a || {text:"I'm not sure about that one, honey. Try a place name, \"coffee open now\", or the search bar at the top.", ids:[]};
+    const fall = pending || a || {text:"I'm not sure about that one, honey. Try a place name, \"coffee open now\", or search on Explore.", ids:[]};
     addMsg("bot", fall.text, fall.ids, fall.actions); say(fall.text); HIST.push(["user", q], ["assistant", fall.text]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12);
   }
   function fitPanel(){
@@ -4817,7 +4820,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     const days = (plan.days||[]).map(d => ({day:d.n, date:ti ? dayLabel(ti.dateOf(d.n)) : "", title:d.t||"", stops:(d.items||[]).map(i => (i.t||"")+" "+(i.h||"")+(i.p&&i.p[0]?" ["+i.p[0]+"]":"")).slice(0,10)}));
     const sys = "You are 'Ask the Girls', the warm, witty helper in The NOLA Girls trip app (Golden Girls flavor, light touch). App users: Tara and Emily. Travelers: Tara, Emily, and their niece Lauren (21). Trip: Wed Nov 4 – Sun Nov 8, 2026, staying at the Olivier House Hotel, 828 Toulouse St in the French Quarter (504-525-8456).\n"
       + "Answer ANY question about New Orleans (history, food, music, neighborhoods, customs, getting around, safety, weather, what to do) using your own knowledge, and ANY question about this app or the places in it using the APP DATA below.\n"
-      + "Rules: Use APP DATA first for places, hours, open/closed, addresses and phone numbers. When the guide has nothing, you may use web-sourced facts and say they are worth confirming. Never invent a venue, and never invent that a place is open or closed. Never invent exact hours, prices or phone numbers. Never invent schedule items. When you mention a place from APP DATA, put its id in double brackets right after the name, e.g. Café du Monde [[cdm]]. Prefer places that are OPEN when the question is about now. Mention the safety color for anything yellow or red at night. Keep answers under 140 words unless asked for detail; use short bullets for lists. If the question is about how to use the app, explain the relevant feature (the search bar at the top searches the guide and the map; Open now lists what's open this minute; the Map has green, yellow and red walking zones; Explore collections; Save keeps a place, Add to trip drops it into a free time; tapping a Calendar day adds a custom event with a title, time, and optional place; Saved is the kitchen table; Ink is tattoo ideas; Help has emergency numbers). For \"what's my schedule today\", use only PLAN items for the trip day that matches today. If today is not a trip day or that day has no items, say so.\n"
+      + "Rules: Use APP DATA first for places, hours, open/closed, addresses and phone numbers. When the guide has nothing, you may use web-sourced facts and say they are worth confirming. Never invent a venue, and never invent that a place is open or closed. Never invent exact hours, prices or phone numbers. Never invent schedule items. When you mention a place from APP DATA, put its id in double brackets right after the name, e.g. Café du Monde [[cdm]]. Prefer places that are OPEN when the question is about now. Mention the safety color for anything yellow or red at night. Keep answers under 140 words unless asked for detail; use short bullets for lists. If the question is about how to use the app, explain the relevant feature (Explore search looks through the guide and the map, and the top right shows who is signed in; Open now lists what's open this minute; the Map has green, yellow and red walking zones; Explore collections; Save keeps a place, Add to trip drops it into a free time; tapping a Calendar day adds a custom event with a title, time, and optional place; Saved is the kitchen table; Ink is tattoo ideas; Help has emergency numbers). For \"what's my schedule today\", use only PLAN items for the trip day that matches today. If today is not a trip day or that day has no items, say so.\n"
       + "NOW: New Orleans local time "+DOWL[N.dow]+" "+fmtM(N.mins)+(N.date?" ("+N.date+")":"")+(typeof WX!=="undefined" && WX ? "; weather "+WX.temp+"°F "+WXL(WX.code) : "")+".\n"
       + "APP DATA — places as [id, name, type, area, status now, hours, google rating, distance, night safety, address, phone, why]:\n"+JSON.stringify(places)+"\nPLAN:\n"+JSON.stringify(days);
     const msgs = [{role:"user", content:sys + "\n\nReply 'Ready.' and wait for questions."}, {role:"assistant", content:"Ready."}];
@@ -5492,7 +5495,7 @@ html body nav.vswitch.vswitch{display:none!important}
     ".nola-pop .nola-later{all:unset;cursor:pointer;box-sizing:border-box;min-height:44px;padding:10px 16px;border-radius:999px;border:1px solid #23172C;color:#23172C;font-weight:700}" +
     ".nola-pop .nola-go:focus-visible,.nola-pop .nola-later:focus-visible{outline:3px solid #E0B65A;outline-offset:2px}" +
     ".nola-pop .nola-x{all:unset;cursor:pointer;position:absolute;top:8px;right:10px;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;color:#23172C;font-size:1.3rem}" +
-    "@media (max-width:899px){header .top-row>.row{flex-wrap:wrap}button.nola-install{padding:4px 10px;font-size:.78rem}.gsearch,.gsearch .field{min-width:0}}" +
+    "@media (max-width:899px){header .top-row>.row{flex-wrap:wrap;justify-content:flex-end}button.nola-install{padding:4px 10px;font-size:.78rem}.nwho{min-width:0}}" +
     "button.nola-install.nola-compact{padding:4px 10px;width:auto;min-height:28px;font-size:.78rem;gap:6px}";
   document.head.appendChild(css);
 
@@ -5687,39 +5690,6 @@ html body nav.vswitch.vswitch{display:none!important}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="places.js"></script>
-<script>
-(function(){
-  var input = document.getElementById("gs"), panel = document.getElementById("gs-panel");
-  if(!input || !panel) return;
-  function paint(){
-    var q = input.value.trim();
-    input.setAttribute("aria-expanded", q.length >= 2 ? "true" : "false");
-    if(q.length < 2){ panel.hidden = true; panel.innerHTML = ""; return; }
-    var ql = q.toLowerCase(), N = nolaNow();
-    var places = P.filter(function(p){ return hay(p).includes(ql) || (p.story||"").toLowerCase().includes(ql); }).slice(0, 8);
-    var html = '<div class="gs-sec"><div class="xh">In the guide</div>';
-    if(!places.length) html += '<p class="xm">Nothing in the guide for “'+esc(q)+'”.</p>';
-    else html += places.map(function(p){
-      var mine = new Set(myPicks()).has(p.id);
-      return '<div class="res gs-hit"><button class="nm" type="button" data-open="'+esc(p.id)+'">'+esc(p.n)+'</button><div class="right">'+pill(statusAt(p,N))+'</div><div class="sub2"><span>'+esc(p.a||"")+'</span><button class="btn" type="button" data-heart="'+esc(p.id)+'" aria-pressed="'+mine+'">'+(mine?"✓ Saved · Remove":"Save")+'</button>'+(typeof readOnly!=="undefined" && readOnly ? "" : '<button class="btn" type="button" data-addto="'+esc(p.id)+'">Add to trip</button>')+'<a class="btn" href="'+mapsPlaceUrl(p)+'" target="_blank" rel="noopener">Maps</a></div></div>';
-    }).join("");
-    html += '</div><div id="gs-osm"></div>';
-    panel.innerHTML = html; panel.hidden = false;
-    if(window.nolaPaintOsm) window.nolaPaintOsm(document.getElementById("gs-osm"), q);
-  }
-  var t = null;
-  input.addEventListener("input", function(){ clearTimeout(t); t = setTimeout(paint, 180); });
-  document.addEventListener("click", function(e){
-    if(!e.target.closest) return;
-    var inSearch = e.target.closest("#gsearch");
-    if(inSearch && e.target.closest("[data-open],[data-addto]")){ panel.hidden = true; input.setAttribute("aria-expanded","false"); return; }
-    if(!inSearch){ panel.hidden = true; input.setAttribute("aria-expanded","false"); }
-  }, true);
-  document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ panel.hidden = true; input.setAttribute("aria-expanded","false"); } });
-  var r0 = render;
-  render = function(){ var o = r0.apply(this, arguments); if(input.value.trim().length>=2 && !panel.hidden) paint(); return o; };
-})();
-</script>
 <script src="rides.js"></script>
 <script src="config.js"></script>
 <script src="auth.js"></script>
