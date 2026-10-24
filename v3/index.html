@@ -7,7 +7,12 @@
   ["code","token_hash","type","error","error_code","error_description"].forEach(function(k){ if(qp.get(k) && !o[k]) o[k]=qp.get(k); });
   if(o.access_token||o.code||o.token_hash||o.error){ sessionStorage.setItem("nola-auth-return", JSON.stringify(o));
     ["code","token_hash","type","error","error_code","error_description"].forEach(function(k){ qp.delete(k); });
-    var qs=qp.toString(); history.replaceState(null,"",location.pathname+(qs?"?"+qs:"")); } }catch(e){} })();</script>
+    var qs=qp.toString(); history.replaceState(null,"",location.pathname+(qs?"?"+qs:"")); }
+  /* Invite links: #signup, #join, or ?signup=1 open the join form. Capture this before the router rewrites the hash. */
+  var route = (h.split("~")[0].split(".")[0] || "").toLowerCase();
+  var qSignup = (qp.get("signup") || "").toLowerCase(), qJoin = (qp.get("join") || "").toLowerCase();
+  if(route==="signup" || route==="join" || qSignup==="1" || qSignup==="true" || qJoin==="1" || qJoin==="true") sessionStorage.setItem("nola-open-signup","1");
+  }catch(e){} })();</script>
 <script>/* per-account local cache: the app's save keys always hold ONLY the current owner's data
    (a signed-in user id, or "guest"). Runs before the app reads localStorage. */
 (function(){ try{
@@ -3422,7 +3427,7 @@ document.addEventListener("click", e=>{
 document.addEventListener("keydown", e=>{ if(e.key==="Escape" && tourStep>=0) tourEnd(); });
 /* the walkthrough is for first-time visitors only: anyone who has used the app before never sees it again */
 let tourSeen = false; try{ tourSeen = !!(localStorage.getItem("nola3-tour-done") || localStorage.getItem("nola-visited") || localStorage.getItem("nola2-tab") || localStorage.getItem("nola-tab")); localStorage.setItem("nola-visited", "1"); if(!tourSeen) localStorage.setItem("nola3-tour-done", "1"); }catch(e){ tourSeen = true; }
-if(!tourSeen) setTimeout(()=>{ if(!S.sheet && tourStep<0 && S.tab==="home" && location.hash!=="#tour") tourShow(0, "quick"); }, 900);
+if(!tourSeen && sessionStorage.getItem("nola-open-signup")!=="1") setTimeout(()=>{ if(!S.sheet && tourStep<0 && S.tab==="home" && location.hash!=="#tour" && sessionStorage.getItem("nola-open-signup")!=="1") tourShow(0, "quick"); }, 900);
 if(location.hash==="#tour") setTimeout(()=>tourShow(0, "full"), 700);
 else if(!tourSeen && location.hash==="") {}
 
@@ -3837,6 +3842,13 @@ function pageTitle(){
 let lastRoute = null, routing = false;
 function syncURL(){
   const r = routeFromState(); document.title = "NOLA Girls · "+pageTitle();
+  /* #signup is the shareable join page. Keep it in the address bar while that flow is open. */
+  if(sessionStorage.getItem("nola-open-signup")==="1"){
+    document.title = "NOLA Girls · Join the trip";
+    if((location.hash||"").toLowerCase()!=="#signup"){ try{ history.replaceState(null, "", "#signup"); }catch(e){} }
+    lastRoute = "signup";
+    return;
+  }
   const cur = (location.hash||"").replace(/^#/,"");
   if(r===lastRoute && cur===r) return;
   const base = lastRoute ? lastRoute.split("~")[0] : null;

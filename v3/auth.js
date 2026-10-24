@@ -188,7 +188,7 @@
     mode = mode === "signin" ? "signin" : "join";
     modal = el('<div class="nmodal" id="nmodal" role="dialog" aria-modal="true" aria-labelledby="nform-h"><form class="nform" id="nform" novalidate>'+
       '<div class="nf-tabs" role="tablist" aria-label="Sign in or join"><button type="button" role="tab" id="nf-tab-signin" data-m="signin">Sign in</button><button type="button" role="tab" id="nf-tab-join" data-m="join">Join the trip</button></div>'+
-      '<h2 id="nform-h" class="nf-vh"></h2><div class="small">We\'ll email you a sign-in link. No password.</div>'+
+      '<h2 id="nform-h"></h2><div class="small" id="nf-blurb"></div>'+
       '<div id="nf-namewrap"><label for="nf-name">Name</label><input id="nf-name" name="name" autocomplete="name"></div>'+
       '<label for="nf-email">Email</label><input id="nf-email" name="email" type="email" autocomplete="email" inputmode="email" required>'+
       '<div id="nf-codewrap" hidden><label for="nf-code">Type the code from your email</label><input id="nf-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" pattern="[0-9]{6,10}"></div>'+
@@ -200,6 +200,7 @@
       mode = m; stage = "send"; go.textContent = "Send my link"; msg.textContent = "";
       modal.querySelector("#nf-codewrap").hidden = true;
       modal.querySelector("#nform-h").textContent = m === "join" ? "Join the trip" : "Sign in";
+      modal.querySelector("#nf-blurb").textContent = m === "join" ? "We'll email you a code to join. No password." : "We'll email you a code to sign in. No password.";
       modal.querySelector("#nf-namewrap").hidden = m !== "join";
       ["signin", "join"].forEach(function(k){ var t = modal.querySelector("#nf-tab-" + k); t.setAttribute("aria-selected", String(k === m)); t.tabIndex = k === m ? 0 : -1; });
       f.dataset.mode = m;
@@ -248,7 +249,34 @@
     return v;
   }
   window.NolaAccount.verifyCode = verifyCode;
-  function closeForm(){ if (modal) { modal.remove(); modal = null; } }
+  function signupHash(){
+    var h = (location.hash || "").replace(/^#/, "").split("~")[0].split(".")[0].toLowerCase();
+    if (h === "signup" || h === "join") return true;
+    try {
+      var q = new URLSearchParams(location.search);
+      var s = (q.get("signup") || "").toLowerCase(), jn = (q.get("join") || "").toLowerCase();
+      if (s === "1" || s === "true" || jn === "1" || jn === "true") return true;
+    } catch (e) {}
+    return false;
+  }
+  function closeForm(){
+    var fromSignup = sessionStorage.getItem("nola-open-signup") === "1";
+    if (modal) { modal.remove(); modal = null; }
+    if (!fromSignup) return;
+    sessionStorage.removeItem("nola-open-signup");
+    if (typeof render === "function") { try { render(); } catch (e) {} }
+  }
+  function openSignup(){
+    if (session && session.user) {
+      sessionStorage.removeItem("nola-open-signup");
+      if (typeof render === "function") { try { render(); } catch (e) {} }
+      return;
+    }
+    sessionStorage.setItem("nola-open-signup", "1");
+    openForm("join");
+    if (typeof render === "function") { try { render(); } catch (e) {} }
+  }
+  window.NolaAccount.openSignup = openSignup;
 
   function helpSignOut(){
     var main = document.getElementById("main"); if (!main || typeof S === "undefined" || S.tab !== "help") return;
@@ -278,9 +306,10 @@
   async function onSession(s, evt){
     var had = uid(); session = s;
     window.NolaAccount.email = s && s.user && s.user.email ? String(s.user.email).toLowerCase() : null; window.NolaAccount.isAdmin = isAdminEmail(window.NolaAccount.email);
+    if (s) sessionStorage.removeItem("nola-open-signup");
     if (typeof window.nolaAuthChanged === "function") { try { window.nolaAuthChanged(); } catch(e){ warn(e); } }
     if (s) { hideBar(); closeForm(); }
-    else mountBar();
+    else { mountBar(); if (sessionStorage.getItem("nola-open-signup") === "1" || signupHash()) openSignup(); }
     helpSignOut();
     paintWho();
     if (s && s.user.id !== had) {
@@ -350,6 +379,7 @@
       if (t.id === "nwho-out") window.NolaAccount.signOut();
       else openForm("signin");
     });
+    window.addEventListener("hashchange", function(){ if (signupHash()) openSignup(); });
     consumeReturn().then(function(fresh){
       return sb.auth.getSession().then(function(r){ var s = r.data.session || fresh; return onSession(s, "INITIAL").then(function(rv){ if (rv === "reload") return;
         if (s && (fresh || !sessionStorage.getItem("nola-greeted"))) { sessionStorage.setItem("nola-greeted", "1"); greet(s).catch(warn); } }); });

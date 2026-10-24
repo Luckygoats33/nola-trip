@@ -173,7 +173,9 @@ with sync_playwright() as p:
     tg.nth(1).click(); WAIT(1200)
     t=pg.inner_text("#main")
     ck("admin Saved all: grouped by person + group picks", "All trip plans" in t and "bob@example.com" in t and "alice@example.com" in t and "Group picks" in t)
-    ck("group picks: % and count and names", "100%" in t and "4 of 4" in t and "50%" in t and "Picked by" in t and "Alice" in t and "Bob" in t and "Will" in t)
+    low=t.lower()
+    names=[x.strip() for x in pg.locator(".adm-row .adm-pick b").all_inner_texts()]
+    ck("group picks: % and count and names", "100%" in t and "4 of 4" in t and "50%" in t and "picked by" in low and "Alice" in names and "Bob" in names and "Will" in names)
     pg.evaluate("document.getElementById('group-picks').scrollIntoView({block:'start'}); window.scrollBy(0,-70)"); WAIT(300)
     pg.screenshot(path=OUT+"group-picks-390.png")
     pg.locator(".adm-savedtoggle button").nth(0).click(); WAIT(400)
