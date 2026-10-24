@@ -118,9 +118,9 @@
     var id = "osm-" + r.osm.toLowerCase(), ro = typeof readOnly !== "undefined" && readOnly, mine = typeof myPicks === "function" && new Set(myPicks()).has(id);
     var btns = mode === "sheet"
       ? (ro ? "" : '<button class="btn" data-xreg="' + esc(r.osm) + '" data-xact="swap">Swap in</button><button class="btn" data-xreg="' + esc(r.osm) + '" data-xact="addp">Add</button>')
-      : '<button class="btn" data-xreg="' + esc(r.osm) + '" data-xact="heart" aria-pressed="' + mine + '">' + (mine ? "✓ In my plans · Remove" : "Add to my plans") + '</button>' +
+      : '<button class="btn" data-xreg="' + esc(r.osm) + '" data-xact="heart" aria-pressed="' + mine + '">' + (mine ? "✓ Saved · Remove" : "Save") + '</button>' +
         (ro ? "" : '<button class="btn" data-xreg="' + esc(r.osm) + '" data-xact="addto">Add to trip</button>') +
-        '<a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(r.name + (r.addr ? ", " + r.addr : "") + ", New Orleans") + '">Map</a>';
+        '<a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(r.name + (r.addr ? ", " + r.addr : "") + ", New Orleans") + '">Maps</a>';
     return '<div class="xres"><div class="xn">' + esc(r.name) + '</div><div class="xm">' + esc(kindOf(r)) + (r.addr ? " · " + esc(r.addr) : "") + " · " + esc(mi(r.m)) + '</div><div class="xb">' + btns + '</div></div>';
   }
   function paint(input, mode){
@@ -132,7 +132,7 @@
     var known = new Set(builtinIds(raw)), list = res.filter(function(r){ return !known.has("osm-" + r.osm.toLowerCase()); });
     box.innerHTML = '<div class="xh">Real places on the map' + (list.length ? "" : "") + '</div>' +
       (list.length ? list.map(function(r){ return rowHtml(r, mode); }).join("") : '<div class="xm">No other matches on the map for “' + esc(raw) + '”.</div>') +
-      '<div class="xsrc">From OpenStreetMap via Photon/Nominatim. Add to my plans and it syncs to your account.</div>';
+      '<div class="xsrc">From OpenStreetMap via Photon/Nominatim. Save and it syncs to your account.</div>';
     box._res = list;
   }
   function refresh(){
@@ -170,8 +170,9 @@
   function pinHtml(p){
     var mine = typeof myPicks === "function" && new Set(myPicks()).has(p.id), ro = typeof readOnly !== "undefined" && readOnly;
     return '<div class="mpop"><div class="mpop-n">' + esc(p.n) + '</div>' + (p.ad ? '<div class="mpop-a">' + esc(p.ad) + '</div>' : '') +
-      '<div class="mpop-b"><button type="button" class="mbtn save" data-heart="' + esc(p.id) + '" aria-pressed="' + mine + '">' + (mine ? "✓ In my plans · Remove" : "Add to my plans") + '</button>' +
+      '<div class="mpop-b"><button type="button" class="mbtn save" data-heart="' + esc(p.id) + '" aria-pressed="' + mine + '">' + (mine ? "✓ Saved · Remove" : "Save") + '</button>' +
       (ro ? '' : '<button type="button" class="mbtn" data-addto="' + esc(p.id) + '">Add to trip</button>') +
+      '<a class="mbtn ghost" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent((p.n || "Place") + (p.ad ? ", " + p.ad : ", New Orleans")) + '" target="_blank" rel="noopener">Maps</a>' +
       '<button type="button" class="mbtn ghost" data-open="' + esc(p.id) + '">Details</button></div></div>';
   }
   function hookMarkers(){
@@ -209,7 +210,8 @@
       tapRes[key] = { r: r, spot: spot };
       var ro = typeof readOnly !== "undefined" && readOnly, h = '<div class="mpop">';
       if (r) h += '<div class="mpop-k">Nearest place</div><div class="mpop-n">' + esc(r.name) + '</div><div class="mpop-a">' + esc(kindOf(r)) + (r.addr ? " · " + esc(r.addr) : "") + '</div>' +
-        '<div class="mpop-b"><button type="button" class="mbtn save" data-xtap="' + key + '" data-which="r" data-act="heart">Add to my plans</button>' + (ro ? "" : '<button type="button" class="mbtn" data-xtap="' + key + '" data-which="r" data-act="addto">Add to trip</button>') + '</div>';
+        '<div class="mpop-b"><button type="button" class="mbtn save" data-xtap="' + key + '" data-which="r" data-act="heart">Save</button>' + (ro ? "" : '<button type="button" class="mbtn" data-xtap="' + key + '" data-which="r" data-act="addto">Add to trip</button>') +
+        '<a class="mbtn ghost" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(r.lat + "," + r.lon) + '" target="_blank" rel="noopener">Maps</a></div>';
       else h += '<div class="mpop-a">No named place right here.</div>';
       h += '<div class="mpop-b"><button type="button" class="mbtn ghost" data-xtap="' + key + '" data-which="s" data-act="heart">📍 Save this spot</button></div></div>';
       if (LMAP.hasLayer && pop.isOpen()) pop.setContent(h);
@@ -256,7 +258,7 @@
     var known = new Set(builtinIds(q));
     var list = res.filter(function(r){ return !known.has("osm-" + r.osm.toLowerCase()); });
     el._res = list;
-    el.innerHTML = '<div class="xh">Real places on the map</div>' + (list.length ? list.map(function(r){ return rowHtml(r, "all"); }).join("") : '<div class="xm">No other matches on the map for “' + esc(q) + '”.</div>') + '<div class="xsrc">From OpenStreetMap via Photon/Nominatim. Add to my plans and it syncs to your account.</div>';
+    el.innerHTML = '<div class="xh">Real places on the map</div>' + (list.length ? list.map(function(r){ return rowHtml(r, "all"); }).join("") : '<div class="xm">No other matches on the map for “' + esc(q) + '”.</div>') + '<div class="xsrc">From OpenStreetMap via Photon/Nominatim. Save and it syncs to your account.</div>';
   };
   if (n) try { render(); } catch(e){}
 })();
