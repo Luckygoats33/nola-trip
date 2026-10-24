@@ -733,6 +733,7 @@ button,a,.chip,.tab,.plink,.btn,.mood,.tile,.colcard,summary{touch-action:manipu
 .slot.busy{opacity:.55;background:var(--sunk);cursor:not-allowed}
 .slot small{font-size:.68rem;color:var(--muted);max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cal-confirm{position:sticky;bottom:0;background:var(--surface);padding-top:8px;z-index:2}
+.cal-hold{margin:0 0 4px;font-weight:800}
 .open-head p{margin:0}
 @media (max-width:899px){
   .top-row{flex-wrap:wrap}
@@ -1766,10 +1767,11 @@ function vPlan(cal){
       if(it.sun){ const ss = ti ? sunsetNOLA(ti.dateOf(d.n)) : null; extra = ss ? ' Sunset tonight is about '+ss.label+'. '+cruiseVerdict(ss) : ' Add your dates to see tonight\'s sunset time.'; }
       const here = stopPt(it), prev = ix>0 ? stopPt(d.items[ix-1]) : null;
       let conn = '';
-      if(ix>0 && here && prev){ const m=meters(prev,here), tr=travel(m), gap=toM(it.t)-toM(d.items[ix-1].t), tight = m>60 && tr.mins>gap;
+      if(ix>0 && here && prev){ const m=meters(prev,here), tr=travel(m), prevEnd=d.items[ix-1].end && toM(d.items[ix-1].end)>toM(d.items[ix-1].t) ? toM(d.items[ix-1].end) : toM(d.items[ix-1].t), gap=toM(it.t)-prevEnd, tight = m>60 && tr.mins>gap;
         conn = m<60 ? '' : '<li class="conn'+(tight?' tight':'')+'"><span></span><span>↓ '+tr.txt+' · '+miles(m)+(tight?' · tight: only '+dur(Math.max(gap,0))+' between stops':'')+'</span></li>'; }
       const fixed = it.fixed!==undefined ? !!it.fixed : !!it.key;
-      let li = conn + '<li'+(it.key?' class="key"':'')+'><span class="t">'+(ed?'<input class="field" type="time" id="t-'+it.k+'" value="'+esc(it.t)+'" aria-label="Time" style="padding:4px 6px">':fmtM(toM(it.t)))+'</span><div class="what">';
+      const when = it.end && toM(it.end)>toM(it.t) ? fmtClock(toM(it.t))+"–"+fmtClock(toM(it.end)) : fmtM(toM(it.t));
+      let li = conn + '<li'+(it.key?' class="key"':'')+'><span class="t">'+(ed?'<input class="field" type="time" id="t-'+it.k+'" value="'+esc(it.t)+'" aria-label="Time" style="padding:4px 6px">':esc(when))+'</span><div class="what">';
       const exp = ed || !!S.openStop[it.k], why = whyOf(it);
       li += ed ? '<input class="field" id="h-'+it.k+'" value="'+esc(it.h)+'" aria-label="Stop name">' : '<button class="stop" data-stop="'+it.k+'" aria-expanded="'+exp+'">'+esc(it.h)+'</button>';
       li += '<span class="fx '+(fixed?'fixed':'flex')+'">'+(fixed?'Booked / fixed':'Flexible')+'</span>';
@@ -1825,42 +1827,71 @@ function vAlts(sh){
   return h;
 }
 
-/* first open hour on the preferred day, then the other days */
+/* 30-minute free/busy slots, 6:00 am through 9:00 pm */
+const ADD_FROM = 6*60, ADD_TO = 21*60, ADD_STEP = 30;
+const hm = m => String(Math.floor(((m%1440)+1440)%1440/60)).padStart(2,"0")+":"+String(((m%1440)+1440)%1440%60).padStart(2,"0");
+const fmtClock = m => { m=((m%1440)+1440)%1440; let h=Math.floor(m/60); const mm=String(m%60).padStart(2,"0"), ap=h>=12?"pm":"am"; h=h%12||12; return h+":"+mm+" "+ap; };
+const holdLabel = (a,b) => fmtClock(a)+"–"+fmtClock(b)+" ("+dur(Math.max(0,b-a))+")";
+/* Older stops have only a start time and blocked that whole hour. A block with end occupies [start, end). */
+function itemSpan(it){
+  const start = toM(it && it.t || "12:00");
+  if(it && it.end && /^\d{1,2}:\d{2}$/.test(String(it.end))){
+    const end = toM(it.end);
+    if(end>start) return {start, end, h:it.h||"Taken"};
+  }
+  const hr = Math.floor(start/60)*60;
+  return {start:hr, end:hr+60, h:(it&&it.h)||"Taken"};
+}
+function slotTaken(items, m){
+  return (items||[]).find(it=>{ const s=itemSpan(it); return s.start < m+ADD_STEP && s.end > m; }) || null;
+}
+function rangeFree(items, from, to){
+  for(let m=from; m<to; m+=ADD_STEP){ if(slotTaken(items, m)) return false; }
+  return to>from;
+}
+function holdOf(sh){
+  const a = toM(sh && sh.t || "12:00");
+  let b = sh && sh.end ? toM(sh.end) : a+ADD_STEP;
+  if(b<=a) b = a+ADD_STEP;
+  return {a, b};
+}
+/* first open half-hour on the preferred day, then the other days */
 function firstFree(preferDay){
   const order = [];
   const pref = plan.days.find(d=>d.n===preferDay);
   if(pref) order.push(pref);
   plan.days.forEach(d=>{ if(d.n!==preferDay) order.push(d); });
   for(const d of order){
-    const busy = new Set((d.items||[]).map(it=>Math.floor(toM(it.t||"12:00")/60)));
-    for(let hr=8; hr<=21; hr++){ if(!busy.has(hr)) return {day:d.n, t:String(hr).padStart(2,"0")+":00"}; }
+    for(let m=ADD_FROM; m<=ADD_TO; m+=ADD_STEP){
+      if(!slotTaken(d.items, m)) return {day:d.n, t:hm(m), end:hm(m+ADD_STEP)};
+    }
   }
-  return {day:(pref||plan.days[0]).n, t:"12:00"};
+  return {day:(pref||plan.days[0]).n, t:"12:00", end:"12:30"};
 }
 /* add a place to the trip: a free/busy calendar, then confirm */
 function vAddTo(sh){
   const p = BY[sh.id]; if(!p) return "";
   const ti = tripInfo();
+  const hold = holdOf(sh);
   const W = dayW(sh.day, sh.t);
   let h = '<div class="sheet-top"><div><span class="eyebrow">Add to trip</span><h2 id="sheet-title">'+esc(p.n)+'</h2></div><button class="close" data-close="1" aria-label="Close">×</button></div>';
-  h += '<p class="small muted">Pick a free time. Gray slots are already taken. Then confirm and it lands on the Calendar.</p>';
+  h += '<p class="small muted">Free times run from 6:00 am. Tap a start, then a later free slot, to hold a longer block. Gray slots are already taken.</p>';
   h += '<div class="cal-pick" role="group" aria-label="Free times by day">';
   plan.days.forEach(d=>{
     const dt = ti ? ti.dateOf(d.n) : null;
-    const busy = {};
-    (d.items||[]).forEach(it=>{ const hr=Math.floor(toM(it.t||"00:00")/60); if(busy[hr]==null) busy[hr]=it.h; });
     h += '<div class="cal-col"><div class="cal-col-h"><b>'+esc(dt?fmtD(dt,{weekday:"short"}):("Day "+d.n))+'</b><span>'+(dt?esc(fmtD(dt,{month:"short",day:"numeric"})):"")+'</span></div>';
-    for(let hr=8; hr<=21; hr++){
-      const t = String(hr).padStart(2,"0")+":00";
-      const sel = sh.day===d.n && Math.floor(toM(sh.t)/60)===hr;
-      if(busy[hr]) h += '<button type="button" class="slot busy" disabled aria-disabled="true"><span>'+fmtM(hr*60)+'</span><small>'+esc(busy[hr])+'</small></button>';
-      else h += '<button type="button" class="slot'+(sel?' on':'')+'" data-slot="'+d.n+'|'+t+'" aria-pressed="'+sel+'"><span>'+fmtM(hr*60)+'</span><small>Free</small></button>';
+    for(let m=ADD_FROM; m<=ADD_TO; m+=ADD_STEP){
+      const t = hm(m);
+      const hit = slotTaken(d.items, m);
+      const sel = sh.day===d.n && hold.a<=m && m<hold.b;
+      if(hit) h += '<button type="button" class="slot busy" disabled aria-disabled="true"><span>'+fmtClock(m)+'</span><small>'+esc(hit.h)+'</small></button>';
+      else h += '<button type="button" class="slot'+(sel?' on':'')+'" data-slot="'+d.n+'|'+t+'" aria-pressed="'+sel+'"><span>'+fmtClock(m)+'</span><small>'+(sel?'Held':'Free')+'</small></button>';
     }
     h += '</div>';
   });
   h += '</div>';
-  h += W ? '<div class="today">'+chipStatus(p,W)+'<span class="muted">'+esc(dayLabel(parseD(W.date)))+' at '+fmtM(toM(sh.t))+'</span></div>' : '<p class="small muted">Add trip dates to check whether it\'s open then.</p>';
-  h += '<div class="row cal-confirm"><button class="btn primary" data-doadd="1">Confirm · '+esc(fmtM(toM(sh.t)))+' · Day '+sh.day+'</button><button class="btn" data-close="1">Cancel</button></div>';
+  h += W ? '<div class="today">'+chipStatus(p,W)+'<span class="muted">'+esc(dayLabel(parseD(W.date)))+' · '+esc(holdLabel(hold.a, hold.b))+'</span></div>' : '<p class="small muted">Add trip dates to check whether it\'s open then.</p>';
+  h += '<div class="cal-confirm"><p class="cal-hold" aria-live="polite">'+esc(holdLabel(hold.a, hold.b))+'</p><div class="row"><button class="btn primary" data-doadd="1">Confirm · '+esc(holdLabel(hold.a, hold.b))+' · Day '+sh.day+'</button><button class="btn" data-close="1">Cancel</button></div></div>';
   return h;
 }
 function placeMatches(q){
@@ -2753,9 +2784,23 @@ function planClick(el){
   if(ds.rmp){ if(guard()) return true; const [k,id]=ds.rmp.split("|"); const {it}=findItem(k); if(it){ it.p=it.p.filter(x=>x!==id); savePlan(); } return true; }
   if(ds.swap){ if(guard()) return true; const {it}=findItem(S.sheet.k); const p=BY[ds.swap]; if(it&&p){ it.p=[p.id]; it.h=p.n; it.d=""; S.sheet=null; savePlan("Swapped in "+p.n+"."); } return true; }
   if(ds.addp){ if(guard()) return true; const {it}=findItem(S.sheet.k); const p=BY[ds.addp]; if(it&&p&&!it.p.includes(p.id)){ it.p.push(p.id); if(it.h==="New stop") it.h=p.n; S.sheet=null; savePlan("Added "+p.n+"."); } return true; }
-  if(ds.slot && S.sheet && S.sheet.mode==="addto"){ const [day,t]=ds.slot.split("|"); S.sheet.day=+day; S.sheet.t=t; render(); return true; }
-  if(ds.addto){ if(guard()) return true; const slot=firstFree(S.day); S.sheet={mode:"addto", id:ds.addto, day:slot.day, t:slot.t}; render(); return true; }
-  if(ds.doadd){ if(guard()) return true; const sh=S.sheet, p=BY[sh.id], d=plan.days.find(x=>x.n===sh.day); if(p&&d){ d.items.push({k:uidk(), t:sh.t||"12:00", h:p.n, d:"", p:[p.id]}); S.sheet=null; S.day=d.n; S.tab="cal"; savePlan("Added "+p.n+" to the calendar · Day "+d.n+" at "+fmtM(toM(sh.t||"12:00"))+"."); } return true; }
+  if(ds.slot && S.sheet && S.sheet.mode==="addto"){
+    const [dayS,t]=ds.slot.split("|"); const day=+dayS, m=toM(t);
+    const d0=plan.days.find(x=>x.n===day); if(!d0 || slotTaken(d0.items, m)) return true;
+    const sh=S.sheet, hold=holdOf(sh);
+    if(sh.day!==day){ sh.day=day; sh.t=t; sh.end=hm(m+ADD_STEP); }
+    else if(m>=hold.a && m<hold.b){
+      if(hold.b-hold.a>ADD_STEP && m===hold.a) sh.t=hm(hold.a+ADD_STEP);
+      else if(hold.b-hold.a>ADD_STEP && m+ADD_STEP===hold.b) sh.end=hm(hold.b-ADD_STEP);
+    } else {
+      const from=Math.min(hold.a, m), to=Math.max(hold.b, m+ADD_STEP);
+      if(rangeFree(d0.items, from, to)){ sh.t=hm(from); sh.end=hm(to); }
+      else { toast("That stretch isn't free the whole way. Pick slots with no gray one in between."); sh.day=day; sh.t=t; sh.end=hm(m+ADD_STEP); }
+    }
+    render(); return true;
+  }
+  if(ds.addto){ if(guard()) return true; const slot=firstFree(S.day); S.sheet={mode:"addto", id:ds.addto, day:slot.day, t:slot.t, end:slot.end}; render(); return true; }
+  if(ds.doadd){ if(guard()) return true; const sh=S.sheet, p=BY[sh.id], d=plan.days.find(x=>x.n===sh.day); if(p&&d){ const hold=holdOf(sh); if(!rangeFree(d.items, hold.a, hold.b)){ toast("Part of that block is already taken."); return true; } d.items.push({k:uidk(), t:hm(hold.a), end:hm(hold.b), h:p.n, d:"", p:[p.id]}); S.sheet=null; S.day=d.n; S.tab="cal"; savePlan("Added "+p.n+" · "+holdLabel(hold.a, hold.b)+"."); } return true; }
   if(ds.ceplace && S.sheet && S.sheet.mode==="custom"){ const p=BY[ds.ceplace]; if(p){ S.sheet.placeId=p.id; S.sheet.loc=p.n; S.sheet.mapHits=[]; } render(); return true; }
   if(ds.cemap && S.sheet && S.sheet.mode==="custom"){ const r=(S.sheet.mapHits||[])[+ds.cemap]; if(r && window.nolaRegisterPlace){ const id=window.nolaRegisterPlace(r); const p=BY[id]; if(p){ S.sheet.placeId=p.id; S.sheet.loc=p.n; S.sheet.mapHits=[]; } } render(); return true; }
   if(ds.ceclear && S.sheet && S.sheet.mode==="custom"){ S.sheet.placeId=""; render(); return true; }
@@ -2816,7 +2861,7 @@ function planChange(e){
   if(id==="addtime" && S.sheet){ if(e.target.value) S.sheet.t=e.target.value; render(); return true; }
   if(id==="ce-time" && S.sheet && S.sheet.mode==="custom"){ if(e.target.value) S.sheet.t=e.target.value; render(); return true; }
   if(readOnly) return false;
-  if(id.startsWith("t-")){ const {it}=findItem(id.slice(2)); if(it && e.target.value){ it.t=e.target.value; savePlan(); } return true; }
+  if(id.startsWith("t-")){ const {it}=findItem(id.slice(2)); if(it && e.target.value){ const old=toM(it.t), neu=toM(e.target.value); if(it.end && toM(it.end)>old){ it.end=hm(neu+(toM(it.end)-old)); } it.t=e.target.value; savePlan(); } return true; }
   if(id.startsWith("h-")){ const {it}=findItem(id.slice(2)); if(it){ it.h=e.target.value.trim()||"Stop"; savePlan(); } return true; }
   if(id.startsWith("dh-")){ const d=plan.days.find(x=>x.n===+id.slice(3)); if(d){ d.h=e.target.value.trim()||("Day "+d.n); savePlan(); } return true; }
   return false;
@@ -3194,7 +3239,7 @@ const HELP = [
  ["place","Place details",[
   ["Open a place","Tap any place name or card. A panel slides up with everything you need."],
   ["What you'll see","Open or closed right now and today's hours, the 5-cat Google rating with a <b>See reviews on Google</b> link, why you'll love it, address, phone, price, music and reservation notes."],
-  ["Buttons","<b>Save</b> (the cheesecake) saves it to the kitchen table. <b>Add to trip</b> opens a calendar so you can pick a free time. <b>Maps</b> opens the place in Google Maps. <b>Copy link</b> copies a link straight to this place. <b>Copy phone</b> and directions are there too. On the Calendar tab, tap a day to add a custom event."],
+  ["Buttons","<b>Save</b> (the cheesecake) saves it to the kitchen table. <b>Add to trip</b> opens free times from 6:00 am. Tap a start, then a later free slot, to hold a longer block. <b>Maps</b> opens the place in Google Maps. <b>Copy link</b> copies a link straight to this place. <b>Copy phone</b> and directions are there too. On the Calendar tab, tap a day to add a custom event."],
   ["Booking","Tours, cruises and tattoo shops show how to book, the price, and any deposit or ID rules."],
   ["Closing it","Tap the ×, tap outside the panel, or use your phone's back button."]]],
  ["map","Map",[
@@ -3364,7 +3409,7 @@ function vCalendar(){
   h += '<div class="cal-week" role="tablist" aria-label="Trip days">'+plan.days.map(x=>{
     const dt = ti ? ti.dateOf(x.n) : null;
     const items = (x.items||[]).slice().sort((a,b)=>toM(a.t||"00:00")-toM(b.t||"00:00"));
-    const chips = items.slice(0,3).map(it=>'<span class="cal-ev'+(it.k==="emily-lands"?" flight":"")+'">'+esc(fmtM(toM(it.t)))+' '+esc(it.h)+'</span>').join("");
+    const chips = items.slice(0,3).map(it=>{ const when = it.end && toM(it.end)>toM(it.t) ? fmtClock(toM(it.t))+"–"+fmtClock(toM(it.end)) : fmtM(toM(it.t)); return '<span class="cal-ev'+(it.k==="emily-lands"?" flight":"")+'">'+esc(when)+' '+esc(it.h)+'</span>'; }).join("");
     return '<button type="button" class="cal-cell'+(x.n===S.day?" on":"")+'" data-calday="'+x.n+'" role="tab" aria-pressed="'+(x.n===S.day)+'">'
       + '<span class="cal-dow">'+esc(dt?fmtD(dt,{weekday:"short"}):("Day "+x.n))+'</span>'
       + '<span class="cal-num">'+(dt?dt.getUTCDate():x.n)+'</span>'
@@ -4660,7 +4705,8 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
       const place = (i.p||[]).map(id=>BY[id]).find(Boolean);
       const where = place ? (place.n+(place.ad?" · "+place.ad:"")) : (i.d||"");
       const same = where && (where===i.h || (place && place.n===i.h));
-      return "• "+(i.t?fmtM(toM(i.t))+" — ":"")+(i.h||"Stop")+(where && !same ? " · "+where : "");
+      const when = i.end && toM(i.end)>toM(i.t) ? holdLabel(toM(i.t), toM(i.end)) : (i.t?fmtM(toM(i.t)):"");
+      return "• "+(when?when+" — ":"")+(i.h||"Stop")+(where && !same ? " · "+where : "");
     }).join("\n");
   }
   function scheduleAnswer(q){
@@ -4701,7 +4747,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     if(ps.length>1) return {keep:true, text:"I found a few places. Open the one you want and tap Add to trip:\n"+ps.slice(0,3).map(p=>"• "+p.n).join("\n"), ids:ps.slice(0,3).map(p=>p.id)};
     if(ps.length===1 && !readOnly){
       const slot = firstFree(S.day||1);
-      S.sheet = {mode:"addto", id:ps[0].id, day:slot.day, t:slot.t};
+      S.sheet = {mode:"addto", id:ps[0].id, day:slot.day, t:slot.t, end:slot.end};
       S.tab = "cal"; S.day = slot.day;
       setTimeout(()=>{ try{ render(); }catch(e){} }, 0);
       return {keep:true, text:"I opened Add to trip for "+ps[0].n+". Close this chat, pick a free time, and confirm. That puts it on your calendar"+(userSignedIn()?" and syncs to your account.":" once you sign in."), ids:[ps[0].id]};
