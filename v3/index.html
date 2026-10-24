@@ -751,6 +751,16 @@ button.dayev-name{all:unset;display:block;max-width:100%;font-family:var(--displ
 .dayev-when,.dayev-note{font-size:.75rem;color:var(--muted);line-height:1.3}
 .dayev-note{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .day-foot{margin-top:12px}
+.daynav{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--coral);border-radius:16px;padding:10px 10px 12px}
+.daynav-btn{min-width:64px;min-height:48px;padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);font-weight:800;font-size:.85rem;line-height:1.1;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.daynav-btn:hover:not(:disabled){border-color:var(--coral)}
+.daynav-btn:disabled{opacity:.38;cursor:not-allowed}
+.daynav-mid{min-width:0;text-align:center;display:grid;gap:2px;justify-items:center}
+.daynav-mid h2{font-size:clamp(1.15rem,4.6vw,1.6rem)}
+.daynav-mid p{margin:0}
+.daynav-days{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.daynav-days .chip{min-height:44px;padding:6px 10px}
+.daynav-days .chip[aria-pressed="true"]{background:var(--coral);border-color:var(--coral);color:var(--surface)}
 .open-head p{margin:0}
 @media (max-width:899px){
   .top-row{flex-wrap:wrap}
@@ -2693,7 +2703,7 @@ async function refreshProfiles(){
 
 /* ---------- events ---------- */
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-tab],[data-day],[data-calday],[data-dayback],[data-dayadd],[data-cat],[data-heart],[data-open],[data-close],[data-scrim],[data-copy],[data-check],[data-talk],[data-edit],[data-save],[data-cancel],[data-nowbtn],[data-when],[data-ncat],[data-editplan],[data-reset],[data-addday],[data-addstop],[data-planb],[data-addplace],[data-mv],[data-del],[data-rmp],[data-swap],[data-addp],[data-altsame],[data-addto],[data-doadd],[data-slot],[data-fixed],[data-vote],[data-ink],[data-inkfav],[data-locate],[data-next2],[data-lview],[data-ceadd],[data-ceplace],[data-cemap],[data-ceclear],#mapOpen,#mapSaved,[data-sec],[data-stop],[data-mapcat],[data-mapview],[data-mapzoom],[data-mapcolor],[data-clearq],[data-clearex],#mapSafety,[data-safetoggle],[data-safelv],#nowLate,#exOpen,#exWalk,#picksOnly,#walkOnly,#nowPicks");
+  const el = e.target.closest("[data-tab],[data-day],[data-calday],[data-dayback],[data-daynav],[data-dayadd],[data-cat],[data-heart],[data-open],[data-close],[data-scrim],[data-copy],[data-check],[data-talk],[data-edit],[data-save],[data-cancel],[data-nowbtn],[data-when],[data-ncat],[data-editplan],[data-reset],[data-addday],[data-addstop],[data-planb],[data-addplace],[data-mv],[data-del],[data-rmp],[data-swap],[data-addp],[data-altsame],[data-addto],[data-doadd],[data-slot],[data-fixed],[data-vote],[data-ink],[data-inkfav],[data-locate],[data-next2],[data-lview],[data-ceadd],[data-ceplace],[data-cemap],[data-ceclear],#mapOpen,#mapSaved,[data-sec],[data-stop],[data-mapcat],[data-mapview],[data-mapzoom],[data-mapcolor],[data-clearq],[data-clearex],#mapSafety,[data-safetoggle],[data-safelv],#nowLate,#exOpen,#exWalk,#picksOnly,#walkOnly,#nowPicks");
   if(!el) return;
   if(el.dataset.scrim && e.target!==el) return;
   if(el.dataset.sec){ e.preventDefault(); const det=el.parentElement; S.secs[el.dataset.sec]=!det.open; render(); return; }
@@ -2739,8 +2749,9 @@ document.addEventListener("click", e=>{
   if(el.dataset.tab){ S.dayOpen=false; S.tab=el.dataset.tab; try{localStorage.setItem("nola-tab",S.tab);}catch(_){} window.scrollTo(0,0); render(); return; }
   if(el.dataset.calday){ openDayView(+el.dataset.calday); return; }
   if(el.dataset.dayback){ S.dayOpen=false; render(); window.scrollTo(0,0); return; }
+  if(el.dataset.daynav){ const dir = el.dataset.daynav==="1" ? 1 : el.dataset.daynav==="-1" ? -1 : 0; if(dir) shiftDayView(dir); return; }
   if(el.dataset.dayadd){ openCustomDay(S.day); return; }
-  if(el.dataset.day){ S.day=+el.dataset.day; render(); return; }
+  if(el.dataset.day){ if(S.dayOpen && el.closest(".daynav")){ goDayView(+el.dataset.day); return; } S.day=+el.dataset.day; render(); return; }
   if(el.dataset.cat){ S.cat=el.dataset.cat; render(); return; }
   if(el.id==="picksOnly"){ S.picksOnly=!S.picksOnly; render(); return; }
   if(el.dataset.heart){ togglePick(el.dataset.heart); return; }
@@ -2832,10 +2843,9 @@ function openDayView(n){
   S.dayOpen = true;
   S.sheet = null;
   render();
+  window.scrollTo(0,0);
   const back = document.querySelector("[data-dayback]");
-  if(back) back.focus();
-  const ev = document.querySelector(".dayev");
-  if(ev) ev.scrollIntoView({block:"center", inline:"nearest"});
+  if(back) back.focus({preventScroll:true});
 }
 function openCustomDay(n){
   const day = plan.days.find(x=>x.n===n) || plan.days[0];
@@ -2915,10 +2925,32 @@ document.addEventListener("change", e=>{
 });
 document.addEventListener("submit", e=>{ e.preventDefault(); if(e.target.id==="tripform") saveTrip(); });
 document.addEventListener("keydown", e=>{
+  if((e.key==="ArrowLeft" || e.key==="ArrowRight") && S.dayOpen && !S.sheet && !e.altKey && !e.metaKey && !e.ctrlKey && e.target.closest && e.target.closest(".daynav") && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName||"")){
+    e.preventDefault();
+    shiftDayView(e.key==="ArrowRight" ? 1 : -1);
+    return;
+  }
   if(e.key==="Escape" && S.sheet){ S.sheet=null; render(); }
   else if(e.key==="Escape" && S.dayOpen && (S.tab==="cal" || S.tab==="plan" || S.tab==="trip")){ S.dayOpen=false; render(); }
   if(e.key==="Enter" && DRAFT_FIELDS[e.target.id]){ e.preventDefault(); saveTrip(); }
 });
+let daySwipe = null;
+document.addEventListener("touchstart", e=>{
+  daySwipe = null;
+  if(!S.dayOpen || S.sheet || (S.tab!=="cal" && S.tab!=="trip")) return;
+  if(e.touches.length!==1) return;
+  if(e.target.closest && e.target.closest("input,textarea,select,button,a,.daynav")) return;
+  const t = e.touches[0];
+  daySwipe = {x:t.clientX, y:t.clientY, at:Date.now()};
+}, {passive:true});
+document.addEventListener("touchend", e=>{
+  if(!daySwipe || !S.dayOpen || S.sheet){ daySwipe = null; return; }
+  const t = e.changedTouches[0];
+  const dx = t.clientX-daySwipe.x, dy = t.clientY-daySwipe.y, dt = Date.now()-daySwipe.at;
+  daySwipe = null;
+  if(dt>650 || Math.abs(dx)<64 || Math.abs(dx)<Math.abs(dy)*1.5) return;
+  shiftDayView(dx<0 ? 1 : -1);
+}, {passive:true});
 
 /* version links: GitHub Pages uses folders, claude.ai uses three artifacts */
 (function(){ const gh=/github\.io$/.test(location.hostname);
@@ -3280,7 +3312,7 @@ const HELP = [
   ["Safety colors","Green, yellow and red areas show how comfortable each area is for walking at night. Green is busy and well lit, yellow means stay on main streets, red means take a car."],
   ["Collections on the map","Pick a collection to show only those places."]]],
  ["trip","Calendar",[
-  ["Day by day","Calendar is the trip, Wed Nov 4 through Sun Nov 8. Tap a day to open its hourly schedule. Arrival day starts with Emily's flight. The other days start empty. <b>Add a custom event</b> is on that day."],
+  ["Day by day","Calendar is the trip, Wed Nov 4 through Sun Nov 8. Tap a day to open its hourly schedule. Prev, Next, and the day buttons at the top switch days. Arrival day starts with Emily's flight. The other days start empty. <b>Add a custom event</b> is on that day."],
   ["Add to trip","On any place, tap <b>Add to trip</b>. A calendar pops up with free and busy times. Pick a slot, confirm, and it shows on that day."],
   ["Editing","Add stops, move them, remove them, or swap in a Plan B if something is closed or it rains. Changes save automatically."],
   ["Route this day","Opens all of that day's stops as one walking route in Google Maps, starting at the hotel."]]],
@@ -3330,7 +3362,7 @@ const TOURS = {
   {go:"explore", sel:"#main .cols", g:"Blanche", t:"Collections", b:"Thirteen hand-picked lists: Tonight, Jazz & Cocktails, Hidden Gems, Where the Locals Go, Cat Adventures, Romantic, Vegetarian Eats, Photo Spots and more. Each has <b>See on the map</b> and <b>Surprise me from these</b>."},
   {go:"explore", sheet:"cdm", sel:"#sheet-root .sheet", g:"Rose", t:"Inside a place", b:"Tap any place and this opens: open or closed right now, hours, the 5-cat Google rating, why you'll love it, the address and a tap-to-call phone."},
   {go:"map", sel:"#main .mapwrap", g:"Dorothy", t:"The map", b:"Every place, the hotel and (if you allow it) you. On phones tap <b>Tap here to move the map</b> to pan and zoom. The green, yellow and red areas show night-walking comfort: after dark, take a car for anything yellow or red."},
-  {go:"cal", sel:"#main .cal-week", g:"Sophia", t:"Calendar", b:"Day by day from Nov 4 to Nov 8. Arrival day starts with Emily's flight and the other days start empty. Tap a day to see its hours, then add a custom event. Tap <b>Add to trip</b> on a place to drop it into a free time. <b>Route this day in Google Maps</b> walks the day's stops from the hotel."},
+  {go:"cal", sel:"#main .cal-week", g:"Sophia", t:"Calendar", b:"Day by day from Nov 4 to Nov 8. Arrival day starts with Emily's flight and the other days start empty. Tap a day to see its hours. Prev and Next at the top switch days, and Add a custom event is on that screen. Tap <b>Add to trip</b> on a place to drop it into a free time. <b>Route this day in Google Maps</b> walks the day's stops from the hotel."},
   {go:"saved", sel:"#main .view", g:"Sophia", t:"The kitchen table", b:"Everything anyone saved. Filter by person or tap <b>Everyone's in</b> to see what all three of you want."},
   {go:"help", sel:'#tabs [data-tab="help"]', g:"Rose", t:"You're ready", b:"That's everything. <b>Help</b> has the full written guide and this tour any time. Tip: tap <b>Add to home screen</b> at the top to put it on your home screen. Now go have a beignet."}
  ]
@@ -3433,11 +3465,33 @@ function vCol(){
   return h;
 }
 
-function vDayTimeline(){
-  const d = plan.days.find(x=>x.n===S.day) || plan.days[0];
-  if(!d) return "";
+function tripDayParts(n){
   const ti = tripInfo();
-  const dt = ti ? ti.dateOf(d.n) : null;
+  if(!ti) return {chip:"Day "+n, long:"Day "+n, extra:""};
+  const x = ti.dateOf(n);
+  let extra = "";
+  if(ti.D && x>ti.D) extra = "After you leave";
+  else if(ti.D && x.getTime()===ti.D.getTime()) extra = "Departure day";
+  return {chip:fmtD(x,{weekday:"short",day:"numeric"}), long:fmtD(x,{weekday:"long",month:"long",day:"numeric"}), extra};
+}
+function goDayView(n){
+  const day = plan.days.find(x=>x.n===+n);
+  if(!day || (day.n===S.day && S.dayOpen)) return;
+  S.day = day.n;
+  S.dayOpen = true;
+  render();
+  const t = document.getElementById("daynav-title");
+  if(t) t.focus({preventScroll:true});
+}
+function shiftDayView(dir){
+  const i = plan.days.findIndex(x=>x.n===S.day);
+  const nxt = i>=0 ? plan.days[i+dir] : null;
+  if(nxt) goDayView(nxt.n);
+}
+function vDayTimeline(){
+  const days = plan.days;
+  const d = days.find(x=>x.n===S.day) || days[0];
+  if(!d) return "";
   const items = (d.items||[]).slice().sort((a,b)=>toM(a.t||"12:00")-toM(b.t||"12:00") || String(a.h||"").localeCompare(String(b.h||"")));
   let from = ADD_FROM, to = ADD_TO;
   items.forEach(it=>{
@@ -3463,14 +3517,28 @@ function vDayTimeline(){
     placed.push({it, s, a, slots, col});
   });
   const colCount = Math.max(1, colEnds.length);
-  const when = dt ? dayLabel(dt) : ("Day "+d.n);
-  const longWhen = dt ? fmtD(dt,{weekday:"long", month:"long", day:"numeric"}) : ("Day "+d.n);
+  const parts = tripDayParts(d.n);
+  const ix = Math.max(0, days.indexOf(d));
+  const prev = ix>0 ? days[ix-1] : null;
+  const next = ix<days.length-1 ? days[ix+1] : null;
+  const prevParts = prev ? tripDayParts(prev.n) : null;
+  const nextParts = next ? tripDayParts(next.n) : null;
+  const bits = [d.h||"", d.who||""].filter(Boolean);
+  if(parts.extra==="After you leave" || (parts.extra && !/depart/i.test(bits.join(" ")))) bits.push(parts.extra);
   let h = '<div class="row"><button type="button" class="btn" data-dayback="1">← Calendar</button></div>';
-  h += '<div class="head"><span class="eyebrow">'+esc(when)+' · Day '+d.n+'</span><h2>'+esc(longWhen)+'</h2>';
-  h += '<p class="muted small">'+esc(d.h||"This day")+(d.who?' · '+esc(d.who):'')+'. '+(items.length?items.length+(items.length===1?' thing':' things')+' scheduled.':'Nothing scheduled yet.')+' Each row is 30 minutes. Blank rows are open.</p></div>';
+  h += '<nav class="daynav" aria-label="Switch day">';
+  h += '<button type="button" class="daynav-btn" data-daynav="-1"'+(prev?'':' disabled')+' aria-label="'+(prevParts?'Previous day, '+esc(prevParts.long):'Previous day')+'"><span aria-hidden="true">←</span> Prev</button>';
+  h += '<div class="daynav-mid"><span class="eyebrow">Day '+(ix+1)+' of '+days.length+'</span><h2 id="daynav-title" tabindex="-1">'+esc(parts.long)+'</h2>';
+  h += '<p class="muted small">'+esc(bits.join(" · ")||"This day")+'</p></div>';
+  h += '<button type="button" class="daynav-btn" data-daynav="1"'+(next?'':' disabled')+' aria-label="'+(nextParts?'Next day, '+esc(nextParts.long):'Next day')+'">Next <span aria-hidden="true">→</span></button>';
+  h += '<div class="daynav-days" role="group" aria-label="Trip days">'+days.map(x=>{
+    const p = tripDayParts(x.n), on = x.n===d.n;
+    return '<button type="button" class="chip" data-day="'+x.n+'" aria-pressed="'+on+'"'+(on?' aria-current="date"':'')+' aria-label="'+esc(p.long)+'">'+esc(p.chip)+'</button>';
+  }).join("")+'</div></nav>';
+  h += '<p class="muted small">'+(items.length?items.length+(items.length===1?' thing':' things')+' scheduled.':'Nothing scheduled yet.')+' Each row is 30 minutes, 6:00 am to 9:00 pm. Blank rows are open. Prev, Next, or a day above switches days.</p>';
   h += '<div class="row"><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button></div>';
   if(d.n===1 && typeof window.nolaFlightsCard==="function") h += window.nolaFlightsCard();
-  h += '<div class="dayboard" style="grid-template-columns:68px repeat('+colCount+',minmax(0,1fr))" role="grid" aria-label="Schedule for '+esc(longWhen)+'">';
+  h += '<div class="dayboard" style="grid-template-columns:68px repeat('+colCount+',minmax(0,1fr))" role="grid" aria-label="Schedule for '+esc(parts.long)+'">';
   for(let i=0;i<rows;i++){
     const m = from + i*ADD_STEP;
     const hour = m%60===0;
@@ -3496,7 +3564,7 @@ function vCalendar(){
   if(!plan.days.find(x=>x.n===S.day)) S.day = (plan.days[0]||{n:1}).n;
   if(S.dayOpen) return vDayTimeline();
   const ti = tripInfo();
-  let h = '<div class="head"><span class="eyebrow">Wed Nov 4 – Sun Nov 8, 2026</span><h2>Calendar</h2><p class="muted small">Day by day for the trip. Emily\'s flight is already on arrival day. Tap a day for its hourly schedule. <b>Add to trip</b> on a place still drops it into a free time.</p></div>';
+  let h = '<div class="head"><span class="eyebrow">Wed Nov 4 – Sun Nov 8, 2026</span><h2>Calendar</h2><p class="muted small">Day by day for the trip. Emily\'s flight is already on arrival day. Tap a day for its hourly schedule. Prev, Next, and the day buttons at the top of that schedule switch days. <b>Add to trip</b> on a place still drops it into a free time.</p></div>';
   h += '<div class="cal-week" aria-label="Trip days">'+plan.days.map(x=>{
     const dt = ti ? ti.dateOf(x.n) : null;
     const items = (x.items||[]).slice().sort((a,b)=>toM(a.t||"00:00")-toM(b.t||"00:00"));
@@ -4916,7 +4984,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     const days = (plan.days||[]).map(d => ({day:d.n, date:ti ? dayLabel(ti.dateOf(d.n)) : "", title:d.t||"", stops:(d.items||[]).map(i => (i.t||"")+" "+(i.h||"")+(i.p&&i.p[0]?" ["+i.p[0]+"]":"")).slice(0,10)}));
     const sys = "You are 'Ask the Girls', the warm, witty helper in The NOLA Girls trip app (Golden Girls flavor, light touch). App users: Tara and Emily. Travelers: Tara, Emily, and their niece Lauren (21). Trip: Wed Nov 4 – Sun Nov 8, 2026, staying at the Olivier House Hotel, 828 Toulouse St in the French Quarter (504-525-8456).\n"
       + "Answer ANY question about New Orleans (history, food, music, neighborhoods, customs, getting around, safety, weather, what to do) using your own knowledge, and ANY question about this app or the places in it using the APP DATA below.\n"
-      + "Rules: Use APP DATA first for places, hours, open/closed, addresses and phone numbers. When the guide has nothing, you may use web-sourced facts and say they are worth confirming. Never invent a venue, and never invent that a place is open or closed. Never invent exact hours, prices or phone numbers. Never invent schedule items. When you mention a place from APP DATA, put its id in double brackets right after the name, e.g. Café du Monde [[cdm]]. Prefer places that are OPEN when the question is about now. Mention the safety color for anything yellow or red at night. Keep answers under 140 words unless asked for detail; use short bullets for lists. If the question is about how to use the app, explain the relevant feature (Explore search looks through the guide and the map, and the top right shows who is signed in; Open now lists what's open this minute; the Map has green, yellow and red walking zones; Explore collections; Save keeps a place, Add to trip drops it into a free time; tapping a Calendar day opens that day's hourly schedule, and Add a custom event is on that screen; Saved is the kitchen table; Ink is tattoo ideas; Help has emergency numbers). For \"what's my schedule today\", use only PLAN items for the trip day that matches today. If today is not a trip day or that day has no items, say so.\n"
+      + "Rules: Use APP DATA first for places, hours, open/closed, addresses and phone numbers. When the guide has nothing, you may use web-sourced facts and say they are worth confirming. Never invent a venue, and never invent that a place is open or closed. Never invent exact hours, prices or phone numbers. Never invent schedule items. When you mention a place from APP DATA, put its id in double brackets right after the name, e.g. Café du Monde [[cdm]]. Prefer places that are OPEN when the question is about now. Mention the safety color for anything yellow or red at night. Keep answers under 140 words unless asked for detail; use short bullets for lists. If the question is about how to use the app, explain the relevant feature (Explore search looks through the guide and the map, and the top right shows who is signed in; Open now lists what's open this minute; the Map has green, yellow and red walking zones; Explore collections; Save keeps a place, Add to trip drops it into a free time; tapping a Calendar day opens that day's hourly schedule, Prev and Next at the top of that screen switch days within the trip, and Add a custom event is on that screen; Saved is the kitchen table; Ink is tattoo ideas; Help has emergency numbers). For \"what's my schedule today\", use only PLAN items for the trip day that matches today. If today is not a trip day or that day has no items, say so.\n"
       + "NOW: New Orleans local time "+DOWL[N.dow]+" "+fmtM(N.mins)+(N.date?" ("+N.date+")":"")+(typeof WX!=="undefined" && WX ? "; weather "+WX.temp+"°F "+WXL(WX.code) : "")+".\n"
       + "APP DATA — places as [id, name, type, area, status now, hours, google rating, distance, night safety, address, phone, why]:\n"+JSON.stringify(places)+"\nPLAN:\n"+JSON.stringify(days);
     const msgs = [{role:"user", content:sys + "\n\nReply 'Ready.' and wait for questions."}, {role:"assistant", content:"Ready."}];
