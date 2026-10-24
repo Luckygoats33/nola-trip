@@ -14,7 +14,7 @@
   var LS = window.localStorage;
   var rawSet = LS.setItem.bind(LS);
   var SYNC = {}; (window.nolaUserKeys || ["nola-picks","nola-votes","nola-visited","nola-plan","nola-checks","nola-my-ink","nola-trip","nola-searches","nola-ext-places"]).forEach(function(k){ SYNC[k] = 1; });
-  var session = null, pulling = false, timers = {};
+  var session = null, pulling = false, timers = {}, pushPlan = null;
 
   function j(s, d){ try { var v = JSON.parse(s); return v == null ? d : v; } catch(e){ return d; } }
   function uid(){ return session && session.user && session.user.id; }
@@ -69,13 +69,20 @@
     return { prof: res[0].data || {}, lists: res[1].data || [], likes: res[2].data || [] };
   }
   function cloudToLocal(c){
+    pushPlan = null;
     var next = {}, picks = [], votes = {}, vis = {}, by = {};
     c.likes.forEach(function(l){ if (l.kind === "like") picks.push(l.item_ref); if (l.kind === "vote") votes[l.item_ref] = l.value; if (l.kind === "visited") vis[l.item_ref] = l.value == null ? true : l.value; });
     if (picks.length) next["nola-picks"] = JSON.stringify(picks);
     if (Object.keys(votes).length) next["nola-votes"] = JSON.stringify(votes);
     if (Object.keys(vis).length) next["nola-visited"] = JSON.stringify(vis);
     c.lists.forEach(function(l){ by[l.kind] = l; });
-    if (by.itinerary && by.itinerary.data && by.itinerary.data.days) next["nola-plan"] = JSON.stringify(by.itinerary.data);
+    if (by.itinerary && by.itinerary.data && by.itinerary.data.days) {
+      var rawPlan = JSON.stringify(by.itinerary.data);
+      var mig = (typeof window.nolaMigratePlan === "function") ? window.nolaMigratePlan(by.itinerary.data) : null;
+      var outPlan = mig && mig.changed ? JSON.stringify(mig.plan) : rawPlan;
+      next["nola-plan"] = outPlan;
+      if (outPlan !== rawPlan) pushPlan = outPlan;
+    }
     if (by.checklist) next["nola-checks"] = JSON.stringify(by.checklist.data || {});
     if (by.ink) next["nola-my-ink"] = JSON.stringify((by.ink.data || {}).items || []);
     if (by.custom && by.custom.title === "Places from the map") next["nola-ext-places"] = JSON.stringify(by.custom.data || {});
@@ -93,12 +100,20 @@
     var cloudEmpty = !Object.keys(next).length, guest = window.nolaGuestData ? window.nolaGuestData() : {};
     if (cloudEmpty && Object.keys(guest).length) {
       // one-time claim: data made while signed out goes to the FIRST account that signs in with an empty account, then the guest copy is deleted
+      if (guest["nola-plan"] && typeof window.nolaMigratePlan === "function") {
+        try {
+          var gp = JSON.parse(guest["nola-plan"]), gm = window.nolaMigratePlan(gp);
+          if (gm && gm.changed) guest["nola-plan"] = JSON.stringify(gm.plan);
+        } catch(e){}
+      }
       for (var k in guest) await push(k, guest[k]);
       next = guest; window.nolaClearGuest(); rawSet("nola-guest-claimed-by", me);
     }
     var changed = false; pulling = true;
     Object.keys(SYNC).forEach(function(k){ var v = next[k]; if (v == null) { if (LS.getItem(k) != null) { LS.removeItem(k); changed = true; } } else if (LS.getItem(k) !== v) { rawSet(k, v); changed = true; } });
     pulling = false; sessionStorage.removeItem("nola-needs-pull");
+    var planPush = pushPlan; pushPlan = null;
+    if (planPush) { try { await push("nola-plan", planPush); } catch(e){ warn(e); } }
     return changed || switched;
   }
 

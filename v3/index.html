@@ -686,24 +686,57 @@ button,a,.chip,.tab,.plink,.btn,.mood,.tile,.colcard,summary{touch-action:manipu
 .tour.tour-up{bottom:auto;top:calc(64px + env(safe-area-inset-top,0px))}
 .tour-acts{flex-wrap:wrap}
 
-/* ---- Holla Holla ---- */
-button.holla{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:8px 16px;border-radius:999px;background:#A8322D;color:#fff;font:800 .9rem/1 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.01em;white-space:nowrap;border:2px solid #23172C;box-shadow:0 3px 0 #23172C}
-button.holla:hover,button.holla:focus-visible{background:#C23F37;outline:none}
-button.holla:active{transform:translateY(2px);box-shadow:0 1px 0 #23172C}
-button.holla[aria-pressed="true"]{background:#E0B65A;color:#23172C}
-.holla-dot{width:9px;height:9px;border-radius:50%;background:#7CFFB2;box-shadow:0 0 0 0 rgba(124,255,178,.7);animation:hollaPulse 1.8s infinite}
-button.holla[aria-pressed="true"] .holla-dot{background:#1E7A4C}
-@keyframes hollaPulse{0%{box-shadow:0 0 0 0 rgba(124,255,178,.7)}70%{box-shadow:0 0 0 8px rgba(124,255,178,0)}100%{box-shadow:0 0 0 0 rgba(124,255,178,0)}}
-@media (prefers-reduced-motion:reduce){ .holla-dot{animation:none} }
-.holla-head{background:#A8322D;color:#fff;border-radius:18px;padding:16px 18px;margin:4px 0 12px}
-.holla-head .eyebrow{color:#FFE2A8!important}
-.holla-head h2{color:#fff;margin:4px 0 4px}
-.holla-head p{margin:0;color:#fff;opacity:.95}
-.holla-head b{color:#fff}
-@media (max-width:420px){ button.holla{padding:7px 12px;font-size:.84rem} }
-
-.holla-off{all:unset;cursor:pointer;margin-left:4px;text-decoration:underline;font-weight:800;color:#fff}
-.holla-off:focus-visible{outline:2px solid #FFE2A8;outline-offset:2px}
+/* ---- header search (catalog + map) ---- */
+@keyframes askPulse{0%{box-shadow:0 0 0 0 rgba(168,50,45,.55)}70%{box-shadow:0 0 0 8px rgba(168,50,45,0)}100%{box-shadow:0 0 0 0 rgba(168,50,45,0)}}
+.gsearch-row{flex:1 1 240px;min-width:0;position:relative;z-index:20}
+.gsearch{position:relative;flex:1 1 180px;min-width:0;display:flex}
+.gsearch .field{width:100%;min-height:44px;background:var(--surface);border-radius:999px;padding-left:16px}
+.gs-panel{position:absolute;z-index:40;top:calc(100% + 6px);left:0;width:min(440px,92vw);max-height:min(68vh,540px);overflow:auto;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(20,12,28,.28);padding:8px 10px 12px}
+.gs-panel .res{margin:6px 0}
+.gs-panel .xh{margin:8px 0 4px}
+.gs-panel .xm{font-size:.85rem;color:var(--muted);margin:0 0 6px}
+.open-head{background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--leaf);border-radius:18px;padding:16px 18px;margin:4px 0 12px}
+.open-head h2{margin:4px 0}
+.cal-week{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.cal-cell{flex:1 0 112px;scroll-snap-align:start;min-height:112px;display:grid;align-content:start;gap:3px;text-align:left;padding:8px 8px 10px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);cursor:pointer;font:inherit}
+.cal-cell.on{border-color:var(--coral);background:var(--coral-soft);box-shadow:inset 0 0 0 1px var(--coral)}
+.cal-dow{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.cal-num{font-family:var(--display);font-size:1.4rem;line-height:1}
+.cal-n{font-size:.75rem;color:var(--muted)}
+.cal-ev{display:block;font-size:.68rem;line-height:1.25;background:var(--gold-soft);border-radius:6px;padding:2px 4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.cal-ev.flight{background:var(--accent-soft)}
+.cal-more{font-size:.68rem;color:var(--muted)}
+.cal-pick{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;max-height:min(52vh,480px);-webkit-overflow-scrolling:touch}
+.cal-col{flex:1 0 112px;display:grid;gap:4px;align-content:start}
+.cal-col-h{display:grid;font-size:.8rem;position:sticky;top:0;background:var(--surface);padding-bottom:4px;z-index:1}
+.cal-col-h span{color:var(--muted);font-size:.72rem}
+.slot{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);display:grid;justify-items:start;align-content:center;padding:4px 8px;font:inherit;cursor:pointer;text-align:left}
+.slot.on{border-color:var(--coral);background:var(--coral-soft);box-shadow:inset 0 0 0 1px var(--coral)}
+.slot.busy{opacity:.55;background:var(--sunk);cursor:not-allowed}
+.slot small{font-size:.68rem;color:var(--muted);max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cal-confirm{position:sticky;bottom:0;background:var(--surface);padding-top:8px;z-index:2}
+.open-head p{margin:0}
+@media (max-width:899px){
+  .top-row{flex-wrap:wrap}
+  .gsearch-row{flex:1 1 100%;order:3}
+  .gs-panel{width:min(100%,92vw)}
+}
+/* safety zones sit on the map, above the scroll shield, without covering zoom */
+.mapwrap{position:relative}
+.safe-legend{position:absolute;left:8px;bottom:28px;z-index:720;display:grid;gap:4px;width:min(210px,62vw);padding:8px;border-radius:14px;background:rgba(255,248,240,.96);color:#23172C;border:2px solid #23172C;box-shadow:0 8px 22px rgba(20,12,28,.28);pointer-events:auto}
+.safe-legend p{margin:2px 2px 0;font-size:.68rem;line-height:1.3;color:#5A4A66}
+.safe-leg-all,.safe-leg-btn{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:8px;min-height:36px;padding:4px 8px;border-radius:10px;font-weight:800;font-size:.78rem;color:#23172C}
+.safe-leg-all{justify-content:center;background:#23172C;color:#F6EBDD;min-height:32px}
+.safe-leg-all[aria-pressed="false"]{background:#fff;color:#23172C;border:1px dashed #23172C}
+.safe-leg-btn[aria-pressed="false"]{opacity:.45}
+.safe-leg-btn i{width:14px;height:14px;border-radius:4px;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+.safe-legend .sw.green{background:#1F8A4C} .safe-legend .sw.yellow{background:#E0A100} .safe-legend .sw.red{background:#D23B3B}
+.leaflet-overlay-pane{z-index:350}
+.leaflet-marker-pane,.leaflet-shadow-pane{z-index:650}
+.leaflet-overlay-pane path.radar-zone,.map polygon.zone{pointer-events:none!important}
+.leaflet-control-zoom{z-index:730}
+.safe-key{display:flex;flex-wrap:wrap;gap:8px}
+.safe-key span{display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:.85rem}
 
 /* ---- no sideways scrolling on phones: rows wrap ---- */
 .hscroll{flex-wrap:wrap!important;overflow:visible!important;padding-bottom:0}
@@ -737,8 +770,8 @@ button.holla[aria-pressed="true"] .holla-dot{background:#1E7A4C}
 .ask-chip{display:inline-flex;align-items:center;padding:6px 12px}
 .ask-btn{width:44px;height:44px}
 /* small-looking controls keep their look but get a 44px invisible tap area */
-button.nola-install,.nm,.plink,.rt-g,.rt a,.sos h3 a,.holla-off,.lg-list a{position:relative}
-button.nola-install::after,.nm::after,.plink::after,.rt-g::after,.rt a::after,.sos h3 a::after,.holla-off::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+button.nola-install,.nm,.plink,.rt-g,.rt a,.sos h3 a,.lg-list a{position:relative}
+button.nola-install::after,.nm::after,.plink::after,.rt-g::after,.rt a::after,.sos h3 a::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
 /* readable small text: nothing under 11px */
 .tab span{font-size:.72rem!important}
 @media (max-width:899px){ .tab{font-size:.72rem} }
@@ -747,7 +780,7 @@ button.nola-install::after,.nm::after,.plink::after,.rt-g::after,.rt a::after,.s
 /* reduced motion: everything, not just some animations */
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important} }
 /* ---- audit round 2: remaining tap targets ---- */
-button.holla,.cakebtn,[data-ink]{min-height:44px}
+.cakebtn,[data-ink]{min-height:44px}
 [data-ink]{min-width:44px}
 [data-close],.ask-x,.meow-x,.tour-x,.sheet .x,.sheet-top button{min-width:44px;min-height:44px}
 #main details>summary,#sheet-root details>summary{min-height:44px;display:flex;align-items:center}
@@ -873,7 +906,7 @@ button.holla,.cakebtn,[data-ink]{min-height:44px}
   <header class="top">
     <nav class="vswitch" aria-label="App version"><span>Version</span><a id="vlink1">V1 · Classic</a><a id="vlink2">V2</a><a id="vlink3" aria-current="page">V3 · New</a></nav>
     <div class="top-row"><div class="v2brand"><span class="kick">New Orleans · Our adventure</span><h1 class="logo2">The <b>NOLA</b> Girls</h1></div>
-      <div class="row"><button class="holla" type="button" data-holla="1" aria-label="Holla Holla: show everything open right now"><span class="holla-dot" aria-hidden="true"></span>Holla Holla</button><span class="sync" id="sync">Saved on this device</span></div></div>
+      <div class="row gsearch-row"><form class="gsearch" id="gsearch" role="search" action="#" onsubmit="return false"><label class="sr" for="gs">Search places</label><input class="field search" id="gs" type="search" placeholder="Search places…" autocomplete="off" enterkeyhint="search" aria-label="Search places in the guide and on the map" aria-controls="gs-panel" aria-expanded="false"><div id="gs-panel" class="gs-panel" hidden></div></form><span class="sync" id="sync">Saved on this device</span></div></div>
     <div class="iron" aria-hidden="true"></div>
     <div class="tabs" role="tablist" id="tabs"></div>
   </header>
@@ -1251,9 +1284,62 @@ const T24 = {1:["08:30","09:30","10:30","12:30","14:00","15:00","16:30","18:00",
   3:["09:30","11:30","13:30","15:00","17:45","19:30","21:15","23:30"],
   4:["09:30","12:30","17:00","17:45","18:00","19:00","19:45","21:00","21:15","23:00"]};
 const uidk = () => Math.random().toString(36).slice(2,9);
-function seedPlan(){
-  return {days: DAYS.map(d=>({n:d.n, h:d.h, who:d.who, items:(d.items||[]).map((it,i)=>({k:uidk(), t:T24[d.n][i], h:it.h, d:it.d||"", p:(it.p||[]).slice(), key:!!it.k, sun:!!it.sun}))}))};
+/* Default day-by-day is empty except Emily's existing Southwest block. DAYS stays only so the old stock template can be recognized and cleared. */
+const DAY_META = [
+  {n:1, h:"Arrival", who:"Emily lands"},
+  {n:2, h:"Thursday", who:""},
+  {n:3, h:"Friday", who:""},
+  {n:4, h:"Saturday", who:""},
+  {n:5, h:"Sunday", who:"Departure"}
+];
+function flightItem(){
+  return {k:"emily-lands", t:"14:25", h:"Emily lands at MSY", d:"Southwest WN 1715 from Denver (left Portland 6:20 am). About 25–35 min by car to the hotel; Uber and Lyft pick up outside baggage claim.", p:[], key:true, sun:false};
 }
+function seedPlan(){
+  return {days: DAY_META.map(d=>({n:d.n, h:d.h, who:d.who, items:d.n===1?[flightItem()]:[]}))};
+}
+const STOCK_HEADS = new Set();
+const STOCK_PIDS = new Set();
+const STOCK_TITLES = new Set(DAYS.map(d=>d.h));
+DAYS.forEach(d=>{
+  (d.items||[]).forEach(it=>{ STOCK_HEADS.add(it.h); (it.p||[]).forEach(id=>STOCK_PIDS.add(id)); });
+  if(d.alt){ STOCK_HEADS.add(d.alt.h); (d.alt.p||[]).forEach(id=>STOCK_PIDS.add(id)); }
+  (d.opts||[]).forEach(o=>{ STOCK_HEADS.add(o.h); (o.p||[]).forEach(id=>STOCK_PIDS.add(id)); });
+});
+function isFlightItem(it){ return !!(it && (it.k==="emily-lands" || /emily lands at msy/i.test(it.h||""))); }
+function isCustomItem(it){
+  if(!it || isFlightItem(it)) return false;
+  const ids = it.p || [];
+  if(ids.some(id=>/^(osm-|user-|ext-)/.test(String(id)))) return true;
+  if(!STOCK_HEADS.has(it.h)) return true;
+  if(ids.some(id=>!STOCK_PIDS.has(id))) return true;
+  return false;
+}
+function isStockItem(it){
+  if(!it || isFlightItem(it) || isCustomItem(it)) return false;
+  return STOCK_HEADS.has(it.h);
+}
+/* If the saved itinerary is the old stock template, replace it with flights only and keep clearly custom stops. */
+function migratePlan(p){
+  if(!p || !Array.isArray(p.days) || !p.days.length) return {plan:seedPlan(), changed:true};
+  const flat = [];
+  p.days.forEach(d=>(d.items||[]).forEach(it=>flat.push({day:d, it})));
+  const looksStock = flat.some(x=>isStockItem(x.it)) || p.days.some(d=>STOCK_TITLES.has(d.h));
+  if(!looksStock) return {plan:p, changed:false};
+  const next = seedPlan();
+  flat.filter(x=>isCustomItem(x.it)).forEach(({day, it})=>{
+    let dest = next.days.find(x=>x.n===day.n);
+    if(!dest){
+      dest = {n:day.n, h:STOCK_TITLES.has(day.h)?("Day "+day.n):(day.h||"Open"), who:STOCK_TITLES.has(day.h)?"":(day.who||""), items:[]};
+      next.days.push(dest);
+      next.days.sort((a,b)=>a.n-b.n);
+    }
+    dest.items.push(it);
+  });
+  next.days.forEach(d=>d.items.sort((a,b)=>toM(a.t||"00:00")-toM(b.t||"00:00")));
+  return {plan:next, changed:true};
+}
+window.nolaMigratePlan = migratePlan;
 
 /* booking checklist, with everything needed to actually book each one */
 const CHECKS = [
@@ -1357,6 +1443,10 @@ try{ const t0 = JSON.parse(localStorage.getItem("nola-trip")||"{}")||{}; trip = 
 let plan = null;
 try{ const lp = JSON.parse(localStorage.getItem("nola-plan")||"null"); if(lp && Array.isArray(lp.days)) plan = lp; }catch(e){}
 if(!plan) plan = seedPlan();
+else {
+  const mig = migratePlan(plan);
+  if(mig.changed){ plan = mig.plan; try{ localStorage.setItem("nola-plan", JSON.stringify(plan)); }catch(e){} }
+}
 S.planEdit = false; S.confirmReset = false;
 try{ const t = localStorage.getItem("nola-tab"); if(t && VIEWKEYS.includes(t)) S.tab=t; }catch(e){}
 if(location.hash && VIEWKEYS.includes(location.hash.slice(1))) S.tab = location.hash.slice(1);
@@ -1626,19 +1716,23 @@ function dayRoute(d){
   const s = q => q[0].toFixed(5)+","+q[1].toFixed(5), wps = seq.slice(1,-1).slice(0,8);
   return "https://www.google.com/maps/dir/?api=1&origin="+s(seq[0])+"&destination="+s(seq[seq.length-1])+"&travelmode=walking"+(wps.length?"&waypoints="+encodeURIComponent(wps.map(s).join("|")):"");
 }
-function vPlan(){
+function vPlan(cal){
   if(!plan.days.find(x=>x.n===S.day)) S.day = plan.days[0].n;
   const d = plan.days.find(x=>x.n===S.day), ti = tripInfo(), seed = DAYS.find(x=>x.n===d.n) || {};
   const ed = S.planEdit && !readOnly;
   const dlab = n => { if(!ti) return ""; const x=ti.dateOf(n); let s=dayLabel(x); if(ti.D && x>ti.D) s+=" · after you leave"; else if(ti.D && x.getTime()===ti.D.getTime()) s+=" · departure day"; return s; };
-  let h = talk("plan") + vPicture();
-  h += '<div class="head"><span class="eyebrow">Itinerary</span><h2>Day by day</h2><p class="muted small">'
-     + (ti ? 'Each place shows whether it\'s open at that stop\'s time. Tap any stop to see why it\'s worth it. Plans changed? Open a stop and tap Plan B to see what\'s open then and swap it in.' : 'Tap any stop to see why it\'s worth it. Add your dates above and every stop will show whether its place is open at that time.')
-     + (shared ? ' Changes are shared with the group.' : '') + '</p></div>';
-  h += '<div class="row"><button class="btn'+(ed?' primary':'')+'" data-editplan="1"'+(readOnly?' disabled':'')+'>'+(ed?'Done editing':'Edit the plan')+'</button>'
-     + (ed?'<button class="btn" data-reset="1">'+(S.confirmReset?'Tap again to reset everything':'Reset to the original plan')+'</button>':'')+'</div>';
-  h += '<div class="row" role="group" aria-label="Day">'+plan.days.map(x=>'<button class="chip" data-day="'+x.n+'" aria-pressed="'+(x.n===S.day)+'">Day '+x.n+(ti?' · '+esc(fmtD(ti.dateOf(x.n),{weekday:"short"})):'')+'</button>').join("")
-     + (ed?'<button class="chip" data-addday="1">+ Add a day</button>':'')+'</div>';
+  let h = "";
+  if(!cal){
+    h += talk("plan") + vPicture();
+    h += '<div class="head"><span class="eyebrow">Itinerary</span><h2>Day by day</h2><p class="muted small">'
+       + (ti ? 'Each place shows whether it\'s open at that stop\'s time. Tap any stop to see why it\'s worth it. Plans changed? Open a stop and tap Plan B to see what\'s open then and swap it in.' : 'Tap any stop to see why it\'s worth it. Add your dates above and every stop will show whether its place is open at that time.')
+       + (shared ? ' Changes are shared with the group.' : '') + '</p></div>';
+    h += '<div class="row" role="group" aria-label="Day">'+plan.days.map(x=>'<button class="chip" data-day="'+x.n+'" aria-pressed="'+(x.n===S.day)+'">Day '+x.n+(ti?' · '+esc(fmtD(ti.dateOf(x.n),{weekday:"short"})):'')+'</button>').join("")
+       + (ed?'<button class="chip" data-addday="1">+ Add a day</button>':'')+'</div>';
+  }
+  h += '<div class="row"><button class="btn'+(ed?' primary':'')+'" data-editplan="1"'+(readOnly?' disabled':'')+'>'+(ed?'Done editing':'Edit this day')+'</button>'
+     + (ed?'<button class="btn" data-reset="1">'+(S.confirmReset?'Tap again to reset':'Reset to flights only')+'</button>':'')
+     + (cal&&ed?'<button class="chip" data-addday="1">+ Add a day</button>':'')+'</div>';
   h += '<article class="day"><div class="day-head"><div>'
      + (ed ? '<label class="small muted" for="dh-'+d.n+'">Day '+d.n+' title</label><input class="field" id="dh-'+d.n+'" value="'+esc(d.h)+'">' : '<h3>Day '+d.n+' · '+esc(d.h)+'</h3>')
      + (ti?'<span class="date-tag">'+esc(dlab(d.n))+'</span>':'')+'</div><span class="who">'+esc(d.who||"")+(trip.hotel?' · from '+esc(trip.hotel):'')+'</span></div>';
@@ -1668,13 +1762,15 @@ function vPlan(){
       return li;
     }).join("")+'</ol>';
     const rt = dayRoute(d); if(rt) h += '<div class="row"><a class="btn primary" href="'+rt+'" target="_blank" rel="noopener">Route this day in Google Maps</a><span class="small muted">All of this day\x27s stops as one walking route'+(trip.lat?', starting from your hotel':'')+'. Switch to driving in Maps for far stops.</span></div>';
-  } else h += '<p class="muted small">No stops yet.'+(ed?'':' Tap Edit the plan to add some, or use "Add to plan" on any place.')+'</p>';
+  } else h += '<p class="muted small">'+(cal?'Nothing planned this day yet. Open a place and tap <b>Add to trip</b>, then pick a free time.':'No stops yet.'+(ed?'':' Tap Edit this day, or use Add to trip on any place.'))+'</p>';
   if(ed) h += '<div class="row"><button class="btn primary" data-addstop="1">+ Add a stop</button></div>';
-  if(seed.alt) h += '<div class="alt"><b>'+esc(seed.alt.h)+'</b><span>'+esc(seed.alt.d)+'</span>'+plinks(seed.alt.p)+'</div>';
-  if(seed.opts) h += '<div class="opts">'+seed.opts.map(o=>'<div class="opt"><b>'+esc(o.h)+'</b><span class="muted small">'+esc(o.d)+'</span>'+plinks(o.p)+'</div>').join("")+'</div>';
+  if(!cal && seed.alt) h += '<div class="alt"><b>'+esc(seed.alt.h)+'</b><span>'+esc(seed.alt.d)+'</span>'+plinks(seed.alt.p)+'</div>';
+  if(!cal && seed.opts) h += '<div class="opts">'+seed.opts.map(o=>'<div class="opt"><b>'+esc(o.h)+'</b><span class="muted small">'+esc(o.d)+'</span>'+plinks(o.p)+'</div>').join("")+'</div>';
   h += '</article>';
-  const bdone = CHECKS.filter(c=>checks[c.id]&&checks[c.id].done).length;
-  h += '<details class="cat" id="booking"'+(S.secs.book?' open':'')+'><summary data-sec="book"><span class="t2">Booking checklist</span><span class="c">'+bdone+' of '+CHECKS.length+' done</span><span class="hint">Cruise, Preservation Hall, Snug Harbor, dinners, tours. Tap for times, prices, phones, and links.</span></summary><div class="body">'+vBook()+'</div></details>';
+  if(!cal){
+    const bdone = CHECKS.filter(c=>checks[c.id]&&checks[c.id].done).length;
+    h += '<details class="cat" id="booking"'+(S.secs.book?' open':'')+'><summary data-sec="book"><span class="t2">Booking checklist</span><span class="c">'+bdone+' of '+CHECKS.length+' done</span><span class="hint">Cruise, Preservation Hall, Snug Harbor, dinners, tours. Tap for times, prices, phones, and links.</span></summary><div class="body">'+vBook()+'</div></details>';
+  }
   return h;
 }
 
@@ -1706,15 +1802,42 @@ function vAlts(sh){
   return h;
 }
 
-/* add a place to the plan */
+/* first open hour on the preferred day, then the other days */
+function firstFree(preferDay){
+  const order = [];
+  const pref = plan.days.find(d=>d.n===preferDay);
+  if(pref) order.push(pref);
+  plan.days.forEach(d=>{ if(d.n!==preferDay) order.push(d); });
+  for(const d of order){
+    const busy = new Set((d.items||[]).map(it=>Math.floor(toM(it.t||"12:00")/60)));
+    for(let hr=8; hr<=21; hr++){ if(!busy.has(hr)) return {day:d.n, t:String(hr).padStart(2,"0")+":00"}; }
+  }
+  return {day:(pref||plan.days[0]).n, t:"12:00"};
+}
+/* add a place to the trip: a free/busy calendar, then confirm */
 function vAddTo(sh){
   const p = BY[sh.id]; if(!p) return "";
+  const ti = tripInfo();
   const W = dayW(sh.day, sh.t);
-  let h = '<div class="sheet-top"><div><span class="eyebrow">Add to the plan</span><h2 id="sheet-title">'+esc(p.n)+'</h2></div><button class="close" data-close="1" aria-label="Close">×</button></div>';
-  h += '<div class="form"><label for="addday">Day<select class="field" id="addday">'+plan.days.map(x=>'<option value="'+x.n+'"'+(x.n===sh.day?' selected':'')+'>Day '+x.n+' · '+esc(x.h)+'</option>').join("")+'</select></label>'
-     + '<label for="addtime">Time<input class="field" id="addtime" type="time" value="'+esc(sh.t)+'"></label></div>';
-  h += W ? '<div class="today">'+chipStatus(p,W)+'<span class="muted">'+esc(dayLabel(parseD(W.date)))+' at '+fmtM(W.mins)+'</span></div>' : '<p class="small muted">Add trip dates to check whether it\'s open then.</p>';
-  h += '<div class="row"><button class="btn primary" data-doadd="1">Add to Day '+sh.day+'</button><button class="btn" data-close="1">Cancel</button></div>';
+  let h = '<div class="sheet-top"><div><span class="eyebrow">Add to trip</span><h2 id="sheet-title">'+esc(p.n)+'</h2></div><button class="close" data-close="1" aria-label="Close">×</button></div>';
+  h += '<p class="small muted">Pick a free time. Gray slots are already taken. Then confirm and it lands on the Calendar.</p>';
+  h += '<div class="cal-pick" role="group" aria-label="Free times by day">';
+  plan.days.forEach(d=>{
+    const dt = ti ? ti.dateOf(d.n) : null;
+    const busy = {};
+    (d.items||[]).forEach(it=>{ const hr=Math.floor(toM(it.t||"00:00")/60); if(busy[hr]==null) busy[hr]=it.h; });
+    h += '<div class="cal-col"><div class="cal-col-h"><b>'+esc(dt?fmtD(dt,{weekday:"short"}):("Day "+d.n))+'</b><span>'+(dt?esc(fmtD(dt,{month:"short",day:"numeric"})):"")+'</span></div>';
+    for(let hr=8; hr<=21; hr++){
+      const t = String(hr).padStart(2,"0")+":00";
+      const sel = sh.day===d.n && Math.floor(toM(sh.t)/60)===hr;
+      if(busy[hr]) h += '<button type="button" class="slot busy" disabled aria-disabled="true"><span>'+fmtM(hr*60)+'</span><small>'+esc(busy[hr])+'</small></button>';
+      else h += '<button type="button" class="slot'+(sel?' on':'')+'" data-slot="'+d.n+'|'+t+'" aria-pressed="'+sel+'"><span>'+fmtM(hr*60)+'</span><small>Free</small></button>';
+    }
+    h += '</div>';
+  });
+  h += '</div>';
+  h += W ? '<div class="today">'+chipStatus(p,W)+'<span class="muted">'+esc(dayLabel(parseD(W.date)))+' at '+fmtM(toM(sh.t))+'</span></div>' : '<p class="small muted">Add trip dates to check whether it\'s open then.</p>';
+  h += '<div class="row cal-confirm"><button class="btn primary" data-doadd="1">Confirm · '+esc(fmtM(toM(sh.t)))+' · Day '+sh.day+'</button><button class="btn" data-close="1">Cancel</button></div>';
   return h;
 }
 
@@ -1835,23 +1958,30 @@ const STREETS = [
 const HOODS = [["French Quarter",29.9590,-90.0660],["Marigny",29.9668,-90.0560],["Bywater",29.9690,-90.0400],["CBD",29.9478,-90.0715],["Tremé",29.9655,-90.0715],
  ["Garden District",29.9255,-90.0860],["Uptown",29.9300,-90.1120],["Central City",29.9380,-90.0900],["Mid-City",29.9730,-90.0930],["City Park",29.9920,-90.0950],
  ["Algiers Point",29.9520,-90.0535],["Lower Garden District",29.9345,-90.0735],["Lake Pontchartrain",30.0340,-90.0600],["Mississippi River",29.9180,-90.1080]];
-/* visitor advice for walking at night, not crime data */
+/* Visitor walking guidance for after dark. Approximate edges, not crime data or legal advice.
+   Green = busier, better-lit visitor corridors. Yellow = fine by day, caution at night. Red = don't walk at night. */
 const SAFETY = [
- ["green","French Quarter core",[[29.9512,-90.0628],[29.9540,-90.0712],[29.9653,-90.0614],[29.9623,-90.0563]]],
- ["green","Frenchmen St music blocks",[[29.9632,-90.0594],[29.9656,-90.0596],[29.9657,-90.0562],[29.9633,-90.0560]]],
- ["green","CBD and Warehouse District",[[29.9512,-90.0628],[29.9540,-90.0712],[29.9430,-90.0735],[29.9405,-90.0640]]],
- ["green","Garden District",[[29.9335,-90.0815],[29.9280,-90.0765],[29.9225,-90.0865],[29.9285,-90.0915]]],
- ["green","Uptown along St. Charles",[[29.9285,-90.0915],[29.9225,-90.0865],[29.9185,-90.1050],[29.9260,-90.1250],[29.9400,-90.1365],[29.9460,-90.1300],[29.9350,-90.1100]]],
- ["green","City Park (daytime)",[[29.9800,-90.1000],[29.9960,-90.1000],[29.9960,-90.0870],[29.9800,-90.0870]]],
- ["yellow","Rampart St edge of the Quarter",[[29.9540,-90.0712],[29.9553,-90.0727],[29.9667,-90.0628],[29.9653,-90.0614]]],
- ["yellow","Marigny and Bywater side streets",[[29.9623,-90.0563],[29.9667,-90.0628],[29.9740,-90.0450],[29.9705,-90.0330],[29.9620,-90.0350]]],
- ["yellow","Lower Garden District",[[29.9430,-90.0735],[29.9335,-90.0815],[29.9280,-90.0765],[29.9360,-90.0660],[29.9405,-90.0640]]],
- ["yellow","Algiers Point",[[29.9585,-90.0590],[29.9600,-90.0470],[29.9500,-90.0470],[29.9490,-90.0590]]],
- ["yellow","Mid-City",[[29.9620,-90.0800],[29.9720,-90.0700],[29.9800,-90.0870],[29.9800,-90.1000],[29.9680,-90.1050]]],
- ["red","Tremé and 7th Ward, beyond Rampart",[[29.9553,-90.0727],[29.9667,-90.0628],[29.9720,-90.0690],[29.9620,-90.0800]]],
- ["red","Central City",[[29.9430,-90.0745],[29.9480,-90.0830],[29.9380,-90.0990],[29.9300,-90.0930],[29.9335,-90.0815]]]
+ ["green","French Quarter core",[[29.9536,-90.0666],[29.9546,-90.0696],[29.9569,-90.0730],[29.9618,-90.0692],[29.9662,-90.0634],[29.9636,-90.0576],[29.9598,-90.0572],[29.9554,-90.0630]]],
+ ["green","Frenchmen St music blocks",[[29.9628,-90.0586],[29.9644,-90.0594],[29.9656,-90.0556],[29.9640,-90.0550]]],
+ ["green","Decatur and the riverfront",[[29.9542,-90.0648],[29.9532,-90.0622],[29.9610,-90.0564],[29.9632,-90.0578],[29.9596,-90.0618]]],
+ ["green","CBD and Warehouse District",[[29.9536,-90.0666],[29.9486,-90.0622],[29.9392,-90.0660],[29.9416,-90.0772],[29.9492,-90.0784],[29.9546,-90.0736]]],
+ ["green","Garden District along St. Charles",[[29.9348,-90.0788],[29.9312,-90.0752],[29.9255,-90.0835],[29.9228,-90.0910],[29.9272,-90.0942],[29.9328,-90.0865]]],
+ ["green","Uptown along St. Charles",[[29.9272,-90.0942],[29.9228,-90.0910],[29.9188,-90.1080],[29.9255,-90.1245],[29.9365,-90.1320],[29.9425,-90.1240],[29.9335,-90.1055]]],
+ ["green","City Park (daytime)",[[29.9835,-90.1025],[29.9955,-90.1025],[29.9955,-90.0865],[29.9835,-90.0865]]],
+ ["yellow","Rampart edge and Armstrong Park",[[29.9569,-90.0730],[29.9586,-90.0764],[29.9682,-90.0664],[29.9662,-90.0634]]],
+ ["yellow","St. Claude Ave corridor",[[29.9638,-90.0558],[29.9662,-90.0572],[29.9718,-90.0415],[29.9688,-90.0388],[29.9648,-90.0488]]],
+ ["yellow","Marigny and Bywater side streets",[[29.9636,-90.0576],[29.9662,-90.0634],[29.9682,-90.0664],[29.9742,-90.0485],[29.9712,-90.0328],[29.9622,-90.0348]]],
+ ["yellow","Lower Garden District",[[29.9488,-90.0738],[29.9416,-90.0772],[29.9348,-90.0788],[29.9312,-90.0752],[29.9365,-90.0662],[29.9410,-90.0642]]],
+ ["yellow","Algiers Point",[[29.9578,-90.0578],[29.9602,-90.0485],[29.9510,-90.0468],[29.9492,-90.0572]]],
+ ["yellow","Mid-City",[[29.9685,-90.0855],[29.9765,-90.0745],[29.9835,-90.0865],[29.9835,-90.1025],[29.9725,-90.1045]]],
+ ["red","Tremé past Rampart, toward Claiborne",[[29.9586,-90.0764],[29.9612,-90.0858],[29.9738,-90.0792],[29.9708,-90.0682],[29.9682,-90.0664]]],
+ ["red","Claiborne Ave under I-10",[[29.9578,-90.0792],[29.9594,-90.0828],[29.9702,-90.0752],[29.9686,-90.0718]]],
+ ["red","Central City",[[29.9442,-90.0768],[29.9488,-90.0862],[29.9395,-90.1005],[29.9308,-90.0942],[29.9348,-90.0810]]],
+ ["red","Far Bywater toward the Industrial Canal",[[29.9648,-90.0335],[29.9708,-90.0348],[29.9732,-90.0238],[29.9655,-90.0228]]]
 ];
-const SAFE_TXT = {green:"Busy and well-lit. Normal city precautions, day and night.", yellow:"Quieter blocks. Fine by day; stay alert and take a rideshare after dark.", red:"Don't walk here at night. Take a car door to door. Daytime tours are fine."};
+const SAFE_TXT = {green:"Safer visitor area: busy and better lit. Still use normal city sense.", yellow:"Caution: fine by day. At night stay alert, stick to the main street, or take a rideshare.", red:"Avoid walking here at night. Take a car door to door. Daytime visits are a different story."};
+S.mapSafety = true;
+S.safeOn = {green:true, yellow:true, red:true};
 const MAP_VIEWS = {city:["Whole city",29.905,30.04,-90.145,-89.975], fq:["French Quarter",29.949,29.968,-90.076,-90.049], mb:["Marigny & Bywater",29.955,29.976,-90.068,-90.030], cbd:["CBD & Warehouse",29.938,29.958,-90.090,-90.055], up:["Garden District & Uptown",29.918,29.955,-90.140,-90.066]};
 const GROUP_COLOR = ["var(--coral)","var(--lav)","var(--gold)","var(--accent)"];
 const groupIx = p => { const i = FG.findIndex(([,cs])=>cs.includes(GROUP_ORDER.find(c=>p.c.includes(c)))); return i<0?3:i; };
@@ -1869,7 +1999,7 @@ function vSketch(){
   let s = '<svg class="map" viewBox="'+x0.toFixed(1)+' '+y0.toFixed(1)+' '+w.toFixed(1)+' '+hgt.toFixed(1)+'" preserveAspectRatio="xMidYMid meet" style="aspect-ratio:'+w.toFixed(1)+' / '+hgt.toFixed(1)+'" role="img" aria-label="Map of New Orleans places">';
   s += '<rect x="0" y="0" width="884" height="810" fill="var(--surface)"/>';
   s += '<rect x="0" y="0" width="884" height="'+my(30.028).toFixed(1)+'" fill="var(--water)"/>';
-  if(S.mapSafety) SAFETY.forEach(([lv,nm,poly])=>{ s += '<polygon class="zone '+lv+'" points="'+poly.map(q=>pt(q[0],q[1])).join(" ")+'"><title>'+esc(nm+': '+SAFE_TXT[lv])+'</title></polygon>'; });
+  if(S.mapSafety) SAFETY.forEach(([lv,nm,poly])=>{ if(S.safeOn && S.safeOn[lv]===false) return; s += '<polygon class="zone '+lv+'" points="'+poly.map(q=>pt(q[0],q[1])).join(" ")+'"><title>'+esc(nm+': '+SAFE_TXT[lv])+'</title></polygon>'; });
   STREETS.forEach(([nm,line])=>{ s += '<polyline points="'+line.map(q=>pt(q[0],q[1])).join(" ")+'" fill="none" stroke="var(--line)" stroke-width="'+(2.2*f).toFixed(2)+'" stroke-linecap="round"/>'; });
   s += '<polyline points="'+RIVER.map(q=>pt(q[0],q[1])).join(" ")+'" fill="none" stroke="var(--water)" stroke-width="'+(Math.max(9*f,1.2)).toFixed(2)+'" stroke-linejoin="round" stroke-linecap="round"/>';
   const fs = (11*f).toFixed(2);
@@ -1968,7 +2098,7 @@ function vSheet(){
     })()
    +'<dl class="kv"><dt>Area</dt><dd>'+esc(p.a)+'</dd>'+(p.ad?'<dt>Address</dt><dd>'+esc(p.ad)+(p.adNote?' <span class="small muted">('+esc(p.adNote)+')</span>':'')+'</dd>':'')+'<dt>Distance</dt><dd>'+esc(distLabel(p))+'</dd><dt>Price</dt><dd class="mono">'+esc((p.hrs&&p.hrs.price)||p.pr||"–")+'</dd>'+(p.hrs&&p.hrs.reserve?'<dt>Booking</dt><dd>'+esc(p.hrs.reserve)+'</dd>':'')+(p.ph?'<dt>Phone</dt><dd><a class="mono" href="tel:'+String(p.ph).replace(/[^0-9+]/g,'')+'">'+esc(p.ph)+'</a>'+(p.phw?' <span class="small muted">('+esc(p.phw)+')</span>':'')+'</dd>':(p.contact?'<dt>Contact</dt><dd>'+esc(p.contact)+'</dd>':''))+'<dt>Type</dt><dd>'+esc(p.c.map(c=>CATS[c]).join(", "))+'</dd></dl>'
    +(p.hrs&&p.hrs.source?'<p class="srcline">Hours source: <a href="'+esc(p.hrs.source)+'" target="_blank" rel="noopener">'+esc(p.hrs.source.replace(/^https?:\/\/(www\.)?/,'').split('/')[0])+'</a>'+(p.hrs.confidence?' · confidence '+esc(p.hrs.confidence):'')+'</p>':'')
-   +'<div class="actions">'+cakeBtn(p)+(readOnly?'':'<button class="btn" data-addto="'+p.id+'">Add to plan</button>')+dirBtns(p)+(p.ph?'<button class="btn" data-copy="'+esc(p.ph)+'">Copy phone</button>':'')+(p.url?'<a class="btn" href="'+esc(p.url)+'" target="_blank" rel="noopener">Website</a>':'')+'</div>'
+   +'<div class="actions">'+cakeBtn(p)+(readOnly?'':'<button class="btn" data-addto="'+p.id+'">Add to trip</button>')+dirBtns(p)+(p.ph?'<button class="btn" data-copy="'+esc(p.ph)+'">Copy phone</button>':'')+(p.url?'<a class="btn" href="'+esc(p.url)+'" target="_blank" rel="noopener">Website</a>':'')+'</div>'
    +(shared&&who.length?'<p class="small muted">On the kitchen table for '+who.map(id=>esc((profiles[id]&&profiles[id].name)||(id===uid?"you":"someone"))).join(", ")+'</p>':'')
    +'</div></div>';
 }
@@ -2044,7 +2174,7 @@ function vSaved(opts){
     ? 'Your plans are empty. Browse the Map or Explore, then tap <b>Add to my plans</b> on any place. You can remove it the same way.'
     : 'Nothing saved yet. Tap Add to my plans on any place on Home, in Explore, or on the Map.')+'</div>';
   const tally = {must:rows.filter(r=>r.must.length).length, inplan:rows.filter(r=>inPlan(r.p.id).length).length};
-  h += '<div class="summary"><div class="sum"><b>'+rows.length+'</b><span>'+(mineOnly?'My plans':'Saved')+'</span></div><div class="sum soon"><b>'+tally.must+'</b><span>Must-do</span></div><div class="sum open"><b>'+tally.inplan+'</b><span>In day plan</span></div></div>';
+  h += '<div class="summary"><div class="sum"><b>'+rows.length+'</b><span>'+(mineOnly?'My plans':'Saved')+'</span></div><div class="sum soon"><b>'+tally.must+'</b><span>Must-do</span></div><div class="sum open"><b>'+tally.inplan+'</b><span>On the calendar</span></div></div>';
   h += rows.map(r=>{
     const p=r.p, mv=myVotes()[p.id], ip=inPlan(p.id), mine=myPicks().has(p.id);
     return '<div class="res"><button class="nm" data-open="'+p.id+'">'+esc(p.n)+'</button><div class="right">'+pill(statusAt(p,N))+cakeBtn(p)+'</div>'
@@ -2052,7 +2182,7 @@ function vSaved(opts){
       + (mineOnly?'':('<div class="votes" role="group" aria-label="Your vote on '+esc(p.n)+'">'+[["must","Must do"],["maybe","Interested"],["skip","Skip"]].map(([k,l])=>'<button class="vote v-'+k+'" data-vote="'+p.id+'|'+k+'" aria-pressed="'+(mv===k)+'">'+l+' <span class="cn">'+r[k].length+'</span>'+(shared?faces(r[k]):'')+'</button>').join("")+'</div>'))
       + '<div class="sub2"><span>'+esc(p.a)+' · '+esc(shortDist(p))+'</span>'
       + '<button class="btn '+(mine?'primary':'')+'" data-heart="'+p.id+'" aria-pressed="'+mine+'">'+(mine?'✓ In my plans · Remove':'Add to my plans')+'</button>'
-      + (ip.length?'<span class="st open">In plan: '+ip.join(", ")+'</span>':(readOnly?'':'<button class="btn" data-addto="'+p.id+'">Add to day plan</button>'))
+      + (ip.length?'<span class="st open">On the calendar: '+ip.join(", ")+'</span>':(readOnly?'':'<button class="btn" data-addto="'+p.id+'">Add to trip</button>'))
       + '<a class="btn" href="'+dirUrl(p)+'" target="_blank" rel="noopener">Directions</a></div></div>';
   }).join("");
   return h;
@@ -2086,7 +2216,7 @@ function vNext2(W){
 }
 
 /* ---------- real map (Leaflet); falls back to the sketch map when tiles can't load ---------- */
-const RADAR = {green:"#12C94B", yellow:"#FFD000", red:"#FF2A2A"};
+const RADAR = {green:"#1F8A4C", yellow:"#E0A100", red:"#C62828"};
 let LMAP=null, LCL=null, LZONES=null, LME=null, mapEl=null, tileOk=false, tileErr=0, LDARK=null;
 const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888";
 const mapAvailable = () => !!(window.L && window.L.map) && !S.noTiles;
@@ -2149,11 +2279,16 @@ function updateMarkers(){
     LCL.addLayer(mk);
   });
   LZONES.clearLayers();
-  if(S.mapSafety){
-    const col = RADAR;
+  const safeOn = S.safeOn || {green:true, yellow:true, red:true};
+  if(S.mapSafety && (safeOn.green || safeOn.yellow || safeOn.red)){
+    const col = {green:"#1F8A4C", yellow:"#E0A100", red:"#C62828"};
     const order = {green:0, yellow:1, red:2};
-    SAFETY.slice().sort((a,b)=>order[a[0]]-order[b[0]]).forEach(([lv,nm,poly])=>{ L.polygon(poly, {stroke:true, color:col[lv], weight:14, opacity:.22, fill:false, interactive:false}).addTo(LZONES); L.polygon(poly, {color:col[lv], weight:2, opacity:.95, fillColor:col[lv], fillOpacity:.42, interactive:true, className:"radar-zone"}).bindTooltip(({green:"Safe",yellow:"Use caution",red:"Not safe at night"})[lv]+" · "+nm+": "+SAFE_TXT[lv], {sticky:true}).addTo(LZONES); });
+    SAFETY.filter(z=>safeOn[z[0]]!==false).slice().sort((a,b)=>order[a[0]]-order[b[0]]).forEach(([lv,nm,poly])=>{
+      L.polygon(poly, {stroke:true, color:col[lv], weight:2, opacity:.95, fill:true, fillColor:col[lv], fillOpacity:.36, interactive:false, bubblingMouseEvents:false, className:"radar-zone"}).addTo(LZONES);
+    });
     if(!LMAP.hasLayer(LZONES)) LZONES.addTo(LMAP);
+    if(LZONES.bringToBack) LZONES.bringToBack();
+    if(LCL && LCL.bringToFront) LCL.bringToFront();
   } else if(LMAP.hasLayer(LZONES)) LMAP.removeLayer(LZONES);
   LME.clearLayers();
   if(LOC){ L.circle([LOC.lat,LOC.lon], {radius:Math.min(LOC.acc||30,300), color:"#2B7BFF", weight:1, fillOpacity:.12}).addTo(LME); L.circleMarker([LOC.lat,LOC.lon], {radius:7, color:"#fff", weight:3, fillColor:"#2B7BFF", fillOpacity:1}).bindTooltip("You are here").addTo(LME); }
@@ -2450,7 +2585,7 @@ async function refreshProfiles(){
 
 /* ---------- events ---------- */
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-tab],[data-day],[data-cat],[data-heart],[data-open],[data-close],[data-scrim],[data-copy],[data-check],[data-talk],[data-edit],[data-save],[data-cancel],[data-nowbtn],[data-when],[data-ncat],[data-editplan],[data-reset],[data-addday],[data-addstop],[data-planb],[data-addplace],[data-mv],[data-del],[data-rmp],[data-swap],[data-addp],[data-altsame],[data-addto],[data-doadd],[data-fixed],[data-vote],[data-ink],[data-inkfav],[data-locate],[data-next2],[data-lview],#mapOpen,#mapSaved,[data-sec],[data-stop],[data-mapcat],[data-mapview],[data-mapzoom],[data-mapcolor],[data-clearq],[data-clearex],#mapSafety,#nowLate,#exOpen,#exWalk,#picksOnly,#walkOnly,#nowPicks");
+  const el = e.target.closest("[data-tab],[data-day],[data-cat],[data-heart],[data-open],[data-close],[data-scrim],[data-copy],[data-check],[data-talk],[data-edit],[data-save],[data-cancel],[data-nowbtn],[data-when],[data-ncat],[data-editplan],[data-reset],[data-addday],[data-addstop],[data-planb],[data-addplace],[data-mv],[data-del],[data-rmp],[data-swap],[data-addp],[data-altsame],[data-addto],[data-doadd],[data-slot],[data-fixed],[data-vote],[data-ink],[data-inkfav],[data-locate],[data-next2],[data-lview],#mapOpen,#mapSaved,[data-sec],[data-stop],[data-mapcat],[data-mapview],[data-mapzoom],[data-mapcolor],[data-clearq],[data-clearex],#mapSafety,[data-safetoggle],[data-safelv],#nowLate,#exOpen,#exWalk,#picksOnly,#walkOnly,#nowPicks");
   if(!el) return;
   if(el.dataset.scrim && e.target!==el) return;
   if(el.dataset.sec){ e.preventDefault(); const det=el.parentElement; S.secs[el.dataset.sec]=!det.open; render(); return; }
@@ -2471,7 +2606,19 @@ document.addEventListener("click", e=>{
   if(el.dataset.mapview){ S.mapViewKey=el.dataset.mapview; S.mapBox=MAP_VIEWS[el.dataset.mapview].slice(1); render(); return; }
   if(el.dataset.mapzoom){ const b=S.mapBox||MAP_VIEWS.city.slice(1), z=el.dataset.mapzoom==="in"?0.6:1.6, cl=(b[0]+b[1])/2, co=(b[2]+b[3])/2, hl=(b[1]-b[0])*z/2, ho=(b[3]-b[2])*z/2; S.mapBox=[cl-hl,cl+hl,co-ho,co+ho]; S.mapViewKey="custom"; render(); return; }
   if(el.dataset.mapcolor){ S.mapColor=el.dataset.mapcolor; render(); return; }
-  if(el.id==="mapSafety"){ S.mapSafety = !S.mapSafety; render(); return; }
+  if(el.id==="mapSafety" || el.dataset.safetoggle){
+    S.mapSafety = !S.mapSafety;
+    if(!S.safeOn) S.safeOn = {green:true, yellow:true, red:true};
+    if(S.mapSafety) S.safeOn = {green:true, yellow:true, red:true};
+    render(); return;
+  }
+  if(el.dataset.safelv){
+    const k = el.dataset.safelv;
+    if(!S.safeOn) S.safeOn = {green:true, yellow:true, red:true};
+    S.safeOn[k] = S.safeOn[k]===false ? true : false;
+    S.mapSafety = !!(S.safeOn.green || S.safeOn.yellow || S.safeOn.red);
+    render(); return;
+  }
   if(el.id==="mapOpen"){ S.mapOpen=!S.mapOpen; render(); return; }
   if(el.id==="mapSaved"){ S.mapSaved=!S.mapSaved; render(); return; }
   if(el.id==="nowLate"){ S.nowLate=!S.nowLate; render(); return; }
@@ -2525,7 +2672,7 @@ function planClick(el){
   if(ds.ink){ const [n,k]=ds.ink.split("|"); S.sheet={mode:"ink", n:+n, k}; render(); const c=document.querySelector(".close"); if(c) c.focus(); return true; }
   if(ds.inkfav!==undefined){ S.inkFav = ds.inkfav==="1"; render(); return true; }
   if(ds.editplan){ S.planEdit=!S.planEdit; S.confirmReset=false; render(); return true; }
-  if(ds.reset){ if(guard()) return true; if(S.confirmReset){ plan=seedPlan(); S.confirmReset=false; S.day=1; savePlan("Back to the original plan."); } else { S.confirmReset=true; render(); } return true; }
+  if(ds.reset){ if(guard()) return true; if(S.confirmReset){ plan=seedPlan(); S.confirmReset=false; S.day=1; savePlan("Back to flights only."); } else { S.confirmReset=true; render(); } return true; }
   if(ds.addday){ if(guard()) return true; const n=Math.max(...plan.days.map(x=>x.n))+1; plan.days.push({n, h:"Free day", who:"Whole group", items:[]}); S.day=n; savePlan("Added Day "+n+"."); return true; }
   if(ds.addstop){ if(guard()) return true; const d=plan.days.find(x=>x.n===S.day); const last=d.items.length?toM(d.items[d.items.length-1].t)+60:600; const t=Math.min(last,23*60+30); const k=uidk();
     d.items.push({k, t:String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0"), h:"New stop", d:"", p:[]}); savePlan();
@@ -2539,8 +2686,9 @@ function planClick(el){
   if(ds.rmp){ if(guard()) return true; const [k,id]=ds.rmp.split("|"); const {it}=findItem(k); if(it){ it.p=it.p.filter(x=>x!==id); savePlan(); } return true; }
   if(ds.swap){ if(guard()) return true; const {it}=findItem(S.sheet.k); const p=BY[ds.swap]; if(it&&p){ it.p=[p.id]; it.h=p.n; it.d=""; S.sheet=null; savePlan("Swapped in "+p.n+"."); } return true; }
   if(ds.addp){ if(guard()) return true; const {it}=findItem(S.sheet.k); const p=BY[ds.addp]; if(it&&p&&!it.p.includes(p.id)){ it.p.push(p.id); if(it.h==="New stop") it.h=p.n; S.sheet=null; savePlan("Added "+p.n+"."); } return true; }
-  if(ds.addto){ if(guard()) return true; S.sheet={mode:"addto", id:ds.addto, day:S.day, t:"12:00"}; render(); return true; }
-  if(ds.doadd){ if(guard()) return true; const sh=S.sheet, p=BY[sh.id], d=plan.days.find(x=>x.n===sh.day); if(p&&d){ d.items.push({k:uidk(), t:sh.t||"12:00", h:p.n, d:"", p:[p.id]}); S.sheet=null; S.day=d.n; savePlan("Added "+p.n+" to Day "+d.n+" at "+fmtM(toM(sh.t||"12:00"))+"."); } return true; }
+  if(ds.slot && S.sheet && S.sheet.mode==="addto"){ const [day,t]=ds.slot.split("|"); S.sheet.day=+day; S.sheet.t=t; render(); return true; }
+  if(ds.addto){ if(guard()) return true; const slot=firstFree(S.day); S.sheet={mode:"addto", id:ds.addto, day:slot.day, t:slot.t}; render(); return true; }
+  if(ds.doadd){ if(guard()) return true; const sh=S.sheet, p=BY[sh.id], d=plan.days.find(x=>x.n===sh.day); if(p&&d){ d.items.push({k:uidk(), t:sh.t||"12:00", h:p.n, d:"", p:[p.id]}); S.sheet=null; S.day=d.n; S.tab="cal"; savePlan("Added "+p.n+" to the calendar · Day "+d.n+" at "+fmtM(toM(sh.t||"12:00"))+"."); } return true; }
   return false;
 }
 function planChange(e){
@@ -2726,12 +2874,12 @@ const STAMPS = [
 ];
 const stampsFor = vis => STAMPS.filter(s=>Object.keys(vis).some(id=>BY[id] && s.f(BY[id])));
 function toggleVisit(id){
-  if(readOnly){ toast("Only Contributors and Editors can update the passport."); return; }
+  if(readOnly){ toast("Only Contributors and Editors can update the journal."); return; }
   const before = stampsFor(myVisited()).map(s=>s.k);
   const v = Object.assign({}, myVisited()); if(v[id]) delete v[id]; else v[id] = {t:Date.now(), r:0, n:""};
   visited[me()] = v; render(); persistPicks();
   const won = stampsFor(v).filter(s=>!before.includes(s.k));
-  toast(won.length ? "Stamp earned: "+won[0].t+"! "+STAMP_CHEERS[Object.keys(v).length%STAMP_CHEERS.length] : v[id] ? "Marked visited. Rose wants to hear all about it." : "Removed from your journal.");
+  toast(won.length ? "Added to your journal: "+won[0].t+". "+STAMP_CHEERS[Object.keys(v).length%STAMP_CHEERS.length] : v[id] ? "Marked visited. Rose wants to hear all about it." : "Removed from your journal.");
 }
 
 /* ---------- surprise me ---------- */
@@ -2793,7 +2941,7 @@ function surpriseCard(){
       R.stops.forEach((st,i)=>{ h += '<div class="adv-leg">↓ '+esc(st.leg.txt)+'</div><div class="adv-stop"><span class="t">'+fmtM(st.at)+'</span><div class="what"><button class="plink" data-open="'+st.p.id+'">'+esc(st.p.n)+'</button>'+(WHY[st.p.id]?'<span class="why">'+esc(WHY[st.p.id])+'</span>':'')+'<span class="small muted">About '+dur(st.dw)+' · '+esc(st.p.a)+'</span></div></div>'; });
       const pts = R.stops.map(st=>coordOf(st.p)), o = originPt(), seq = (o?[o.pt]:[]).concat(pts), sp = q=>q[0].toFixed(5)+","+q[1].toFixed(5);
       const url = seq.length>=2 ? "https://www.google.com/maps/dir/?api=1&origin="+sp(seq[0])+"&destination="+sp(seq[seq.length-1])+"&travelmode="+(u.mode==="walk"?"walking":"driving")+(seq.length>2?"&waypoints="+encodeURIComponent(seq.slice(1,-1).map(sp).join("|")):"") : dirUrl(R.stops[0].p);
-      h += '<div class="actions"><a class="btn primary" href="'+url+'" target="_blank" rel="noopener">Route it</a>'+(readOnly?'':'<button class="btn" data-surpadd="1">Add to the plan</button>')+'</div></div>';
+      h += '<div class="actions"><a class="btn primary" href="'+url+'" target="_blank" rel="noopener">Route it</a>'+(readOnly?'':'<button class="btn" data-surpadd="1">Add to trip</button>')+'</div></div>';
     }
   }
   return h + '</section>';
@@ -2879,51 +3027,10 @@ function vGirl(){
 const GIRL_MOOD = {Dorothy:"history", Blanche:"romantic", Rose:"nature", Sophia:"locals"};
 const STAMP_CHEERS = ["Sophia says: about time.","Blanche says: that's how a lady collects.","Rose says: I'm so proud I could burst!","Dorothy says: fine. Good. Keep going."];
 
-function vHolla(){
+function vOpenNow(){
   const live = !S.when;
-  return '<section class="holla-head"><span class="eyebrow">Holla Holla</span><h2>'+(live?'Open right now':'Open at the time you picked')+'</h2><p>'+(live?'Everything you can walk into this very minute. Search, filter, or tap a time below to look ahead.':'Tap <b>Right now</b> to jump back to this minute.')+'</p></section>' + vNow();
+  return '<section class="open-head"><span class="eyebrow">Open now</span><h2>'+(live?'Open right now':'Open at the time you picked')+'</h2><p>'+(live?'Everything you can walk into this minute. Search, filter, or pick a time below.':'Tap <b>Right now</b> to jump back to this minute.')+'</p></section>' + vNow();
 }
-/* Holla Holla in context: filters whatever section you're on down to what's open right now */
-S.holla = false; S.hollaTab = null; S.hq = ""; S.hcat = "all";
-function hollaPool(){
-  const t = S.hollaTab;
-  if(t==="explore" || t==="all") return {label:"Explore", sub:"every place", list:P};
-  if(t==="col"){ const c = COL[S.col]; return {label:c ? c.t : "This collection", sub:"this collection", list:c ? colPlaces(c.k) : P}; }
-  if(t==="trip" || t==="plan"){ const ids = new Set(); (plan.days||[]).forEach(d=>(d.items||[]).forEach(i=>(i.p||[]).forEach(id=>ids.add(id)))); return {label:"Your plan", sub:"places in your plan", list:[...ids].map(id=>BY[id]).filter(Boolean)}; }
-  if(t==="saved"){ const ids = [...new Set([...totalPicked(), ...Object.values(votes).flatMap(v=>Object.keys(v||{}))])]; return {label:"Saved", sub:"your saved places", list:ids.map(id=>BY[id]).filter(Boolean)}; }
-  if(t==="ink") return {label:"Tattoo shops", sub:"the tattoo shops", list:P.filter(p=>p.c.includes("tattoo"))};
-  if(t==="girl") return {label:S.girl+"'s picks", sub:S.girl+"'s picks", list:P.filter(p=>approver(p)===S.girl)};
-  return {label:"Everywhere", sub:"every place", list:P};
-}
-function hollaHead(label, n, sub){
-  return '<section class="holla-head"><span class="eyebrow">Holla Holla · '+esc(label)+'</span><h2>'+n+' open right now</h2><p>Showing only '+esc(sub)+' you can walk into this minute. <button class="holla-off" type="button" data-holla="1">Show everything again</button></p></section>';
-}
-function vHollaCtx(){
-  const N = nolaNow(), pool = hollaPool();
-  if(S.hollaTab==="map") return hollaHead("Map", P.filter(p=>statusAt(p,N).state==="open").length, "places") + vMap2();
-  const open = pool.list.filter(p=>statusAt(p,N).state==="open");
-  const q = (S.hq||"").trim().toLowerCase();
-  const cats = [...new Set(open.flatMap(p=>p.c))].filter(c=>CATS[c]);
-  let shown = open.filter(p=>(S.hcat==="all" || p.c.includes(S.hcat)) && (!q || hay(p).toLowerCase().includes(q)));
-  shown.sort((a,b)=>{ const da=distInfo(a), db=distInfo(b); return (da&&db) ? da.m-db.m : a.d-b.d; });
-  let h = hollaHead(pool.label, open.length, pool.sub);
-  h += '<div class="row"><input class="field search" id="hq" type="search" placeholder="Search what\'s open: food, jazz, cats…" value="'+esc(S.hq||"")+'" aria-label="Search places open right now"></div>';
-  if(cats.length > 1) h += '<p class="inkhint"><b>Filter by type</b>, or tap <b>All</b>.</p><div class="row inkstyles" role="group" aria-label="Type of place"><button class="chip" data-hcat="all" aria-pressed="'+(S.hcat==="all")+'">All <span class="n">'+open.length+'</span></button>'+cats.map(c=>'<button class="chip" data-hcat="'+c+'" aria-pressed="'+(S.hcat===c)+'">'+esc(CATS[c])+' <span class="n">'+open.filter(p=>p.c.includes(c)).length+'</span></button>').join("")+'</div>';
-  if(!open.length) return h + quip("Dorothy", "Nothing in "+pool.sub+" is open this minute. Tap Show everything again, or try the Home Holla Holla for the whole city.");
-  if(!shown.length) return h + quip("Rose", "Nothing open matches that. Try another word or tap All.");
-  return h + shown.map(p=>resRow(p, statusAt(p,N))).join("");
-}
-function hollaToggle(){
-  if(S.holla){ hollaOff(); }
-  else {
-    if(S.tab==="now") S.tab = "home";
-    S.holla = true; S.hollaTab = S.tab; S.when = null; S.sheet = null; S.hq = ""; S.hcat = "all";
-    if(S.tab==="map"){ S.hollaMapPrev = !!S.mapOpen; S.mapOpen = true; }
-  }
-  window.scrollTo(0,0); render();
-}
-function hollaOff(){ if(S.hollaTab==="map" && S.hollaMapPrev!==undefined) S.mapOpen = S.hollaMapPrev; S.holla = false; S.hollaTab = null; S.hollaMapPrev = undefined; }
-document.addEventListener("input", e=>{ if(e.target && e.target.id==="hq"){ S.hq = e.target.value; render(); } });
 
 /* ---------- views ---------- */
 const ICON = {
@@ -2933,7 +3040,8 @@ const ICON = {
  home:'<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>'
 };
 TAB_ICON.home = ICON.home; TAB_ICON.trip = TAB_ICON.plan;
-TABS.splice(0, TABS.length, ["home","Home"],["map","Map"],["explore","Explore"],["saved","Saved"],["ink","Ink"]);
+TAB_ICON.cal = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
+TABS.splice(0, TABS.length, ["home","Home"],["map","Map"],["explore","Explore"],["cal","Calendar"],["saved","Saved"],["ink","Ink"]);
 /* ---------- help: the ? tab with the full guide, and a 3-step walkthrough on first visit ---------- */
 TAB_ICON.help = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.8-2.5 2.3-2.5 4"/><path d="M12 17.2v.3"/></svg>';
 TABS.push(["help","Help"]);
@@ -2943,7 +3051,8 @@ const HELP = [
   ["The 3-second version","Use the bar at the bottom to move around. Tap any place to see why it's worth it, when it's open, and how to get there. Tap the cheesecake to save it to the kitchen table."],
   ["Take the tour","Tap <b>Take the full tour</b> at the top of this page for a step-by-step walk through every screen. It moves around the app for you; tap <b>Next</b> to go on or <b>×</b> to stop."]]],
  ["top","The top of the screen",[
-  ["Holla Holla","The red button at the top right, on every screen. Tap it to see <b>only what's open this very minute</b> in the section you're on: on Home the whole city, on Map only open places are pinned, on Explore every open place, on Trip the open stops in your plan, on Saved your open saves, on Ink the open tattoo shops. Search and filter right there. Tap it again (or <b>Show everything again</b>) to turn it off; switching sections turns it off too."],
+  ["Search","The search bar at the top looks through the guide and live places on the map. Tap a result for details, or <b>Add to my plans</b> to save it. It stays on every screen."],
+  ["Open now","The <b>Open now</b> chip on Home and Explore lists only what you can walk into this minute, with a time picker if you want to look ahead. The Map tab has the same filter."],
   ["The logo","Tap <b>The NOLA Girls</b> any time to jump back to Home."],
   ["Install app","The round download button (or <b>Install app</b> on wider screens) puts the app on your home screen. It opens full screen and keeps working with weak signal. On iPhone: Safari → Share → Add to Home Screen."],
   ["Day and evening look","The app switches to a darker evening look on its own after sunset in New Orleans. To keep it always light or always dark, open <b>Trip details & settings</b> at the top of this Help page → Look and feel."],
@@ -2952,15 +3061,16 @@ const HELP = [
   ["Home","Your starting point: greeting, countdown, weather, Golden Girls, quick tiles, who's leading tonight, and Surprise me."],
   ["Map","Every place on a real map, plus your location and the hotel."],
   ["Explore","Search and fifteen hand-picked collections."],
-  ["Saved","Your <b>Trip plan</b> (the day-by-day plan you can edit, with river cruise times) is the first tab here. Also the kitchen table: everyone's saves and votes, saved tattoo designs, and your passport of visited places. The number badge counts saved places."],
+  ["Calendar","The day-by-day trip, Wed Nov 4 through Sun Nov 8. Flight details start on the arrival day. Everything you add with <b>Add to trip</b> shows up here."],
+  ["Saved","The kitchen table: everyone's saves and votes, your journal, and saved tattoo designs. The number badge counts saved places."],
   ["Ink","Tattoo design concepts, sketches, and shops with booking info."],
   ["? Help","This guide."]]],
  ["home","Home",[
   ["Greeting and countdown","Shows the time in New Orleans, days until you arrive (or which trip day it is), and the weather."],
   ["Golden Girls banners","Dorothy, Blanche, Rose or Sophia weigh in on every screen. Tap <b>Another one</b> for a new line."],
-  ["Quick tiles","<b>Trip plan</b> (it turns into <b>Today's plan</b> once you're there), <b>Near me</b> (places within about a 15-minute walk), <b>Hidden gems</b>, <b>Tonight</b>, <b>Lauren's 21st</b>, <b>NOLA Time Machine</b>, <b>Passport</b> and <b>Tattoo ideas</b>."],
+  ["Quick tiles","<b>Calendar</b> (it turns into <b>Today</b> once you're there), <b>Near me</b> (places within about a 15-minute walk), <b>Hidden gems</b>, <b>Tonight</b>, <b>Lauren's 21st</b>, <b>NOLA Time Machine</b>, and <b>Tattoo ideas</b>."],
   ["Who's leading tonight?","Tap a Golden Girl to see her picks: Dorothy (history and jazz), Blanche (romance and late nights), Rose (beignets, cats and swamps), Sophia (food, Voodoo and bargains). Open places come first. <b>Surprise me, [name]</b> builds an adventure in her style."],
-  ["Surprise me","Pick a vibe (Romantic, Local favorites, Nature, Cat lovers, History, Vegetarian, Jazz, Hidden gems), how many hours, and walk or ride. Tap <b>Find our adventure</b> for a route of places that are open then. <b>Spin again</b> shuffles it; <b>Add to the plan</b> drops it into today."]]],
+  ["Surprise me","Pick a vibe (Romantic, Local favorites, Nature, Cat lovers, History, Vegetarian, Jazz, Hidden gems), how many hours, and walk or ride. Tap <b>Find our adventure</b> for a route of places that are open then. <b>Spin again</b> shuffles it; <b>Add to trip</b> drops it onto the Calendar."]]],
  ["explore","Explore and collections",[
   ["Search","Type anything: a place, a food, a neighborhood, a tattoo idea or a history topic. Results update as you type."],
   ["Collections","Tonight, Jazz & Cocktails, Hidden Gems, Where the Locals Go, History, Cat Adventures, Nature, Romantic, Vegetarian Eats, Photo Spots, River, Day Trips, Tattoo shops, Lauren's 21st and more. Each opens with a short intro."],
@@ -2969,7 +3079,7 @@ const HELP = [
  ["place","Place details",[
   ["Open a place","Tap any place name or card. A panel slides up with everything you need."],
   ["What you'll see","Open or closed right now and today's hours, the 5-cat Google rating with a <b>See reviews on Google</b> link, why you'll love it, address, phone, price, music and reservation notes."],
-  ["Buttons","<b>Save</b> (the cheesecake) adds it to the kitchen table. <b>Mark visited</b> adds it to your journal and can earn a passport stamp. The hearts rate it after you've been. <b>Copy link</b> copies a link straight to this place. <b>Copy phone</b> and directions are there too."],
+  ["Buttons","<b>Add to my plans</b> (the cheesecake) saves it to the kitchen table. <b>Add to trip</b> opens a calendar so you can pick a free time. <b>Mark visited</b> adds it to your journal. The hearts rate it after you've been. <b>Copy link</b> copies a link straight to this place. <b>Copy phone</b> and directions are there too."],
   ["Booking","Tours, cruises and tattoo shops show how to book, the price, and any deposit or ID rules."],
   ["Closing it","Tap the ×, tap outside the panel, or use your phone's back button."]]],
  ["map","Map",[
@@ -2978,23 +3088,22 @@ const HELP = [
   ["Dots and colors","Dots group together when zoomed out; tap a group to zoom in. <b>Color by open now</b> shows what's open. Tap a dot for the place's name and details."],
   ["Safety colors","Green, yellow and red areas show how comfortable each area is for walking at night. Green is busy and well lit, yellow means stay on main streets, red means take a car."],
   ["Collections on the map","Pick a collection to show only those places."]]],
- ["trip","Trip and the plan",[
-  ["Day by day","Each day (Nov 4 to Nov 8) has times, stops and notes. Tap a day to see it."],
+ ["trip","Calendar",[
+  ["Day by day","Calendar is the trip, Wed Nov 4 through Sun Nov 8. Tap a day to see its stops. Arrival day starts with Emily's flight. The other days start empty."],
+  ["Add to trip","On any place, tap <b>Add to trip</b>. A calendar pops up with free and busy times. Pick a slot, confirm, and it shows on that day."],
   ["Editing","Add stops, move them, remove them, or swap in a Plan B if something is closed or it rains. Changes save automatically."],
-  ["Route this day","Opens all of that day's stops as one walking route in Google Maps, starting at the hotel."],
-  ["River cruise times","Every sailing for the Natchez, the Creole Queen and the City of New Orleans, with sunset timing for your dates."]]],
- ["saved","Saved, voting and passport",[
+  ["Route this day","Opens all of that day's stops as one walking route in Google Maps, starting at the hotel."]]],
+ ["saved","Saved and journal",[
   ["The kitchen table","Everything anyone saved with the cheesecake. Filter by person, or <b>Everyone's in</b> to see what all three of you want."],
   ["Saved designs","Tattoo designs you saved, ready to show an artist."],
-  ["Passport","Earn stamps by marking places visited (jazz, beignets, cats, history and more). Rose gets very excited about every one."],
-  ["Journal","Every place you've been, with your heart ratings and notes. Turn on <b>Auto check-in</b> at the top and GPS adds a place after you've spent about a minute there (while the app is open), fills in passport stamps, and pops up what's next on the plan. <b>Undo</b> on the pop-up or <b>Remove from journal</b> takes one back. <b>Share recap</b> texts your trip so far; <b>Send my location</b> texts where you are, with a map link."]]],
+  ["Journal","Every place you've been, with your heart ratings and notes. Turn on <b>Auto check-in</b> at the top and GPS adds a place after you've spent about a minute there (while the app is open), and pops up what's next on the calendar. <b>Undo</b> on the pop-up or <b>Remove from journal</b> takes one back. <b>Share recap</b> texts your trip so far; <b>Send my location</b> texts where you are, with a map link."]]],
  ["ink","Ink: tattoo ideas",[
   ["Design concepts","100 AI-made concepts. Use the style buttons (New Orleans, 90s, Retro, Art deco, Gangsta cats, Aristocrat cats, Old-school flash, Y2K & cute, Voodoo & mystic) to narrow them down."],
   ["Look closer","Tap an image to see it large. <b>Previous</b> and <b>Next</b> stay inside the style you picked."],
   ["Take it to an artist","<b>Save</b> keeps it in Saved designs. <b>Copy brief</b> copies a short description to paste into a message to the shop."],
   ["Sketches and shops","Below the concepts are 27 hand-drawn sketches and the tattoo shops, with website, address, phone, and how to book. You must be 18+ with photo ID; many shops take a deposit."]]],
  ["more","Lauren's 21st, Time Machine and more",[
-  ["Lauren's 21st","A big night out: dinner, Preservation Hall, a 21st toast, dueling pianos, dancing and late-night beignets. Pick a night with <b>Plan the night on</b> and tap <b>Add this night to the plan</b>."],
+  ["Lauren's 21st","A big night out: dinner, Preservation Hall, a 21st toast, dueling pianos, dancing and late-night beignets. Pick a night with <b>Plan the night on</b> and tap <b>Add this night to the calendar</b>."],
   ["NOLA Time Machine","Three hundred years of New Orleans by era, with the places where you can still feel each one."],
   ["Golden Girl picks","Every place belongs to one of the girls. Her page lists her picks with open ones first."]]],
  ["share","Saving, sharing and offline",[
@@ -3023,24 +3132,24 @@ function vHelp(){
 /* the walkthroughs: a quick 3-step one on first visit, and a full guided tour from Help */
 const TOURS = {
  quick: [
-  {go:"home", sel:"#tabs", g:"Rose", t:"Get around with the bottom bar", b:"<b>Home</b> is your start, <b>Map</b> shows everything nearby, <b>Explore</b> has collections and search, <b>Trip</b> is the day-by-day plan, <b>Saved</b> is the kitchen table, and <b>Ink</b> has tattoo ideas."},
-  {go:"home", sel:"header .holla", g:"Blanche", t:"Holla Holla!", b:"Tap <b>Holla Holla</b> at the top right on any screen to see only what's open this very minute in that section, with search and filters. Tap it again to see everything. Tap a place for hours, address and phone, and the <b>cheesecake</b> to save it."},
+  {go:"home", sel:"#tabs", g:"Rose", t:"Get around with the bottom bar", b:"<b>Home</b> is your start, <b>Map</b> shows everything nearby, <b>Explore</b> has collections and search, <b>Calendar</b> is the day-by-day trip, <b>Saved</b> is the kitchen table, and <b>Ink</b> has tattoo ideas."},
+  {go:"home", sel:"#gs", g:"Blanche", t:"Search up top", b:"The search bar looks through the guide and the live map. Tap a result for hours and address, or <b>Add to my plans</b> to save it. The <b>Open now</b> chip on Home lists only what's open this minute."},
   {go:"home", sel:'#tabs [data-tab="help"]', g:"Dorothy", t:"Stuck? Tap Help", b:"<b>Help</b> on the bottom bar has the full guide and a longer tour of everything. Tap the logo any time to come back Home.", last:'<button class="btn" type="button" data-tourfull="1">Take the full tour</button>'}
  ],
  full: [
   {go:"home", sel:"#main .hero", g:"Sophia", t:"Welcome to The NOLA Girls", b:"Picture it: Wed Nov 4 to Sun Nov 8, home base at the Olivier House on Toulouse St. This card shows the New Orleans time, the countdown and the weather. The app knows what's open at any hour, so you never walk up to a locked door."},
-  {go:"home", sel:"header .holla", g:"Blanche", t:"Holla Holla", b:"The red button at the top right works on every screen: it narrows what you're looking at to <b>only what's open this very minute</b>. On Home that's the whole city; on Map, Explore, Trip, Saved and Ink it's just that section. Search and filter right there, then tap it again to see everything."},
-  {go:"home", sel:"#tabs", g:"Rose", t:"The bottom bar", b:"Seven buttons get you everywhere: <b>Home</b>, <b>Map</b>, <b>Explore</b>, <b>Trip</b>, <b>Saved</b>, <b>Ink</b> and <b>Help</b>. The gold one is where you are. The logo at the top always brings you back Home."},
+  {go:"home", sel:"#gs", g:"Blanche", t:"Search", b:"Type a place, a food, or a neighborhood. Matches from the guide come first, then real places from the map, each with <b>Add to my plans</b>. For only what's open this minute, tap <b>Open now</b> on Home or Explore."},
+  {go:"home", sel:"#tabs", g:"Rose", t:"The bottom bar", b:"Seven buttons get you everywhere: <b>Home</b>, <b>Map</b>, <b>Explore</b>, <b>Calendar</b>, <b>Saved</b>, <b>Ink</b> and <b>Help</b>. The gold one is where you are. The logo at the top always brings you back Home."},
   {go:"home", sel:"#main .talk", g:"Blanche", t:"The girls have opinions", b:"Dorothy, Blanche, Rose and Sophia chime in on every screen. Tap <b>Another one</b> for a new line. They're also a shortcut to good picks, as you'll see."},
-  {go:"home", sel:"#main .tile", g:"Rose", t:"Quick tiles", b:"<b>Trip plan</b> (it turns into <b>Today's plan</b> once you're there), <b>Near me</b> (about a 15-minute walk), <b>Hidden gems</b>, <b>Tonight</b>, <b>Lauren's 21st</b>, the <b>Time Machine</b>, your <b>Passport</b> and <b>Tattoo ideas</b>. One tap each."},
+  {go:"home", sel:"#main .tile", g:"Rose", t:"Quick tiles", b:"<b>Calendar</b> (it turns into <b>Today</b> once you're there), <b>Near me</b> (about a 15-minute walk), <b>Hidden gems</b>, <b>Tonight</b>, <b>Lauren's 21st</b>, the <b>Time Machine</b>, and <b>Tattoo ideas</b>. One tap each."},
   {go:"home", sel:"#main .girls", g:"Dorothy", t:"Who's leading tonight?", b:"Can't decide? Let a Golden Girl choose. Dorothy brings history and jazz, Blanche romance and late nights, Rose beignets, cats and swamps, and Sophia food, Voodoo and bargains. Her page lists her picks, open ones first."},
-  {go:"home", sel:"#main .surprise", g:"Sophia", t:"Surprise me", b:"The best button when you have a free afternoon. Pick a vibe, how many hours, and walk or ride, then tap <b>Find our adventure</b>. You get a route of places that are actually open. <b>Spin again</b> for another, <b>Add to the plan</b> to keep it."},
+  {go:"home", sel:"#main .surprise", g:"Sophia", t:"Surprise me", b:"The best button when you have a free afternoon. Pick a vibe, how many hours, and walk or ride, then tap <b>Find our adventure</b>. You get a route of places that are actually open. <b>Spin again</b> for another, <b>Add to trip</b> to put it on the Calendar."},
   {go:"explore", sel:"#uq", g:"Dorothy", t:"Search everything", b:"Type a place, a food, a neighborhood, a tattoo idea or a bit of history. Results show up as you type, open places first."},
   {go:"explore", sel:"#main .cols", g:"Blanche", t:"Collections", b:"Fifteen hand-picked lists: Tonight, Jazz & Cocktails, Hidden Gems, Where the Locals Go, Cat Adventures, Romantic, Vegetarian Eats, Photo Spots and more. Each has <b>See on the map</b> and <b>Surprise me from these</b>."},
   {go:"explore", sheet:"cdm", sel:"#sheet-root .sheet", g:"Rose", t:"Inside a place", b:"Tap any place and this opens: open or closed right now, hours, the 5-cat Google rating, why you'll love it, the address and a tap-to-call phone. Tap the <b>cheesecake</b> to save it, <b>Mark visited</b> once you've been, and <b>Copy link</b> to text it to someone."},
   {go:"map", sel:"#main .mapwrap", g:"Dorothy", t:"The map", b:"Every place, the hotel and (if you allow it) you. On phones tap <b>Tap here to move the map</b> to pan and zoom. The green, yellow and red areas show night-walking comfort: after dark, take a car for anything yellow or red."},
-  {go:"trip", sel:"#main .view", g:"Sophia", t:"The plan", b:"Day by day from Nov 4 to Nov 8. Add, move or remove stops, swap in a <b>Plan B</b> when it rains, and tap <b>Route this day in Google Maps</b> for a walking route from the hotel. River cruise times are here too."},
-  {go:"saved", sel:"#main .view", g:"Sophia", t:"The kitchen table", b:"Everything anyone saved. Filter by person or tap <b>Everyone's in</b> to see what all three of you want. Mark places visited to earn <b>Passport</b> stamps and keep a journal with heart ratings."},
+  {go:"cal", sel:"#main .cal-week", g:"Sophia", t:"Calendar", b:"Day by day from Nov 4 to Nov 8. Arrival day starts with Emily's flight and the other days start empty. Tap <b>Add to trip</b> on a place, pick a free time, and it shows up here. <b>Route this day in Google Maps</b> walks the day's stops from the hotel."},
+  {go:"saved", sel:"#main .view", g:"Sophia", t:"The kitchen table", b:"Everything anyone saved. Filter by person or tap <b>Everyone's in</b> to see what all three of you want. Mark places visited to keep a journal with heart ratings."},
   {go:"ink", sel:"#main .inkstyles", g:"Blanche", t:"Tattoo ideas", b:"100 design concepts. Pick a style (90s, Art deco, Gangsta cats, Aristocrat cats and more), tap a design to see it large, <b>Save</b> it, and <b>Copy brief</b> to send to the artist. Shops with booking info are further down."},
   {go:"help", sel:'#tabs [data-tab="help"]', g:"Rose", t:"You're ready", b:"That's everything. <b>Help</b> has the full written guide and this tour any time. Tip: tap <b>Install app</b> at the top to put it on your home screen. Now go have a beignet."}
  ]
@@ -3084,11 +3193,11 @@ if(!tourSeen) setTimeout(()=>{ if(!S.sheet && tourStep<0 && S.tab==="home" && lo
 if(location.hash==="#tour") setTimeout(()=>tourShow(0, "full"), 700);
 else if(!tourSeen && location.hash==="") {}
 
-VIEWKEYS.push("home","trip","col","time","birthday","all","girl","help","admin");
-const NAV_OF = {girl:"home", col:"explore", time:"explore", birthday:"explore", river:"explore", all:"explore", now:"home", info:"home", plan:"saved", trip:"saved"};
+VIEWKEYS.push("home","trip","cal","col","time","birthday","all","girl","help","admin");
+const NAV_OF = {girl:"home", col:"explore", time:"explore", birthday:"explore", river:"explore", all:"explore", now:"home", info:"home", plan:"cal", trip:"cal"};
 try{ const t2 = localStorage.getItem("nola2-tab"); S.tab = VIEWKEYS.includes(t2) && !["col","girl","time","all"].includes(t2) ? t2 : "home"; }catch(e){ S.tab = "home"; }
 if(location.hash && VIEWKEYS.includes(location.hash.slice(1))) S.tab = location.hash.slice(1);
-if(S.tab==="plan") S.tab = "trip";
+if(S.tab==="plan" || S.tab==="trip") S.tab = "cal";
 
 function tripStatus(){
   const ti = tripInfo(); if(!ti) return null; const T = todayUTC(), until = Math.round((ti.A-T)/DAY);
@@ -3100,19 +3209,17 @@ function vHome(){
   const N = nolaNow(), hr = N.mins/60, greet = hr<5?"Still up":hr<12?"Good morning":hr<17?"Good afternoon":hr<22?"Good evening":"Late night";
   const ts = tripStatus(), night = document.documentElement.getAttribute("data-mode")==="night";
   let h = '<section class="hero"><span class="kick">New Orleans · Our adventure</span><h2>'+greet+', <em>NOLA Girls.</em></h2><p>A little history. A little trouble. A whole lot of New Orleans.</p>'
-    + '<div class="chips"><span class="hchip">'+esc(DOWL[N.dow])+' <b>'+fmtM(N.mins)+'</b></span>'+(ts?'<span class="hchip"><b>'+esc(ts.txt)+'</b></span>':'<button class="hchip" data-go="trip" style="background:none;cursor:pointer">Add your dates</button>')+(WX?'<span class="hchip">'+WX.temp+'° '+esc(WXL(WX.code))+'</span>':'')+'</div></section>';
+    + '<div class="chips"><span class="hchip">'+esc(DOWL[N.dow])+' <b>'+fmtM(N.mins)+'</b></span>'+(ts?'<span class="hchip"><b>'+esc(ts.txt)+'</b></span>':'<button class="hchip" data-go="info" style="background:none;cursor:pointer">Add your dates</button>')+(WX?'<span class="hchip">'+WX.temp+'° '+esc(WXL(WX.code))+'</span>':'')+'<button class="hchip" type="button" data-go="now">Open now</button></div></section>';
   h += talk("home") + wxBox();
-  const tiles = [["trip"+(ts&&ts.day?":"+ts.day:""),ICON.plan,ts&&ts.day?"Today's plan":"Trip plan",ts&&ts.day?"Day "+ts.day+" itinerary":(tripInfo()&&todayUTC()<tripInfo().A?"Starts "+new Date(tripInfo().A).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",timeZone:"UTC"}):"Your itinerary")],["nearme",ICON.near,"Near me","Within a 15-min walk"],["col:hidden",ICON.gem,"Hidden gems","Local discoveries"],["col:tonight",ICON.moon,"Tonight","Jazz, bars & more"]];
+  const tiles = [["cal"+(ts&&ts.day?":"+ts.day:""),ICON.plan,ts&&ts.day?"Today":"Calendar",ts&&ts.day?"Day "+ts.day+" on the calendar":(tripInfo()&&todayUTC()<tripInfo().A?"Starts "+new Date(tripInfo().A).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",timeZone:"UTC"}):"Day by day")],["nearme",ICON.near,"Near me","Within a 15-min walk"],["col:hidden",ICON.gem,"Hidden gems","Local discoveries"],["col:tonight",ICON.moon,"Tonight","Jazz, bars & more"]];
   h += '<div class="tiles">'+tiles.map(([go,ic,t,s])=>'<button class="tile" '+(go==="nearme"?'data-nearme="1"':'data-go="'+go+'"')+'><span class="ti">'+ic+'</span><b>'+esc(t)+'</b><span>'+esc(s)+'</span></button>').join("")+'</div>';
   h += girlsPicker();
   h += '<div class="sh"><h3>What\'s your vibe?</h3><button class="lnk" data-go="explore">See all</button></div><div class="moods">'+MOODS.map(([k,l])=>'<button class="mood" data-col="'+k+'">'+esc(l)+'</button>').join("")+'</div>';
   h += surpriseCard();
   const open = P.filter(p=>!isSailing(p) && statusAt(p,N).state==="open").sort((a,b)=>{ const x=distInfo(a),y=distInfo(b); return (x&&y)?x.m-y.m:a.d-b.d; }).slice(0,5);
   h += '<div class="sh"><h3>Open right now</h3><button class="lnk" data-go="now">See everything open</button></div>'+(open.length?open.map(p=>resRow(p,statusAt(p,N))).join(""):quip("Dorothy","Everything decent is closed at this hour. Go to bed. Tonight and Hidden gems will still be there tomorrow."));
-  const got = stampsFor(myVisited()).length;
   h += '<div class="two"><button class="tile" data-go="birthday"><span class="ti">'+ICON.gem+'</span><b>Lauren\'s 21st</b><span>The big night out, photo spots, and tattoo ideas</span></button>'
      + '<button class="tile" data-go="time"><span class="ti">'+ICON.moon+'</span><b>NOLA Time Machine</b><span>1718 to today, and where to feel it</span></button>'
-     + '<button class="tile" data-go="saved" data-savedtab="passport"><span class="ti">'+ICON.gem+'</span><b>Passport</b><span>'+got+' of '+STAMPS.length+' stamps collected</span></button>'
      + '<button class="tile" data-go="ink"><span class="ti">'+ICON.gem+'</span><b>Tattoo ideas</b><span>'+AI_INK.length+' design concepts + 27 sketches</span></button></div>';
   return h;
 }
@@ -3120,7 +3227,7 @@ function vHome(){
 function vExplore2(){
   const q = (S.uq||"").trim().toLowerCase();
   let h = talk("explore") + '<div class="head"><span class="eyebrow">Discover</span><h2>Explore New Orleans</h2></div>';
-  h += '<div class="row"><input class="field search" id="uq" type="search" placeholder="Search places, history, tattoo designs…" value="'+esc(S.uq||"")+'" aria-label="Search everything">'+(q?'<button class="btn" data-clearuq="1">Clear</button>':'')+'</div>';
+  h += '<div class="row"><input class="field search" id="uq" type="search" placeholder="Search places, history, tattoo designs…" value="'+esc(S.uq||"")+'" aria-label="Search everything">'+(q?'<button class="btn" data-clearuq="1">Clear</button>':'')+'<button class="chip" type="button" data-go="now">Open now</button></div>';
   if(q){
     const N = nolaNow(), places = P.filter(p=>hay(p).includes(q) || (p.story||"").toLowerCase().includes(q)).slice(0,30);
     const eras = ERAS.map((e,i)=>({e,i})).filter(x=>(x.e.y+" "+x.e.t+" "+x.e.x).toLowerCase().includes(q));
@@ -3152,15 +3259,37 @@ function vCol(){
   return h;
 }
 
-function vTripSaved(){ S.tab = "saved"; S.savedTab = "trip"; return vSaved2(); }
+function vCalendar(){
+  if(!plan.days.find(x=>x.n===S.day)) S.day = (plan.days[0]||{n:1}).n;
+  const ti = tripInfo();
+  let h = '<div class="head"><span class="eyebrow">Wed Nov 4 – Sun Nov 8, 2026</span><h2>Calendar</h2><p class="muted small">Day by day for the trip. Emily\'s flight is already on arrival day. Tap <b>Add to trip</b> on a place, pick a free time, and it shows up here.</p></div>';
+  h += '<div class="cal-week" role="tablist" aria-label="Trip days">'+plan.days.map(x=>{
+    const dt = ti ? ti.dateOf(x.n) : null;
+    const items = (x.items||[]).slice().sort((a,b)=>toM(a.t||"00:00")-toM(b.t||"00:00"));
+    const chips = items.slice(0,3).map(it=>'<span class="cal-ev'+(it.k==="emily-lands"?" flight":"")+'">'+esc(fmtM(toM(it.t)))+' '+esc(it.h)+'</span>').join("");
+    return '<button type="button" class="cal-cell'+(x.n===S.day?" on":"")+'" data-day="'+x.n+'" role="tab" aria-pressed="'+(x.n===S.day)+'">'
+      + '<span class="cal-dow">'+esc(dt?fmtD(dt,{weekday:"short"}):("Day "+x.n))+'</span>'
+      + '<span class="cal-num">'+(dt?dt.getUTCDate():x.n)+'</span>'
+      + '<span class="cal-n">'+(items.length?items.length+(items.length===1?" stop":" stops"):"Open")+'</span>'
+      + chips + (items.length>3?'<span class="cal-more">+'+(items.length-3)+' more</span>':'')
+      + '</button>';
+  }).join("")+'</div>';
+  h += '<div class="row"><button class="btn" data-go="river">River cruise times</button><button class="btn" data-go="birthday">Lauren\'s 21st</button></div>';
+  if(S.day===1 && typeof window.nolaFlightsCard==="function") h += window.nolaFlightsCard();
+  h += vPlan(true);
+  return h;
+}
+function vTripSaved(){ S.tab = "cal"; return vCalendar(); }
 function vTrip(){
-  return '<div class="row"><button class="btn" data-go="river">River cruise times</button><button class="btn" data-go="birthday">Lauren\'s 21st</button></div>' + vPlan();
+  return vCalendar();
 }
 
-/* saved: my plans (default), group picks, passport, journal, designs */
+/* saved: my plans (default), group picks, journal, designs */
 S.savedTab = "mine"; S.person = "all";
 function vSaved2(){
-  const tabs = [["mine","My plans"],["picks","Group picks"],["trip","Trip plan"],["passport","Passport"],["journal","Journal"],["designs","Saved designs"]];
+  if(S.savedTab==="passport") S.savedTab = "journal";
+  if(S.savedTab==="trip") S.savedTab = "mine";
+  const tabs = [["mine","My plans"],["picks","Group picks"],["journal","Journal"],["designs","Saved designs"]];
   const mineCount = myPicks().size;
   const emptyMine = S.savedTab==="mine" && mineCount===0;
   /* Completely blank Saved until this account adds something */
@@ -3171,8 +3300,6 @@ function vSaved2(){
   }
   let h = talk("saved") + '<div class="head"><span class="eyebrow">The kitchen table</span><h2>Saved</h2></div><div class="seg" role="tablist">'+tabs.map(([k,l])=>'<button class="chip" data-savedtab="'+k+'" aria-pressed="'+(S.savedTab===k)+'">'+l+(k==="mine"&&mineCount?' · '+mineCount:'')+'</button>').join("")+'</div>';
   if(S.savedTab==="mine") return h + vSaved({mineOnly:true});
-  if(S.savedTab==="trip") return h + vTrip();
-  if(S.savedTab==="passport") return h + vPassport();
   if(S.savedTab==="journal") return h + vJournal();
   if(S.savedTab==="designs"){
     const ai = AI_INK.filter(d=>pickersOf("ai-"+d.n).length), sk = INK.C.flatMap(c=>c.d.filter(d=>pickersOf("ink-"+c.n+d.k).length).map(d=>({c,d})));
@@ -3247,7 +3374,7 @@ function vBirthday(){
   h += '<section class="colhead" style="border-bottom:6px solid var(--brass)"><span class="eyebrow" style="color:var(--brass)">Happy 21st, Lauren</span><h2>Lauren\'s 21st in New Orleans</h2><p>The big night out, the photo spots, a tattoo to remember it by, and a few cats for good measure.</p></section>';
   h += talk("birthday");
   h += '<div class="sh"><h3>The big night out</h3></div><ol class="tl">'+BDAY_NIGHT.map(([t,lab,ids,tip])=>{ const W = dayW(S.bday, t); return '<li><span class="t">'+fmtM(toM(t))+'</span><div class="what"><b>'+esc(lab)+'</b><span class="d">'+esc(tip)+'</span><div class="links">'+ids.map(id=>'<span class="row" style="gap:4px"><button class="plink" data-open="'+id+'">'+esc(BY[id].n)+'</button>'+chipStatus(BY[id],W)+'</span>').join("")+'</div></div></li>'; }).join("")+'</ol>';
-  if(!readOnly) h += '<div class="row"><label class="small muted" for="bday">Plan the night on</label><select class="field" id="bday">'+plan.days.map(d=>'<option value="'+d.n+'"'+(d.n===S.bday?' selected':'')+'>Day '+d.n+(ti?' · '+esc(dayLabel(ti.dateOf(d.n))):'')+'</option>').join("")+'</select><button class="btn primary" data-addnight="1">Add this night to the plan</button></div>';
+  if(!readOnly) h += '<div class="row"><label class="small muted" for="bday">Plan the night on</label><select class="field" id="bday">'+plan.days.map(d=>'<option value="'+d.n+'"'+(d.n===S.bday?' selected':'')+'>Day '+d.n+(ti?' · '+esc(dayLabel(ti.dateOf(d.n))):'')+'</option>').join("")+'</select><button class="btn primary" data-addnight="1">Add this night to the calendar</button></div>';
   h += '<div class="box"><h3>Big-night rules</h3><ul><li>Bring a physical photo ID. Phone photos of IDs don\'t work at most bars.</li><li>Cash for covers, tips, and the band.</li><li>Water between drinks. Hurricanes are stronger than they taste.</li><li>Rideshare home together. Nobody walks back alone.</li></ul></div>';
   const ph = colPlaces("photo");
   h += '<div class="sh"><h3>Photo spots</h3><button class="lnk" data-col="photo">All photo spots</button></div>'+ph.slice(0,6).map(p=>resRow(p,statusAt(p,nolaNow()))).join("");
@@ -3301,15 +3428,26 @@ mapList = function(){
 };
 const _updateMarkers = updateMarkers;
 updateMarkers = function(){ _updateMarkers(); const o = originPt(); if(LMAP && S.radius && o) L.circle(o.pt, {radius:S.radius*80/1.25, color:cssVar("--coral"), weight:1.5, dashArray:"6 6", fill:false}).addTo(LME); };
+function safeLegendHtml(){
+  const on = !!S.mapSafety;
+  const lv = S.safeOn || {green:true, yellow:true, red:true};
+  const btn = (k, name, mean) => '<button type="button" class="safe-leg-btn" data-safelv="'+k+'" aria-pressed="'+(on && lv[k]!==false)+'"><i class="sw '+k+'" aria-hidden="true"></i><span><b>'+name+'</b> · '+mean+'</span></button>';
+  return '<div class="safe-legend" role="group" aria-label="Safety zone legend. Green is safer, yellow is caution, red is avoid at night.">'
+    + '<button type="button" class="safe-leg-all" data-safetoggle="1" aria-pressed="'+on+'">'+(on?'Zones on':'Show zones')+'</button>'
+    + btn("green","Green","safer")
+    + btn("yellow","Yellow","caution")
+    + btn("red","Red","avoid")
+    + '<p>Guidance, not legal advice.</p></div>';
+}
 function vMap2(){
   if(!mapAvailable()) return vSketch();
   const o = originPt();
   let h = '<div class="mapctl"><button class="btn primary" data-nearme="map">◎ Near me</button><label class="mapsel"><span>Jump to</span><select class="field" id="lviewsel" aria-label="Jump to an area"><option value="">Pick an area…</option>'+Object.entries(LVIEWS).map(([k,v])=>'<option value="'+k+'">'+esc(v[0])+'</option>').join("")+'</select></label></div>';
-  h += '<div class="mapwrap"><div id="mapSlot" class="mapslot"></div></div>';
+  h += '<div class="mapwrap"><div id="mapSlot" class="mapslot"></div>'+safeLegendHtml()+'</div>';
   h += '<div class="mapctl"><label class="mapsel wide"><span>Show</span><select class="field" id="mapcolsel" aria-label="Which places to show on the map"><option value="all"'+(!S.mapCol||S.mapCol==="all"?' selected':'')+'>All places</option>'+COLS.filter(c=>!c.special).map(c=>'<option value="'+c.k+'"'+(S.mapCol===c.k?' selected':'')+'>'+esc(c.t)+'</option>').join("")+'</select></label></div>';
   h += '<div class="row hscroll" role="group" aria-label="Walking radius"><span class="small muted">Within</span>'+[0,5,10,15,30].map(m=>'<button class="chip" data-radius="'+m+'" aria-pressed="'+((S.radius||0)===m)+'">'+(m?m+' min walk':'Any distance')+'</button>').join("")+(S.radius&&!o?'<span class="small muted">Tap Near me first</span>':'')+'</div>';
-  h += '<div class="row hscroll"><button class="chip" id="mapOpen" aria-pressed="'+!!S.mapOpen+'">Open now</button><button class="chip cake" id="mapSaved" aria-pressed="'+!!S.mapSaved+'">Saved</button><button class="chip" data-mapcolor="'+(S.mapColor==="open"?"type":"open")+'" aria-pressed="'+(S.mapColor==="open")+'">Color by open now</button><button class="chip" id="mapSafety" aria-pressed="'+!!S.mapSafety+'">Night travel tips</button></div>';
-  if(S.mapSafety) h += '<div class="safety"><h3>Getting around after dark</h3><div class="radar-key" role="img" aria-label="Map colors: green is safe, yellow means use caution, red is not safe at night"><span>Safe</span><i aria-hidden="true"></i><span>Not safe</span></div><ul class="tips"><li>Stick to busy, lit streets: Bourbon, Royal, Decatur, Frenchmen, Canal, and St. Charles.</li><li>Order rideshares from inside the bar and meet the car at the door.</li><li>Take a car for Bywater, Uptown, Tremé, and anything after midnight.</li><li>Shaded zones on the map are rough visitor advice, not crime data.</li></ul><p class="small muted">Emergency 911 · NOPD non-emergency <span class="mono">504-821-2222</span></p></div>';
+  h += '<div class="row hscroll"><button class="chip" id="mapOpen" aria-pressed="'+!!S.mapOpen+'">Open now</button><button class="chip cake" id="mapSaved" aria-pressed="'+!!S.mapSaved+'">Saved</button><button class="chip" data-mapcolor="'+(S.mapColor==="open"?"type":"open")+'" aria-pressed="'+(S.mapColor==="open")+'">Color by open now</button><button class="chip" id="mapSafety" aria-pressed="'+!!S.mapSafety+'">Safety zones</button></div>';
+  h += '<div class="safety"><h3>Walking zones</h3><div class="safe-key" role="list"><span><i class="sw green"></i> Green · safer</span><span><i class="sw yellow"></i> Yellow · caution</span><span><i class="sw red"></i> Red · avoid at night</span></div><ul class="tips"><li>Green is the busier, better-lit visitor core: Bourbon, Royal, Decatur, Frenchmen, Canal, and St. Charles.</li><li>Yellow means fine by day; at night stay on the main street or take a car.</li><li>Red means don\'t walk it at night. Order the rideshare from inside and meet it at the door.</li></ul><p class="small muted">Shaded zones are visitor guidance, not legal advice or crime data. Edges are approximate. Emergency 911 · NOPD non-emergency <span class="mono">504-821-2222</span></p></div>';
   h += talk("map");
   h += '<details class="cat" open><summary data-sec="maplx"><span class="t2">Places in this view</span><span class="c" id="maplistcount"></span><span class="hint">Move the map to update the list.</span></summary><div class="body" id="maplist"></div></details>';
   return h;
@@ -3325,7 +3463,7 @@ vSheet = function(){
   const p = BY[S.sheet]; if(!p) return "";
   const N = S.when || nolaNow(), x = p.hrs, v = myVisited()[p.id];
   let h = '<div class="sheet-top"><div><span class="eyebrow">'+esc(p.c.map(c=>CATS[c]).filter(Boolean).join(" · "))+'</span><h2 id="sheet-title">'+esc(p.n)+'</h2></div><button class="close" data-close="1" aria-label="Close">×</button></div>';
-  { const mine = new Set(myPicks()).has(p.id); h += '<div class="sheet-save-row"><button class="btn primary sheet-save" data-heart="'+p.id+'" aria-pressed="'+mine+'">'+(mine?'✓ In my plans · tap to remove':'Add to my plans')+'</button>'+(readOnly?'':'<button class="btn sheet-plan" data-addto="'+p.id+'">+ Add to plan</button>')+'</div>'; }
+  { const mine = new Set(myPicks()).has(p.id); h += '<div class="sheet-save-row"><button class="btn primary sheet-save" data-heart="'+p.id+'" aria-pressed="'+mine+'">'+(mine?'✓ In my plans · tap to remove':'Add to my plans')+'</button>'+(readOnly?'':'<button class="btn sheet-plan" data-addto="'+p.id+'">Add to trip</button>')+'</div>'; }
   if(WHY[p.id]) h += '<div class="whybox"><p><b>Why you\'ll love it:</b> '+esc(WHY[p.id])+'</p></div>';
   if(p.story) h += '<p class="story"><b>What happened here:</b> '+esc(p.story)+'</p>';
   if(p.c.includes("tattoo")) h += bookingBlock(p);
@@ -3341,19 +3479,19 @@ vSheet = function(){
   h += '<dl class="kv"><dt>Area</dt><dd>'+esc(p.a)+'</dd>'+(p.ad?'<dt>Address</dt><dd>'+esc(p.ad)+(p.adNote?' <span class="small muted">('+esc(p.adNote)+')</span>':'')+'</dd>':'')+'<dt>Distance</dt><dd>'+esc(distLabel(p))+'</dd><dt>Price</dt><dd>'+esc((x&&x.price)||p.pr||"–")+'</dd>'+(x&&x.reserve?'<dt>Booking</dt><dd>'+esc(x.reserve)+'</dd>':'')+(p.ph?'<dt>Phone</dt><dd><a class="mono" href="tel:'+String(p.ph).replace(/[^0-9+]/g,'')+'">'+esc(p.ph)+'</a>'+(p.phw?' <span class="small muted">('+esc(p.phw)+')</span>':'')+'</dd>':(p.contact?'<dt>Contact</dt><dd>'+esc(p.contact)+'</dd>':''))+'</dl>';
   if(v) h += '<div class="box"><b>In your journal</b><div class="hearts" role="group" aria-label="Your rating">'+[1,2,3,4,5].map(n=>'<button class="'+(n<=(v.r||0)?'on':'')+'" data-rate="'+p.id+'|'+n+'" aria-label="'+n+' of 5">♥</button>').join("")+'</div><input class="field" id="jn-'+p.id+'" placeholder="A memory from this place…" value="'+esc(v.n||"")+'"></div>';
   if(x && x.source) h += '<p class="srcline">Hours source: <a href="'+esc(x.source.split(" ")[0])+'" target="_blank" rel="noopener">'+esc(x.source.replace(/^https?:\/\/(www\.)?/,'').split('/')[0])+'</a>'+(x.confidence?' · confidence '+esc(x.confidence):'')+'</p>';
-  h += '<div class="stickybar">'+cakeBtn(p)+'<a class="btn primary" href="'+dirUrl(p)+'" target="_blank" rel="noopener">Directions</a>'+(readOnly?'':'<button class="btn" data-addto="'+p.id+'">Add to day</button><button class="btn" data-visit="'+p.id+'">'+(v?'Visited ✓':'Mark visited')+'</button>')+(p.url?'<a class="btn" href="'+esc(p.url)+'" target="_blank" rel="noopener">Website</a>':'')+(p.ph?'<button class="btn" data-copy="'+esc(p.ph)+'">Copy phone</button>':'')+'<button class="btn" data-share="1">Copy link</button></div>';
+  h += '<div class="stickybar">'+cakeBtn(p)+'<a class="btn primary" href="'+dirUrl(p)+'" target="_blank" rel="noopener">Directions</a>'+(readOnly?'':'<button class="btn" data-addto="'+p.id+'">Add to trip</button><button class="btn" data-visit="'+p.id+'">'+(v?'Visited ✓':'Mark visited')+'</button>')+(p.url?'<a class="btn" href="'+esc(p.url)+'" target="_blank" rel="noopener">Website</a>':'')+(p.ph?'<button class="btn" data-copy="'+esc(p.ph)+'">Copy phone</button>':'')+'<button class="btn" data-share="1">Copy link</button></div>';
   return '<div class="scrim" data-scrim="1"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">'+h+'</div></div>';
 };
 
 /* ---------- page addresses ----------
    #view.arg~kind.id — only letters, digits, . _ ~ - so links also work inside claude.ai. */
-const PAGE_NAMES = {help:"Help & guide", girl:"Golden Girl picks", home:"Home", map:"Map", explore:"Explore", trip:"Trip", saved:"Saved", ink:"Tattoo ideas", col:"Collection", time:"Time Machine", birthday:"Lauren's 21st", river:"River cruises", info:"Trip details & settings", now:"Holla Holla · Open right now", all:"All places"};
+const PAGE_NAMES = {help:"Help & guide", girl:"Golden Girl picks", home:"Home", map:"Map", explore:"Explore", cal:"Calendar", trip:"Calendar", plan:"Calendar", saved:"Saved", ink:"Tattoo ideas", col:"Collection", time:"Time Machine", birthday:"Lauren's 21st", river:"River cruises", info:"Trip details & settings", now:"Open right now", all:"All places"};
 function routeFromState(){
   let r = S.tab;
   if(S.tab==="col") r += "."+S.col;
   else if(S.tab==="time") r += "."+S.tm;
   else if(S.tab==="girl") r += "."+S.girl;
-  else if(S.tab==="trip" && S.day) r += "."+S.day;
+  else if((S.tab==="cal" || S.tab==="trip") && S.day) r += "."+S.day;
   else if(S.tab==="saved" && S.savedTab && S.savedTab!=="picks") r += "."+S.savedTab;
   else if(S.tab==="map" && S.mapCol && S.mapCol!=="all") r += "."+S.mapCol;
   if(typeof S.sheet==="string" && BY[S.sheet]) r += "~place."+S.sheet;
@@ -3363,13 +3501,13 @@ function routeFromState(){
 }
 function applyRoute(hash){
   const h = (hash||"").replace(/^#/,""); if(!h) return false;
-  const [base, sh] = h.split("~"), [v, arg] = base.split("."), view = v==="plan" ? "trip" : v;
+  const [base, sh] = h.split("~"), [v, arg] = base.split("."), view = (v==="plan" || v==="trip") ? "cal" : v;
   if(!VIEWKEYS.includes(view)) return false;
   S.tab = view;
   if(view==="col" && arg && COL[arg]) S.col = arg;
   if(view==="time") S.tm = Math.max(0, Math.min(ERAS.length-1, +arg||0));
-  if(view==="trip" && arg) S.day = +arg || 1;
-  if(view==="saved") S.savedTab = ["mine","picks","passport","journal","designs","trip"].includes(arg) ? arg : "mine";
+  if(view==="cal" && arg) S.day = +arg || 1;
+  if(view==="saved") S.savedTab = arg==="passport" ? "journal" : (arg==="trip" ? "mine" : (["mine","picks","journal","designs"].includes(arg) ? arg : "mine"));
   if(view==="map") S.mapCol = arg && COL[arg] ? arg : "all";
   if(view==="girl") S.girl = GIRLS[arg] ? arg : "Blanche";
   S.sheet = null;
@@ -3448,16 +3586,14 @@ render = function(){
   const night = applyMode();
   const savedN = [...new Set([...totalPicked(), ...Object.values(votes).flatMap(v=>Object.keys(v||{}))])].filter(x=>BY[x]).length;
   const cur = NAV_OF[S.tab] || S.tab;
-  document.querySelectorAll("header .holla").forEach(b=>b.setAttribute("aria-pressed", String(!!S.holla || S.tab==="now")));
   document.getElementById("tabs").innerHTML = TABS.map(([k,l])=>'<button class="tab" role="tab" data-tab="'+k+'" aria-selected="'+(cur===k)+'">'+(TAB_ICON[k]||"")+'<span>'+l+'</span>'+(k==="saved"&&savedN?'<span class="n">'+savedN+'</span>':'')+'</button>').join("");
   const sync = document.getElementById("sync"); if(sync){ sync.textContent = shared ? (readOnly?"Viewing the group's trip":"Shared with the group") : "Saved on this device"; sync.className = "sync"+(shared?" on":""); }
   const mb = document.getElementById("modebtn"); if(mb) mb.textContent = S.mode==="auto" ? (night?"☾ After Dark · auto":"☀ Day · auto") : S.mode==="night" ? "☾ After Dark" : "☀ Day";
   try{ localStorage.setItem("nola2-tab", S.tab); }catch(e){}
   const a = document.activeElement, fid = a && a.id && a.tagName==="INPUT" && a.type!=="time" && a.type!=="date" ? a.id : null;
   let caret = null; try{ caret = fid ? a.selectionStart : null; }catch(_){}
-  if(S.holla && S.tab !== S.hollaTab) hollaOff();
-  const V0 = {help:vHelp, girl:vGirl, home:vHome, map:vMap2, explore:vExplore2, trip:vTripSaved, plan:vTripSaved, saved:vSaved2, col:vCol, time:vTime, ink:vInk2, birthday:vBirthday, river:vRiver, info:vInfo2, now:vHolla, all:vExplore}[S.tab] || vHome;
-  const V = S.holla ? vHollaCtx : V0;
+  if(S.tab==="plan" || S.tab==="trip") S.tab = "cal";
+  const V = {help:vHelp, girl:vGirl, home:vHome, map:vMap2, explore:vExplore2, cal:vCalendar, trip:vCalendar, plan:vCalendar, saved:vSaved2, col:vCol, time:vTime, ink:vInk2, birthday:vBirthday, river:vRiver, info:vInfo2, now:vOpenNow, all:vExplore}[S.tab] || vHome;
   document.getElementById("main").innerHTML = '<section class="view">'+V()+'</section>';
   document.getElementById("sheet-root").innerHTML = S.sheet ? vSheet() : "";
   syncURL();
@@ -3468,17 +3604,17 @@ render = function(){
 /* ---------- v2 events ---------- */
 window.addEventListener("error", e=>{ try{ toast("Something hiccuped. Pull down to refresh if a button stops working."); console.error(e.error||e.message); }catch(_){} });
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle],[data-holla],[data-hcat],[data-surpclear]");
+  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle],[data-surpclear]");
   if(!el) return; const d = el.dataset;
   if(d.surp){ const [k,v]=d.surp.split(":"), nv = k==="hrs" ? +v : v; S.surp[k] = S.surp[k]===nv ? null : nv; S.surpRes = (S.surp.mood||S.surp.hrs||S.surp.mode) ? surpriseNow() : null; if(!d.go){ render(); return; } }
   if(d.surpclear){ S.surp.mood = S.surp.hrs = S.surp.mode = null; S.surpRes = null; render(); return; }
   if(d.savedtab){ S.savedTab = d.savedtab; if(!d.go){ render(); return; } }
-  if(d.go){ const [v,arg] = d.go.split(":"); S.tab = v; if(v==="col") S.col = arg; if(v==="trip" && arg) S.day = +arg; S.sheet = null; window.scrollTo(0,0); render(); if(d.surp) document.getElementById("surprise")?.scrollIntoView({block:"start"}); return; }
+  if(d.go){ let [v,arg] = d.go.split(":"); if(v==="trip"||v==="plan") v="cal"; S.tab = v; if(v==="col") S.col = arg; if(v==="cal" && arg) S.day = +arg; S.sheet = null; window.scrollTo(0,0); render(); if(d.surp) document.getElementById("surprise")?.scrollIntoView({block:"start"}); return; }
   if(d.col){ S.tab = "col"; S.col = d.col; S.sheet = null; window.scrollTo(0,0); render(); return; }
   if(d.surprun){ if(d.surprun==="again") S.surp.seed++; S.surpRes = surpriseNow(); render(); setTimeout(()=>document.getElementById("adv")?.scrollIntoView({block:"nearest", behavior:"smooth"}),30); return; }
   if(d.surpadd){ const R = S.surpRes; if(!R||!R.stops.length) return; const ts = tripStatus(), dn = (ts&&ts.day) || S.day || 1, day = plan.days.find(x=>x.n===dn) || plan.days[0];
     R.stops.forEach(st=>{ const m = st.at%1440; day.items.push({k:uidk(), t:String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0"), h:st.p.n, d:"From Surprise Me", p:[st.p.id]}); });
-    savePlan("Added "+R.stops.length+" stops to Day "+day.n+"."); return; }
+    S.tab = "cal"; S.day = day.n; savePlan("Added "+R.stops.length+" stops to the calendar · Day "+day.n+"."); return; }
   if(d.tm){ S.tm = +d.tm; S.tab = "time"; S.sheet = null; render(); return; }
   if(d.visit){ toggleVisit(d.visit); return; }
   if(d.rate){ const [id,n] = d.rate.split("|"); const v = Object.assign({}, myVisited()); if(!v[id]) return; v[id] = Object.assign({}, v[id], {r: v[id].r===+n ? 0 : +n}); visited[me()] = v; render(); persistPicks(); return; }
@@ -3488,12 +3624,10 @@ document.addEventListener("click", e=>{
   if(d.radius!==undefined){ S.radius = +d.radius; if(S.radius && !originPt()) locate(); render(); return; }
   if(d.mapcol){ S.mapCol = d.mapcol; S.tab = "map"; S.sheet = null; render(); if(LMAP) setTimeout(()=>{ if(S.mapCol!=="all") fitAll(); }, 60); return; }
   if(d.aiink){ S.sheet = {mode:"aiink", n:d.aiink}; render(); return; }
-  if(d.addnight){ const day = plan.days.find(x=>x.n===S.bday) || plan.days[0]; BDAY_NIGHT.forEach(([t,lab,ids])=>day.items.push({k:uidk(), t, h:lab, d:"Lauren's 21st", p:ids.slice(0,1), key:true})); savePlan("The big night is on Day "+day.n+"."); return; }
+  if(d.addnight){ const day = plan.days.find(x=>x.n===S.bday) || plan.days[0]; BDAY_NIGHT.forEach(([t,lab,ids])=>day.items.push({k:uidk(), t, h:lab, d:"Lauren's 21st", p:ids.slice(0,1), key:true})); S.tab="cal"; S.day=day.n; savePlan("The big night is on the calendar · Day "+day.n+"."); return; }
   if(d.nearme){ S.radius = 15; S.tab = "map"; render(); locate(()=>{ if(LMAP && LOC) S.mapGo = [[LOC.lat,LOC.lon],16]; }); return; }
   if(d.clearuq){ S.uq = ""; render(); return; }
   if(d.share){ shareLink(); return; }
-  if(d.holla){ hollaToggle(); return; }
-  if(d.hcat){ S.hcat = d.hcat; render(); return; }
   if(d.inkstyle){ S.inkStyle = d.inkstyle; render(); return; }
   if(d.girl){ S.girl = d.girl; S.tab = "girl"; S.sheet = null; window.scrollTo(0,0); render(); return; }
   if(d.girlsurp){ S.surp.mood = GIRL_MOOD[d.girlsurp] || "hidden"; S.surpRes = surpriseNow(); S.tab = "home"; render(); setTimeout(()=>document.getElementById("adv")?.scrollIntoView({block:"start", behavior:"smooth"}), 60); return; }
@@ -3601,7 +3735,7 @@ document.addEventListener("change", e=>{
     if(wantOpen) pool = pool.filter(x=>isOpen(x, W));
     const near = /near|close|walk|nearby|around here/.test(q);
     pool.sort((a,b)=>{ const da = distInfo(a), db = distInfo(b); return (da&&db) ? da.m-db.m : a.d-b.d; });
-    if(!pool.length) return {text:"Nothing. "+(wantOpen?"Everything matching that is closed right now.":"I have no idea what you're looking for.")+" Try Holla Holla, or ask me something I can work with — \"coffee open now\" or \"jazz tonight.\"", ids:[]};
+    if(!pool.length) return {text:"Nothing. "+(wantOpen?"Everything matching that is closed right now.":"I have no idea what you're looking for.")+" Try Open now, or ask me something I can work with — \"coffee open now\" or \"jazz tonight.\"", ids:[]};
     const top = pool.slice(0, 6);
     return {text:(wantOpen ? "Open right now" : "Here are some")+(near ? ", closest first" : "")+" — "+label+":\n"+top.map(x=>"• "+placeLine(x, W)+(distInfo(x)?" · "+distInfo(x).txt:"")).join("\n"), ids:top.map(x=>x.id)};
   }
@@ -3615,7 +3749,7 @@ document.addEventListener("change", e=>{
   }
   async function claudeAnswer(q, onText){
     const ctx = context();
-    const prompt = "You ARE Dorothy Zbornak from The Golden Girls. You are the AI assistant inside 'The NOLA Girls', a New Orleans trip app used by Tara and Emily; their niece Lauren (21) is on the trip too, and her 21st is part of it.\n\nVOICE RULES — you must follow these exactly:\n- Speak in Dorothy's voice: dry, deadpan sarcasm with a sharp wit. Bea Arthur energy.\n- Complete, grammatically correct sentences. Declarative. Land with finality.\n- Use the three-beat structure: acknowledge sincerely, pause, deliver the kill shot in the same flat tone.\n- Never use bullet points, headers, or corporate language. Talk TO people, not at spreadsheets.\n- Keep answers under 100 words unless someone really messed up.\n- Reference the other Girls when relevant: 'Ma' for Sophia, 'Rose' with a deep breath first, 'Blanche' with a wry observation, 'Stanley' with contempt.\n- Use Dorothy's phrases naturally: 'Oh, please.' 'Excuse me?' 'The point is...' 'Let me tell you something...'\n- End with a mic drop, not a summary. Last line should be the sharpest.\n- When giving practical advice (safety, directions, hours), deliver it like a substitute teacher who cares but will not be argued with.\n- Never use exclamation points casually. Never hedge with 'I think' or 'maybe'. State.\n- Never laugh at your own jokes. The deadpan IS the joke.\n- Sign responses '— Dorothy' only when the tone warrants a dramatic exit.\n\nDATA RULES:\n- Use ONLY the app data below. Don't invent hours, prices or places.\n- Prefer places that are open now when the question is about now.\n- When you mention a place from the data, append its id in double brackets right after the name, like Café du Monde [[cdm]].\n\nAPP DATA (JSON):\n" + JSON.stringify(ctx) + "\n\nQUESTION: " + q;
+    const prompt = "You ARE Dorothy Zbornak from The Golden Girls. You are the AI assistant inside 'The NOLA Girls', a New Orleans trip app used by Tara and Emily; their niece Lauren (21) is on the trip too, and her 21st is part of it.\n\nVOICE RULES — you must follow these exactly:\n- Speak in Dorothy's voice: dry, deadpan sarcasm with a sharp wit. Bea Arthur energy.\n- Complete, grammatically correct sentences. Declarative. Land with finality.\n- Use the three-beat structure: acknowledge sincerely, pause, deliver the kill shot in the same flat tone.\n- Never use bullet points, headers, or corporate language. Talk TO people, not at spreadsheets.\n- Keep answers under 100 words unless someone really messed up.\n- Reference the other Girls when relevant: 'Ma' for Sophia, 'Rose' with a deep breath first, 'Blanche' with a wry observation, 'Stanley' with contempt.\n- Use Dorothy's phrases naturally: 'Oh, please.' 'Excuse me?' 'The point is...' 'Let me tell you something...'\n- End with a mic drop, not a summary. Last line should be the sharpest.\n- When giving practical advice (safety, directions, hours), deliver it like a substitute teacher who cares but will not be argued with.\n- Never use exclamation points casually. Never hedge with 'I think' or 'maybe'. State.\n- Never laugh at your own jokes. The deadpan IS the joke.\n- Sign responses '— Dorothy' only when the tone warrants a dramatic exit.\n\nDATA RULES:\n- Use the app data below first. When the guide has nothing on a place, you may use web-sourced facts and say they should be confirmed. Never invent a venue, and never invent that a place is open or closed.\n- Prefer places that are open now when the question is about now.\n- When you mention a place from the data, append its id in double brackets right after the name, like Café du Monde [[cdm]].\n\nAPP DATA (JSON):\n" + JSON.stringify(ctx) + "\n\nQUESTION: " + q;
     const input = window.askClaudeInput ? window.askClaudeInput(q, HIST) : prompt;
     const r = await SAMPLE(input, {modelTier:"default", cache:false, onText:({text})=>onText(text)});
     return r.text;
@@ -3651,7 +3785,7 @@ document.addEventListener("change", e=>{
   .ask-in{display:flex;gap:6px;padding:10px;border-top:1px solid #E3D6C6;background:#FFF8F0}
   .ask-in input{flex:1;min-width:0;min-height:44px;border:1px solid #CDBBA6;border-radius:999px;padding:0 14px;font-size:1rem;background:#fff;color:#23172C}
   .ask-btn{all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;border-radius:50%;background:#23172C;color:#F6EBDD}
-  .ask-btn.mic.on{background:#A8322D;animation:hollaPulse 1.4s infinite}
+  .ask-btn.mic.on{background:#A8322D;animation:askPulse 1.4s infinite}
   .ask-btn svg{width:20px;height:20px}
   .ask-btn:focus-visible{outline:3px solid #E0B65A}
   .ask-mode{font-size:.72rem;color:#5A4A66;padding:0 14px 8px}
@@ -3679,28 +3813,117 @@ document.addEventListener("change", e=>{
   function listenAgain(){ if(convo && panel){ const m = $(".mic", panel); if(m && !m.classList.contains("on")) setTimeout(()=>m.click(), 350); } }
   function say(t){ const want = speak; voiceTurn = false; if(!want || !window.speechSynthesis){ listenAgain(); return; } try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(String(t).replace(/\[\[[^\]]+\]\]/g,"").slice(0,600)); const v = speechSynthesis.getVoices().find(v=>/en-US/i.test(v.lang) && /female|samantha|aria|jenny|zira/i.test(v.name)); if(v) u.voice = v; u.onend = listenAgain; speechSynthesis.speak(u); }catch(e){ listenAgain(); } }
   const HIST = [];
+  function isMiss(a){
+    if(!a) return true;
+    if(a.find) return true;
+    if(a.results && a.results.length) return false;
+    if(a.ids && a.ids.length) return false;
+    return /not in our guide|couldn.?t find|i don.?t have|no idea|Nothing\.|I.m not sure|how to find|try different/i.test(a.text||"");
+  }
+  function webStrip(s){ return String(s||"").replace(/<[^>]+>/g," ").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;|&#039;/g,"'").replace(/\s+/g," ").trim(); }
+  async function webGet(url, ms){
+    const ac = new AbortController(), t = setTimeout(()=>ac.abort(), ms||6500);
+    try{ const r = await fetch(url, {signal:ac.signal}); return r.ok ? await r.json() : null; }catch(e){ return null; } finally { clearTimeout(t); }
+  }
+  window.nolaWebSearch = async function(raw, extra){
+    const q = String(raw||"").trim();
+    if(q.length < 2) return [];
+    const hits = [], seen = {};
+    function add(title, url, snippet){
+      title = webStrip(title); url = String(url||"").trim(); snippet = webStrip(snippet);
+      if(!title || !/^https:\/\//i.test(url)) return;
+      const k = url.split("#")[0];
+      if(seen[k]) return; seen[k] = 1;
+      hits.push({title, url, snippet:snippet.slice(0, 240)});
+    }
+    async function wiki(query){
+      const j = await webGet("https://en.wikipedia.org/w/api.php?action=opensearch&format=json&origin=*&limit=5&search="+encodeURIComponent(query));
+      if(Array.isArray(j) && j[1]) j[1].forEach((title,i)=>add(title, (j[3]||[])[i], (j[2]||[])[i]));
+      if(hits.length >= 2) return;
+      const qj = await webGet("https://en.wikipedia.org/w/api.php?action=query&list=search&srlimit=5&format=json&origin=*&srsearch="+encodeURIComponent(query));
+      (((qj||{}).query||{}).search||[]).forEach(s=>add(s.title, "https://en.wikipedia.org/wiki/"+encodeURIComponent(String(s.title||"").replace(/ /g,"_")), s.snippet));
+    }
+    async function ddg(query){
+      const j = await webGet("https://api.duckduckgo.com/?format=json&no_html=1&skip_disambig=1&q="+encodeURIComponent(query), 5000);
+      if(!j) return;
+      if(j.AbstractURL) add(j.Heading || query, j.AbstractURL, j.Abstract);
+      (j.RelatedTopics||[]).forEach(function walk(topic){
+        if(topic.FirstURL) add(String(topic.Text||"").split(" - ")[0], topic.FirstURL, topic.Text);
+        (topic.Topics||[]).forEach(walk);
+      });
+    }
+    await wiki(q);
+    const alt = String(extra||"").trim();
+    if(hits.length < 2 && alt && alt.toLowerCase()!==q.toLowerCase()) await wiki(alt);
+    const nolaish = /new orleans|nola|french quarter/i.test(q+" "+alt);
+    if(hits.length < 2 && !nolaish) await wiki(q+" New Orleans");
+    if(hits.length < 2) await ddg(nolaish ? q : q+" New Orleans");
+    const words = (q+" "+alt).toLowerCase().replace(/[^a-z0-9 ]/g," ").split(/\s+/).filter(w => w.length>=4 && !/^(what|whats|where|when|which|this|that|with|from|about|have|does|tell|please|there|their|they|them|your|into|near|open|find|show|give|need|want|know|like|just|some|more|than|then|also|only|very|really|would|could|should|orleans|nola|guide|honey)$/.test(w));
+    const score = h => words.reduce((n,w)=> n + (h.title.toLowerCase().includes(w) ? 1 : 0), 0);
+    const min = words.length >= 2 ? 2 : 1;
+    const strong = words.length ? hits.filter(h => score(h) >= min) : hits;
+    const titled = strong.length ? strong : hits.filter(h => score(h) > 0);
+    return (titled.length ? titled : hits).slice(0, 5);
+  };
+  window.nolaRenderWeb = function(bubble, hits){
+    if(!bubble || !hits || !hits.length) return;
+    const lab = document.createElement("div"); lab.className = "web-lab"; lab.textContent = "From the web";
+    const list = document.createElement("div"); list.className = "web-list";
+    hits.forEach(h=>{
+      const a = document.createElement("a"); a.className = "web-hit"; a.href = h.url; a.target = "_blank"; a.rel = "noopener";
+      a.innerHTML = "<b>"+esc(h.title)+"</b>"+(h.snippet?'<span>'+esc(h.snippet)+'</span>':'')+'<small>'+esc(String(h.url).replace(/^https?:\/\//,"").slice(0,72))+'</small>';
+      list.appendChild(a);
+    });
+    const acts = bubble.querySelector(".ask-acts");
+    bubble.insertBefore(list, acts || null);
+    bubble.insertBefore(lab, list);
+    const log = bubble.parentElement; if(log) log.scrollTop = log.scrollHeight;
+  };
+  const webCss = document.createElement("style");
+  webCss.textContent = ".web-lab{margin-top:8px;font:800 .72rem ui-monospace,Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;color:#A8322D}.web-list{display:grid;gap:6px;margin-top:6px}.web-hit{display:grid;gap:2px;padding:8px 10px;border-radius:12px;background:#fff;border:1px solid #E3D6C6;color:#23172C;text-decoration:none}.web-hit b{font-size:.92rem}.web-hit span{font-size:.8rem;line-height:1.35;color:#3A2C44}.web-hit small{font-size:.7rem;color:#5A4A66;word-break:break-all}";
+  document.head.appendChild(webCss);
   async function ask(q){
     q = (q||"").trim(); if(!q) return;
     addMsg("me", q); const inp = $("#askq", panel); if(inp) inp.value = "";
     if(/^(bye|goodbye|stop|stop listening|that's all|thats all|thank you that's all|end call|hang up)\b/i.test(q)){ convo = false; const c = $("#askconvo", panel); if(c) c.checked = false; try{ localStorage.setItem("nola-ask-convo","0"); }catch(_){} addMsg("bot", "Bye for now, honey. Tap the mic whenever you need me."); say("Bye for now, honey."); return; }
     let act = null; try{ act = (window.askAction ? window.askAction(q) : null) || (window.askFind ? window.askFind(q) : null); }catch(e){ act = null; }
     if(act && !act.find && /^That's not in our guide/.test(act.text||"")){ const lb = ((act.actions||[])[0]||{}).label||"", mm = lb.match(/^Find (.+) nearby$/); if(mm) act.find = mm[1]; }
+    let pending = null;
     if(act && act.find && window.nolaFindNearby){
       const wait = addMsg("bot", "Looking around for " + act.find + "…");
       let found = null; try{ found = await window.nolaFindNearby(act.find); }catch(_){ found = null; }
       if(wait) wait.remove();
-      if(found && found.results.length){ const d = addMsg("bot", found.text, [], found.actions); window.nolaRenderResults(d, found.results); HIST.push(["user", q], ["assistant", found.text + " " + found.results.map(r => r.name).join(", ")]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12); return; }
-      act = Object.assign({}, act, {text:"I couldn't find " + act.find + " close by. Try one of these:", actions:(act.actions && act.actions.length ? act.actions : [{label:"Search maps for " + act.find, href:"https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(act.find + " near me"), kind:"call"}])});
+      if(found && found.results && found.results.length){ const d = addMsg("bot", found.text, [], found.actions); window.nolaRenderResults(d, found.results); HIST.push(["user", q], ["assistant", found.text + " " + found.results.map(r => r.name).join(", ")]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12); return; }
+      pending = {text:"I couldn't find " + act.find + " in the guide or on the map.", find:act.find, actions:(act.actions && act.actions.length ? act.actions : [{label:"Search maps for " + act.find, href:"https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(act.find + " New Orleans"), kind:"call"}])};
+      act = null;
     }
-    if(act){ addMsg("bot", act.text, act.ids, act.actions); say(act.text); HIST.push(["user", q], ["assistant", act.text]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12); return; }
+    if(act && !isMiss(act)){ addMsg("bot", act.text, act.ids, act.actions); say(act.text); HIST.push(["user", q], ["assistant", act.text]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12); return; }
+    if(act && isMiss(act)) pending = pending || act;
+    let a = null; try{ a = window.askEngine ? window.askEngine(q, HIST) : null; }catch(e){ a = null; }
+    a = a || localAnswer(q);
+    if(a && !isMiss(a)){ addMsg("bot", a.text, a.ids, a.actions); say(a.text); HIST.push(["user", q], ["assistant", a.text]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12); return; }
+    const term = (pending && pending.find) || "";
+    const waitW = addMsg("bot", "Nothing in the guide for that. Checking the web…");
+    let hits = []; try{ hits = await window.nolaWebSearch(q, term); }catch(_){ hits = []; }
+    if(waitW) waitW.remove();
+    if(hits && hits.length){
+      const note = "From the web. These aren't in our guide, so confirm hours and details before you go.";
+      const acts = (pending && pending.actions) || (a && a.actions) || [];
+      const d = addMsg("bot", note, [], acts);
+      window.nolaRenderWeb(d, hits);
+      say(note);
+      HIST.push(["user", q], ["assistant", note + " " + hits.map(h => h.title).join(", ")]);
+      if(HIST.length > 12) HIST.splice(0, HIST.length - 12);
+      return;
+    }
     if(SAMPLE){
       const b = addMsg("bot", "Thinking…");
       try{ const t = await claudeAnswer(q, t=>{ b.firstChild ? (b.firstChild.nodeValue = t.replace(/\s*\[\[[a-z0-9-]+\]\]/gi,"")) : (b.textContent = t); });
         b.remove(); addMsg("bot", t); say(t); HIST.push(["user", q], ["assistant", t]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12); return; }
       catch(e){ b.remove(); if(e && e.code==="not_granted"){ SAMPLE = null; } }
     }
-    let a = null; try{ a = window.askEngine ? window.askEngine(q, HIST) : null; }catch(e){ a = null; }
-    a = a || localAnswer(q); addMsg("bot", a.text, a.ids, a.actions); say(a.text); HIST.push(["user", q], ["assistant", a.text]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12);
+    const fall = pending || a || {text:"I'm not sure about that one, honey. Try a place name, \"coffee open now\", or the search bar at the top.", ids:[]};
+    addMsg("bot", fall.text, fall.ids, fall.actions); say(fall.text); HIST.push(["user", q], ["assistant", fall.text]); if(HIST.length > 12) HIST.splice(0, HIST.length - 12);
   }
   function fitPanel(){
     if(!panel || !window.visualViewport) return;
@@ -3713,7 +3936,7 @@ document.addEventListener("change", e=>{
     if(panel){ panel.remove(); panel = null; fab.style.display = ""; document.documentElement.classList.remove("ask-open"); if(window.visualViewport) visualViewport.removeEventListener("resize", fitPanel); return; }
     fab.style.display = "none";
     panel = document.createElement("section"); panel.className = "ask-panel"; panel.setAttribute("role","dialog"); panel.setAttribute("aria-label","Ask the Girls");
-    panel.innerHTML = '<div class="ask-hd"><span class="badge-g" style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--lav,#7558AE);color:#fff;font:italic 700 1rem Georgia,serif">D</span><div><b>Ask Dorothy</b><small>'+(SAMPLE?"Dorothy Zbornak, powered by Claude":"Instant answers from this app's places")+'</small></div><button class="ask-x" type="button" aria-label="Close">×</button></div>'
+    panel.innerHTML = '<div class="ask-hd"><span class="badge-g" style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--lav,#7558AE);color:#fff;font:italic 700 1rem Georgia,serif">D</span><div><b>Ask Dorothy</b><small>'+(SAMPLE?"Dorothy Zbornak, powered by Claude":"The guide first, then the web")+'</small></div><button class="ask-x" type="button" aria-label="Close">×</button></div>'
       + '<div class="ask-log" aria-live="polite"></div>'
       + '<div class="ask-sugg">'+SUGG.map(s=>'<button class="ask-chip" type="button" data-asksugg="'+esc(s)+'">'+esc(s)+'</button>').join("")+'</div>'
       + (SR ? '<div class="ask-live" aria-live="polite">● Listening…</div>' : '')
@@ -3909,59 +4132,12 @@ document.addEventListener("change", e=>{
 const PHOTO_CREDITS = {"tonight":{"file":"tonight.webp","title":"Bourbon Street at night, New Orleans French Quarter, April 2023","author":"edenpictures","source":"https://commons.wikimedia.org/wiki/File:Bourbon_Street_at_night,_New_Orleans_French_Quarter,_April_2023.jpg","license":"CC BY 2.0"},"jazz":{"file":"jazz.webp","title":"Treme Brass Band at New Orleans Jazz Fest 2014 08","author":"kowarski","source":"https://commons.wikimedia.org/wiki/File:Treme_Brass_Band_at_New_Orleans_Jazz_Fest_2014_08.jpg","license":"CC BY 2.0"},"hidden":{"file":"hidden.webp","title":"Algiers Point New Orleans June 2016 along Patterson 01","author":"Infrogmation of New Orleans","source":"https://commons.wikimedia.org/wiki/File:Algiers_Point_New_Orleans_June_2016_along_Patterson_01.jpg","license":"CC BY 2.0"},"locals":{"file":"locals.webp","title":"Shotgun House, Irish Channel, New Orleans 01","author":"Infrogmation of New Orleans","source":"https://commons.wikimedia.org/wiki/File:Shotgun_House,_Irish_Channel,_New_Orleans_01.jpg","license":"CC BY 2.0"},"history":{"file":"history.webp","title":"St. Louis Cathedral - New Orleans Jackson Square July 2015","author":"Brandon","source":"https://commons.wikimedia.org/wiki/File:St._Louis_Cathedral_-_New_Orleans_Jackson_Square_July_2015.jpg","license":"CC BY 2.0"},"cats":{"file":"cats.webp","title":"Four Cats on porch chair, New Orleans, July 2022","author":"Bart Everson","source":"https://commons.wikimedia.org/wiki/File:Four_Cats_on_porch_chair,_New_Orleans,_July_2022.jpg","license":"CC BY 4.0"},"nature":{"file":"nature.webp","title":"City Park NOLA 4 July 2010 oak with Spanish moss","author":"Infrogmation of New Orleans","source":"https://commons.wikimedia.org/wiki/File:City_Park_NOLA_4_July_2010_oak_with_Spanish_moss.JPG","license":"CC BY-SA 3.0"},"romantic":{"file":"romantic.webp","title":"QuarterFloweryBalconies23Ap07","author":"Infrogmation of New Orleans","source":"https://commons.wikimedia.org/wiki/File:QuarterFloweryBalconies23Ap07.jpg","license":"CC BY 2.0"},"veg":{"file":"veg.webp","title":"DFC 2101 Vivid purple round eggplants piled with fresh green beans and cucumbers at a market stall","author":"PattayaPatrol","source":"https://commons.wikimedia.org/wiki/File:DFC_2101_Vivid_purple_round_eggplants_piled_with_fresh_green_beans_and_cucumbers_at_a_market_stall.jpg","license":"CC BY-SA 4.0"},"birthday":{"file":"birthday.webp","title":"Lundi Gras fireworks in New Orleans 2024-02-12 - 1","author":"Miguel Discart","source":"https://commons.wikimedia.org/wiki/File:Lundi_Gras_fireworks_in_New_Orleans_2024-02-12_-_1.jpg","license":"CC BY-SA 2.0"},"photo":{"file":"photo.webp","title":"RoyalStreetBywaterColorfulHouses","author":"Infrogmation of New Orleans","source":"https://commons.wikimedia.org/wiki/File:RoyalStreetBywaterColorfulHouses.jpg","license":"CC BY-SA 3.0"},"ink":{"file":"ink.webp","title":"Tattoo Flash SAAM-1998.84.50A 1","author":"Unknown (Smithsonian American Art Museum)","source":"https://commons.wikimedia.org/wiki/File:Tattoo_Flash_SAAM-1998.84.50A_1.jpg","license":"CC0"},"river":{"file":"river.webp","title":"Steamboat Natchez. New Orleans. (48759732042)","author":"Bernard Spragg. NZ","source":"https://commons.wikimedia.org/wiki/File:Steamboat_Natchez._New_Orleans._(48759732042).jpg","license":"CC0"},"daytrips":{"file":"daytrips.webp","title":"Oak Alley Plantation, Louisiana - Big Oaks, February 2023","author":"Jeff Ruane","source":"https://commons.wikimedia.org/wiki/File:Oak_Alley_Plantation,_Louisiana_-_Big_Oaks,_February_2023.jpg","license":"CC BY 2.0"},"tattoo":{"file":"tattoo.webp","title":"Italian-tattoo-artist-at-work","author":"Technopop.tattoo","source":"https://commons.wikimedia.org/wiki/File:Italian-tattoo-artist-at-work.jpg","license":"CC BY-SA 4.0"}};
 var SAFE_CONTACTS = {"groups":[{"title":"Emergency","items":[{"name":"Police / Fire / EMS emergency","phone":"911","tel":"911","note":"Life-threatening emergencies, crimes in progress. Also reaches the NOPD Mobile Crisis Intervention Unit.","src":"nola.gov NOPD contact page + ready.nola.gov, checked Oct 11 2026"},{"name":"Poison Control","phone":"1-800-222-1222","tel":"18002221222","note":"Free, confidential, 24/7.","url":"https://www.poison.org","src":"poison.org, Oct 11 2026"}]},{"title":"Medical","items":[{"name":"University Medical Center New Orleans - Emergency Dept","phone":"504-702-3000","tel":"5047023000","note":"2000 Canal St, 70112. ER on 2nd floor, open 24/7. Main hospital line (no direct ER number is published).","url":"https://lcmchealth.org/university-medical-center-new-orleans/locations/university-medical-center-emergency-care","src":"lcmchealth.org, Oct 11 2026"},{"name":"UMC - free sexual assault forensic exams","phone":"504-702-3931","tel":"5047023931","note":"2000 Canal St. Free forensic exams for ages 15+ (under 15: Manning Family Children's).","url":"https://ready.nola.gov/mardi-gras/safety-first-aid/","src":"ready.nola.gov (City of New Orleans), Oct 11 2026"},{"name":"LCMC Health Emergency Care Downtown (former Tulane Medical Center ER)","phone":"504-988-5263","tel":"5049885263","note":"1415 Tulane Ave, 70112. Free-standing ER, open 24/7. Drop-off at emergency entrance on LaSalle St.","url":"https://lcmchealth.org/our-locations/lcmc-health-emergency-care","src":"lcmchealth.org + LA Dept of Health directory listing, Oct 11 2026"},{"name":"Ochsner Urgent Care - Warehouse District (non-emergency)","phone":"504-552-2433","tel":"5045522433","note":"900 Magazine St, 70130. Mon-Fri 8am-5pm; Sat-Sun 8am-2pm. Closest urgent care to the Quarter.","url":"https://www.ochsner.org/services/urgent-care-services","src":"ochsner.org, Oct 11 2026"},{"name":"Ochsner Urgent Care - Mid-City (later hours)","phone":"504-218-4853","tel":"5042184853","note":"4100 Canal St, 70119. Mon-Fri 8am-8pm; Sat-Sun 8am-5pm.","url":"https://www.ochsner.org/services/urgent-care-services","src":"ochsner.org, Oct 11 2026"},{"name":"Walgreens - 900 Canal St (late night, NOT 24 hours)","phone":"504-568-1271","tel":"5045681271","note":"900 Canal St, 70112. Store listed as closing at 12am. No 24-hour pharmacy could be verified near the Quarter/CBD; call to confirm pharmacy-counter hours.","url":"https://www.walgreens.com/storelocator/find.jsp","src":"walgreens.com store locator, Oct 11 2026"}]},{"title":"Police & reporting","items":[{"name":"NOPD non-emergency / file a report by phone","phone":"504-821-2222","tel":"5048212222","note":"Non-emergency police help and phone police reports.","url":"https://nola.gov/next/nopd/contact/","src":"nola.gov NOPD contact page, Oct 11 2026"},{"name":"NOPD 8th District station (French Quarter/CBD)","phone":"504-658-6080","tel":"5046586080","note":"334 Royal St, 70130. Covers French Quarter, CBD, Marigny.","url":"https://nola.gov/next/nopd/contact/","src":"nola.gov NOPD contact page (phone) + NOPD 8th District Community Policing Plan PDF on nola.gov (address), Oct 11 2026"},{"name":"NOPD online report - lost property / theft","phone":"504-658-5289","tel":"5046585289","note":"Online for lost property, theft (not auto theft), property damage. Not for emergencies, firearms, or known suspects. Phone is for questions about a filed report.","url":"https://secure.coplogic.com/dors/startreport/300011217","src":"nola.gov/file-a-police-report, Oct 11 2026"},{"name":"NOPD Central Evidence & Property (recovered items)","phone":"504-658-5550","tel":"5046585550","note":"Recovered property/evidence held by NOPD.","src":"nola.gov NOPD contact page (via search), Oct 11 2026"}]},{"title":"Crisis & support lines","items":[{"name":"988 Suicide & Crisis Lifeline","phone":"988","tel":"988","note":"Call or text 988, or chat at chat.988lifeline.org. 24/7, free, confidential.","url":"https://988lifeline.org","src":"988lifeline.org, Oct 11 2026"},{"name":"National Domestic Violence Hotline","phone":"1-800-799-7233","tel":"18007997233","note":"24/7. Or text START to 88788.","url":"https://www.thehotline.org","src":"thehotline.org, Oct 11 2026"},{"name":"RAINN National Sexual Assault Hotline","phone":"1-800-656-4673","tel":"18006564673","note":"24/7 national hotline.","url":"https://ready.nola.gov/mardi-gras/safety-first-aid/","src":"ready.nola.gov (City of New Orleans), Oct 11 2026 (rainn.org blocked fetch)"},{"name":"New Orleans Family Justice Center - 24-hour crisis line","phone":"504-866-9554","tel":"5048669554","note":"Sexual assault, domestic violence, stalking. Free; English & Spanish. 701 Loyola Ave, Suite 201.","url":"https://ready.nola.gov/mardi-gras/safety-first-aid/","src":"ready.nola.gov (City of New Orleans), Oct 11 2026"},{"name":"STAR (Sexual Trauma Awareness & Response) Hotline","phone":"1-855-435-7827","tel":"18554357827","note":"24/7 Louisiana sexual assault support (855-435-STAR).","url":"https://ready.nola.gov/mardi-gras/safety-first-aid/","src":"ready.nola.gov (City of New Orleans), Oct 11 2026"},{"name":"Louisiana 211 (VIA LINK)","phone":"211","tel":"211","note":"24/7 info & referral. Alt: 504-269-2673 or 1-800-749-2673. Text your ZIP to 898211.","url":"https://vialink.org","src":"vialink.org, Oct 11 2026"}]},{"title":"Getting around","items":[{"name":"United Cab","phone":"504-522-9771","tel":"5045229771","note":"Book a cab. 1634 Euterpe St. Also has a mobile app.","url":"https://www.unitedcabs.com","src":"unitedcabs.com, Oct 11 2026"},{"name":"RTA RideLine (bus, streetcar, ferry info)","phone":"504-248-3900","tel":"5042483900","note":"Rider info and safety concerns, daily 5am-8pm.","url":"https://www.norta.com/help-and-contacts","src":"norta.com, Oct 11 2026"}]},{"title":"Hotel & visitor help","items":[{"name":"Olivier House Hotel","phone":"504-525-8456","tel":"5045258456","note":"828 Toulouse St (at Dauphine), 70112.","url":"https://olivierhouse.com/contact/","src":"olivierhouse.com contact page, Oct 11 2026"},{"name":"New Orleans & Company (visitor info)","phone":"1-800-672-6124","tel":"18006726124","note":"Official tourism bureau, 2020 St. Charles Ave. Hours not published.","url":"https://www.neworleans.com/contact-us/","src":"neworleans.com, Oct 11 2026"},{"name":"French Quarter Visitor Center (NPS, Jean Lafitte NHP)","phone":"504-589-3882","tel":"5045893882","note":"419 Decatur St, 70130. Hours not posted on NPS site (third-party: Tue-Sat 9:30am-4:30pm); call to confirm.","url":"https://www.nps.gov/jela/planyourvisit/french-quarter-site.htm","src":"nps.gov, Oct 11 2026"}]}]}; /*SAFETY_DATA*/
 
-/* ---------- Holla Holla top picks (Meh → Meow approved), Dorothy's nudge, new Help page ---------- */
+/* ---------- Dorothy's nudge and the Help page ---------- */
 (function(){
-  const MEOW = ["", "Meh", "It'll do", "Purr-fectly fine", "Purr-worthy", "Meow approved"];
-  const CAT = f => '<svg class="mcat'+(f?' on':'')+'" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 2.5l4.2 4.3h7.6L20 2.5v9.2a8 8 0 0 1-16 0z"/><circle cx="9" cy="12" r="1.1"/><circle cx="15" cy="12" r="1.1"/></svg>';
-  const cats = n => '<span class="mcats" role="img" aria-label="'+n+' of 5 cats, '+MEOW[n]+'">'+[1,2,3,4,5].map(i=>CAT(i<=n)).join("")+'</span>';
-  function meow(p, N){
-    const st = statusAt(p, N), why = []; let s = 0;
-    const R = (window.NOLA_RATINGS||{})[p.id];
-    if(R && R.r){ s += (R.r - 4.0) * 2.4; why.push(R.r.toFixed(1)+"★ on Google"+(R.n ? " ("+(R.n>=1000 ? (R.n/1000).toFixed(1)+"k" : R.n)+" reviews)" : "")); }
-    const di = distInfo(p);
-    if(di){ if(di.m < 600){ s += 1.1; why.push(di.txt+" from you"); } else if(di.m < 1600){ s += .5; why.push(di.txt+" from you"); } else if(di.m > 6000){ s -= .9; why.push("a ride away ("+di.txt+")"); } else why.push(di.txt+" from you"); }
-    if(st.left != null){ if(st.left < 45){ s -= 1.3; why.push("closes soon, at "+st.closeLabel); } else if(st.left > 180){ s += .4; why.push("open till "+st.closeLabel+", no rush"); } else why.push("open till "+st.closeLabel); }
-    try{ if(totalPicked().has(p.id)){ s += 1; why.push("saved to the kitchen table"); } }catch(e){}
-    try{ const must = votersOf(p.id, "must").length; if(must){ s += .6*must; why.push(must+" \"must do\" vote"+(must>1?"s":"")); } }catch(e){}
-    const hr = Math.floor(N.mins/60), has = (...c)=>c.some(x=>p.c.includes(x));
-    if(hr>=6 && hr<11 && has("coffee","eat")){ s += .8; why.push("just right for this morning"); }
-    else if(hr>=11 && hr<17 && has("eat","history","shop","nature","cats","daytrip")){ s += .5; why.push("a good afternoon pick"); }
-    else if(hr>=17 && hr<21 && has("eat","drink","jazz","river","date")){ s += .7; why.push("prime evening pick"); }
-    else if((hr>=21 || hr<2) && has("jazz","drink","party")){ s += .9; why.push("night-owl favorite"); }
-    else if(hr>=2 && hr<6 && has("party","drink")){ s += .4; why.push("still going at this hour"); }
-    const score = Math.max(1, Math.min(5, 1 + Math.round(s * 0.8)));
-    return {p, raw:s, score, why};
-  }
-  window.hollaPicks = function(){
-    const N = nolaNow(), pool = typeof hollaPool==="function" ? hollaPool() : {label:"Everywhere", list:P};
-    const list = (S.hollaTab==="map" ? P : pool.list).filter(p=>statusAt(p,N).state==="open");
-    return {label: S.hollaTab==="map" ? "Map" : pool.label, all:list.length, top:list.map(p=>meow(p,N)).sort((a,b)=>b.raw-a.raw).slice(0,5)};
-  };
-  function picksModal(){
-    const old = document.getElementById("meowpop"); if(old) old.remove();
-    const r = hollaPicks();
-    const m = document.createElement("div"); m.id = "meowpop"; m.className = "meow-modal"; m.setAttribute("role","dialog"); m.setAttribute("aria-modal","true"); m.setAttribute("aria-labelledby","meowT");
-    m.innerHTML = '<div class="meow-box"><div class="meow-hd"><div><span class="meow-eb">Holla Holla · '+esc(r.label)+'</span><h2 id="meowT">The girls\' top picks right now</h2></div><button class="meow-x" type="button" data-meowclose="1" aria-label="Close">×</button></div>'
-      + '<div class="meow-scale" aria-hidden="true"><span>Meh</span>'+cats(1).replace('mcats','mcats sm')+'<span class="arrow">→</span>'+cats(5).replace('mcats','mcats sm')+'<span>Meow approved</span></div>'
-      + (r.top.length ? '<ol class="meow-list">'+r.top.map((x,i)=>'<li><div class="meow-top"><span class="meow-rank">'+(i+1)+'</span><div class="meow-name"><b>'+esc(x.p.n)+'</b><span>'+esc(x.p.a||"")+'</span></div></div><div class="meow-score">'+cats(x.score)+'<span class="meow-lbl s'+x.score+'">'+MEOW[x.score]+'</span></div><ul class="meow-why">'+x.why.slice(0,4).map(w=>'<li>'+esc(w)+'</li>').join("")+(WHY[x.p.id]?'<li class="w">'+esc(WHY[x.p.id])+'</li>':'')+'</ul><div class="meow-acts"><button type="button" data-meowopen="'+x.p.id+'">Details</button><a href="'+mapUrl(x.p)+'" target="_blank" rel="noopener">Directions</a></div></li>').join("")+'</ol>'
-         : '<p class="meow-empty">Nothing here is open this minute, honey. Try Holla Holla from Home for the whole city.</p>')
-      + '<div class="meow-ft"><button class="go" type="button" data-meowclose="1">'+(r.all ? 'See all '+r.all+' open' : 'Close')+'</button></div><p class="meow-note">Scores weigh Google ratings, how close it is, closing time, your saves and votes, and what fits this hour.</p></div>';
-    document.body.appendChild(m);
-    m.querySelector('[data-meowclose]').focus({preventScroll:true});
-  }
-  document.addEventListener("click", e=>{
-    const c = e.target.closest("[data-meowclose]"); if(c || e.target.id==="meowpop"){ const m = document.getElementById("meowpop"); if(m) m.remove(); return; }
-    const o = e.target.closest("[data-meowopen]"); if(o){ e.preventDefault(); e.stopPropagation(); const m = document.getElementById("meowpop"); if(m) m.remove(); S.sheet = o.dataset.meowopen; render(); return; }
-    const t = e.target.closest("[data-hpicks]"); if(t){ e.preventDefault(); if(!S.holla && typeof hollaToggle==="function") hollaToggle(); else picksModal(); return; }
-  }, true);
-  document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ const m = document.getElementById("meowpop"); if(m) m.remove(); } });
-  if(typeof hollaToggle === "function"){ const ht = hollaToggle; hollaToggle = function(){ const was = S.holla; ht.apply(this, arguments); if(!was && S.holla) setTimeout(picksModal, 250); }; }
-  if(typeof hollaHead === "function"){ const hh = hollaHead; hollaHead = function(){ return hh.apply(this, arguments).replace('</p></section>', ' <button class="holla-off" type="button" data-hpicks="1">Top picks</button></p></section>'); }; }
-
   /* ---- Dorothy: 33 seconds on one screen ---- */
   const DOROTHY = [
     "What the fuck is taking you so long? Pick something. Sophia's already at the bar.",
-    "Thirty-three seconds. I've seen glaciers move faster. Tap Holla Holla and let's GO.",
+    "Thirty-three seconds. I've seen glaciers move faster. Tap Open now and let's GO.",
     "Honey, we are burning daylight here. Do you want the beignets or not?",
     "I raised two children and taught high school. I know stalling when I see it. Choose."
   ];
@@ -3986,7 +4162,7 @@ var SAFE_CONTACTS = {"groups":[{"title":"Emergency","items":[{"name":"Police / F
   document.addEventListener("click", e=>{
     const b = e.target.closest("[data-doro]"); if(!b) return; e.preventDefault();
     const d = document.getElementById("doro"); if(d) d.remove();
-    if(b.dataset.doro==="pick"){ if(!S.holla) hollaToggle(); else picksModal(); }
+    if(b.dataset.doro==="pick"){ S.tab="now"; S.sheet=null; window.scrollTo(0,0); render(); }
     if(b.dataset.doro==="mute"){ doroOff = true; try{ localStorage.setItem("nola-dorothy-off","1"); }catch(_){} if(typeof toast==="function") toast("Dorothy will keep her opinions to herself. Turn her back on in Help."); }
   });
   window.setDorothy = on => { doroOff = !on; try{ localStorage.setItem("nola-dorothy-off", on ? "0" : "1"); }catch(_){} doroKey = ""; doroArm(); };
@@ -4004,8 +4180,7 @@ var SAFE_CONTACTS = {"groups":[{"title":"Emergency","items":[{"name":"Police / F
     h += '<section class="sos"><h3>In an emergency, call <a href="tel:911">911</a></h3><p>Police, fire or ambulance. Tell them you\'re in the French Quarter and give the nearest cross street.</p><a class="sos-btn" href="tel:911">Call 911</a></section>';
     if(SAFE_CONTACTS && SAFE_CONTACTS.groups) h += SAFE_CONTACTS.groups.map(g=>({title:g.title, items:g.items.filter(it=>(it.tel||it.phone)!=="911")})).filter(g=>g.items.length).map(g=>'<details class="help-acc safety"'+(/emergency|medical|police/i.test(g.title)?' open':'')+'><summary>'+esc(g.title)+'</summary><ul class="callist">'+g.items.map(it=>'<li><div><b>'+esc(it.name)+'</b>'+(it.note?'<span>'+esc(it.note)+'</span>':'')+'</div>'+(it.phone?'<a class="callbtn" href="tel:'+tel(it.tel||it.phone)+'">'+esc(it.phone)+'</a>':it.url?'<a class="callbtn" href="'+esc(it.url)+'" target="_blank" rel="noopener">Open</a>':'')+'</li>').join("")+'</ul></details>').join("");
     h += '<div class="sh"><h3>I want to…</h3></div><div class="todo-grid">'
-      + '<button type="button" data-holla="1"><b>See what\'s open now</b><span>Holla Holla</span></button>'
-      + '<button type="button" data-hpicks="1"><b>Get the best picks</b><span>Meh to Meow approved</span></button>'
+      + '<button type="button" data-go="now"><b>See what\'s open now</b><span>Open now</span></button>'
       + '<button type="button" data-askfab="1"><b>Ask a question</b><span>Type or talk</span></button>'
       + '<button type="button" data-tour="1"><b>Take the tour</b><span>'+TOURS.full.length+' quick steps</span></button>'
       + '<button type="button" data-go="map"><b>Find my way</b><span>Map & directions</span></button>'
@@ -4235,7 +4410,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
   /* ---- finding places ---- */
   const STOP = /^(the|and|what|whats|when|where|how|does|do|is|are|for|open|hours|close|closes|closing|time|phone|number|address|tell|about|get|there|can|we|you|i|me|to|of|in|on|at|a|an|it|its|that|this|near|best|good|go|going|any|some|still|right|now|today|tonight|tomorrow|day|safe|far|from|our|my|with|by|call|directions|way|much|cost|price|rating|rated|reviews|should|would|could|they|them|place|places|spot|spots|new|orleans|nola)$/;
   const DF = {}; P.forEach(p => new Set(lc(p.n).replace(/['’]/g,"").replace(/[^a-z0-9& ]/g," ").split(/\s+/)).forEach(w => { DF[w] = (DF[w]||0) + 1; }));
-  const GENERIC = /^(house|houses|street|park|cafe|café|bar|pub|tour|tours|museum|garden|gardens|square|shop|shops|tattoo|tattoos|jazz|hall|cemetery|plantation|cruise|river|center|club|walk|work|drink|drinks|social|cultural|historic|french|quarter|district|point|lounge|rescue|state|city|art|arts|world|queen|creole|swamp|line|second|design|dinner|lunch|romantic|night|tonight|best|cheap|lost|wallet|weather|pack|airport|streetcar|history|difference|between|mean|happening|cat|cats|food|eat|beignet|beignets|coffee|music|dance|safe|nearest|hospital|install|save|holla|table|kitchen|area|around|tell|about|whole|plan|doing|thing|things|stuff|done|free|spot|spots|rooftop|view|views|store|stores|salon|thrift|market|center|centre|gallery|studio)$/;
+  const GENERIC = /^(house|houses|street|park|cafe|café|bar|pub|tour|tours|museum|garden|gardens|square|shop|shops|tattoo|tattoos|jazz|hall|cemetery|plantation|cruise|river|center|club|walk|work|drink|drinks|social|cultural|historic|french|quarter|district|point|lounge|rescue|state|city|art|arts|world|queen|creole|swamp|line|second|design|dinner|lunch|romantic|night|tonight|best|cheap|lost|wallet|weather|pack|airport|streetcar|history|difference|between|mean|happening|cat|cats|food|eat|beignet|beignets|coffee|music|dance|safe|nearest|hospital|install|save|table|kitchen|area|around|tell|about|whole|plan|doing|thing|things|stuff|done|free|spot|spots|rooftop|view|views|store|stores|salon|thrift|market|center|centre|gallery|studio)$/;
   function findPlaces(q){
     /* a full place name always wins ("is salon salon open") */
     const qq = " " + lc(q).replace(/['’]/g,"").replace(/[^a-z0-9& ]/g," ").replace(/\s+/g," ") + " ";
@@ -4310,12 +4485,12 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     [/saints|football|pelicans|game|sports/, () => "Check the Saints' schedule on neworleanssaints.com for Nov 4–8 home games at the Caesars Superdome (it's in the app). Game days make the CBD and Quarter extra busy, and rideshares surge."],
     [/how long|how many days|when do we (arrive|leave|get there|fly)|trip dates|countdown|days (until|till|to go)/, () => { const ti = tripInfo(); if(!ti) return null; const now = new Date(); const days = Math.ceil((ti.A - now)/86400000); return "You arrive Wednesday, Nov 4 and leave Sunday, Nov 8, 2026 — 4 nights at the Olivier House Hotel, 828 Toulouse St."+(days > 0 ? " That's "+days+" day"+(days===1?"":"s")+" from now." : ""); }],
     [/hotel|where are we staying|our address|olivier/, () => "You're staying at the Olivier House Hotel, 828 Toulouse St, New Orleans, LA 70112 (front desk 504-525-8456). It's in the heart of the French Quarter: 2 blocks to Bourbon, 5 to Jackson Square, about 10 minutes' walk to Frenchmen."],
-    [/golden girls|dorothy|blanche|rose|sophia/, () => "The girls are your hosts! Dorothy brings history and jazz, Blanche romance and late nights, Rose beignets, cats and swamps, and Sophia food, Voodoo and bargains. Tap 'Who's leading tonight?' on Home to see each girl's picks, or Holla Holla for what's open now."]
+    [/golden girls|dorothy|blanche|rose|sophia/, () => "The girls are your hosts! Dorothy brings history and jazz, Blanche romance and late nights, Rose beignets, cats and swamps, and Sophia food, Voodoo and bargains. Tap 'Who's leading tonight?' on Home to see each girl's picks, or Open now for what's open this minute."]
   ];
 
   /* ---- about the app itself (from Help) ---- */
   function helpAnswer(q){
-    if(!/\bapp\b|button|\btab\b|feature|install|\bsave\b|saving|\bvote|holla|surprise me|passport|tattoo idea|design (a|my|your) tattoo|tattoo design|cheesecake|kitchen table|settings|dark mode|after dark|full tour|walkthrough|how do i use|the map work|dorothy (pop|nudge)|ask the girls/.test(q)) return null;
+    if(!/\bapp\b|button|\btab\b|feature|install|\bsave\b|saving|\bvote|open now|search bar|surprise me|passport|tattoo idea|design (a|my|your) tattoo|tattoo design|cheesecake|kitchen table|settings|dark mode|after dark|full tour|walkthrough|how do i use|the map work|dorothy (pop|nudge)|ask the girls/.test(q)) return null;
     const words = q.replace(/[^a-z ]/g," ").split(/\s+/).filter(w => w.length > 3 && !STOP.test(w));
     let best = null, sc = 0;
     (HELP||[]).forEach(([k, t, items]) => items.forEach(([h, a]) => { const txt = lc(t+" "+h+" "+a.replace(/<[^>]+>/g,"")); let s = 0; words.forEach(w => { if(txt.includes(w)) s += lc(h).includes(w) ? 3 : 1; }); if(s > sc){ sc = s; best = [t, h, a]; } }));
@@ -4331,7 +4506,8 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     if(n === 0) return {text:plan.days.map(d => "Day "+d.n+(ti?" ("+dayLabel(ti.dateOf(d.n))+")":"")+": "+(d.t||"")+" — "+(d.items||[]).slice(0,4).map(i => i.h).join(", ")).join("\n"), ids:[]};
     const d = plan.days.find(x => x.n === n); if(!d) return {text:"Your plan has days 1 to "+plan.days.length+".", ids:[]};
     const items = d.items||[];
-    return {text:"Day "+d.n+(ti?" · "+dayLabel(ti.dateOf(d.n)):"")+(d.t?" — "+d.t:"")+":\n"+items.map(i => "• "+(i.t?fmtM(toM(i.t))+" ":"")+(i.h||"")+(i.d?" — "+i.d:"")).join("\n")+(ts && !ts.day ? "\n(Edit it under Saved → Trip plan.)" : ""), ids:[...new Set(items.flatMap(i => i.p||[]))].filter(id => BY[id]).slice(0,6)};
+    const lines = items.length ? items.map(i => "• "+(i.t?fmtM(toM(i.t))+" ":"")+(i.h||"")+(i.d?" — "+i.d:"")).join("\n") : "Nothing planned yet. Use Add to trip on a place.";
+    return {text:"Day "+d.n+(ti?" · "+dayLabel(ti.dateOf(d.n)):"")+(d.h?" — "+d.h:"")+":\n"+lines+"\n(Open Calendar to edit it.)", ids:[...new Set(items.flatMap(i => i.p||[]))].filter(id => BY[id]).slice(0,6)};
   }
 
   function placeAnswer(q, ps){
@@ -4376,13 +4552,13 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     const LBL = {beignet:"beignets",coffee:"coffee",breakfast:"breakfast",jazz:"live music",cocktail:"bars",bar:"bars",bars:"bars",drink:"drinks",dance:"dancing",vegan:"vegan & vegetarian",vegetarian:"vegan & vegetarian",dinner:"dinner",lunch:"lunch",eat:"food",food:"food",cat:"cat spots",cats:"cat spots",tattoo:"tattoo shops",museum:"museums",history:"history",voodoo:"Voodoo & spooky",swamp:"swamp & nature",river:"river trips",cruise:"river trips",shop:"shopping",romantic:"romantic spots",date:"date spots",drag:"LGBTQ+ spots",gay:"LGBTQ+ spots",queer:"LGBTQ+ spots",lgbt:"LGBTQ+ spots",swamp:"swamp tours",locals:"local favorites",local:"local favorites"};
     const kw = hit ? (q.match(hit[0])||[""])[0] : ""; const kind = LBL[kw] || LBL[kw.replace(/s$/,"")] || kw || "places";
     if(!shown.length){
-      if(!onlyOpen || !pool.length) return {text:"I couldn't find "+kind+" for that. Try different words, or tap Holla Holla.", ids:[]};
+      if(!onlyOpen || !pool.length) return {text:"I couldn't find "+kind+" for that. Try different words, or tap Open now.", ids:[]};
       const nxt = pool.map(p => { const st = statusAt(p, W); return [p, st]; }).filter(x => x[1].state==="later").sort((a,b) => a[1].opensIn - b[1].opensIn).slice(0, 4);
       return {text:"No "+kind+" open "+label+(nxt.length ? ". Next to open:\n"+nxt.map(([p,st]) => "• "+p.n+" — opens at "+st.openLabel+(fmtDist(p)?" · "+fmtDist(p):"")).join("\n") : ". Try another time, like \"tomorrow at 10am\"."), ids:nxt.map(x => x[0].id)};
     }
     const top = shown.slice(0, 6);
     if(/how much|price|cost|ticket|expensive/.test(q)) return {text:"Prices — "+kind+":\n"+top.map(p => "• "+p.n+": "+((p.hrs&&p.hrs.price)||p.pr||"see listing")).join("\n"), ids:top.map(p => p.id)};
-    return {text:(onlyOpen ? "Open "+label : "Top picks")+(hit?" — "+kind:"")+":\n"+top.map(p => "• "+p.n+" — "+stTxt(p, W)+(fmtDist(p)?" · "+fmtDist(p):"")+(rating(p)?" · "+rating(p).split(" ")[0]:"")+(safetyOf(p).lv!=="green"?" · "+safetyOf(p).label.toLowerCase():"")).join("\n")+(shown.length>6?"\n…and "+(shown.length-6)+" more. Tap Holla Holla to see them all.":""), ids:top.map(p => p.id)};
+    return {text:(onlyOpen ? "Open "+label : "Top picks")+(hit?" — "+kind:"")+":\n"+top.map(p => "• "+p.n+" — "+stTxt(p, W)+(fmtDist(p)?" · "+fmtDist(p):"")+(rating(p)?" · "+rating(p).split(" ")[0]:"")+(safetyOf(p).lv!=="green"?" · "+safetyOf(p).label.toLowerCase():"")).join("\n")+(shown.length>6?"\n…and "+(shown.length-6)+" more. Tap Open now or search to see them all.":""), ids:top.map(p => p.id)};
   }
 
   window.askFindPlaces = findPlaces;
@@ -4429,7 +4605,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     const days = (plan.days||[]).map(d => ({day:d.n, date:ti ? dayLabel(ti.dateOf(d.n)) : "", title:d.t||"", stops:(d.items||[]).map(i => (i.t||"")+" "+(i.h||"")+(i.p&&i.p[0]?" ["+i.p[0]+"]":"")).slice(0,10)}));
     const sys = "You are 'Ask the Girls', the warm, witty helper in The NOLA Girls trip app (Golden Girls flavor, light touch). App users: Tara and Emily. Travelers: Tara, Emily, and their niece Lauren (21). Trip: Wed Nov 4 – Sun Nov 8, 2026, staying at the Olivier House Hotel, 828 Toulouse St in the French Quarter (504-525-8456).\n"
       + "Answer ANY question about New Orleans (history, food, music, neighborhoods, customs, getting around, safety, weather, what to do) using your own knowledge, and ANY question about this app or the places in it using the APP DATA below.\n"
-      + "Rules: For places, hours, open/closed, addresses and phone numbers, trust APP DATA over memory; if something isn't in the data, you may use general knowledge but say it's worth confirming. Never invent exact hours, prices or phone numbers. When you mention a place from APP DATA, put its id in double brackets right after the name, e.g. Café du Monde [[cdm]]. Prefer places that are OPEN when the question is about now. Mention the safety color for anything yellow or red at night. Keep answers under 140 words unless asked for detail; use short bullets for lists. If the question is about how to use the app, explain the relevant feature (Holla Holla button = what's open now in this section; Explore collections; Map with safety colors; Saved (Trip plan + kitchen table); Ink tattoo ideas and AI designer; Help has emergency numbers).\n"
+      + "Rules: Use APP DATA first for places, hours, open/closed, addresses and phone numbers. When the guide has nothing, you may use web-sourced facts and say they are worth confirming. Never invent a venue, and never invent that a place is open or closed. Never invent exact hours, prices or phone numbers. When you mention a place from APP DATA, put its id in double brackets right after the name, e.g. Café du Monde [[cdm]]. Prefer places that are OPEN when the question is about now. Mention the safety color for anything yellow or red at night. Keep answers under 140 words unless asked for detail; use short bullets for lists. If the question is about how to use the app, explain the relevant feature (the search bar at the top searches the guide and the map; Open now lists what's open this minute; the Map has green, yellow and red walking zones; Explore collections; Saved is the trip plan plus kitchen table; Ink is tattoo ideas; Help has emergency numbers).\n"
       + "NOW: New Orleans local time "+DOWL[N.dow]+" "+fmtM(N.mins)+(N.date?" ("+N.date+")":"")+(typeof WX!=="undefined" && WX ? "; weather "+WX.temp+"°F "+WXL(WX.code) : "")+".\n"
       + "APP DATA — places as [id, name, type, area, status now, hours, google rating, distance, night safety, address, phone, why]:\n"+JSON.stringify(places)+"\nPLAN:\n"+JSON.stringify(days);
     const msgs = [{role:"user", content:sys + "\n\nReply 'Ready.' and wait for questions."}, {role:"assistant", content:"Ready."}];
@@ -4495,7 +4671,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     it.push('<a role="menuitem" href="'+dirUrl(p)+'" target="_blank" rel="noopener">Directions</a>');
     it.push('<a role="menuitem" href="'+dirUrl(p,"apple")+'" target="_blank" rel="noopener">Open in Apple Maps</a>');
     if(!ro){
-      it.push('<button role="menuitem" data-addto="'+p.id+'">Add to a trip day</button>');
+      it.push('<button role="menuitem" data-addto="'+p.id+'">Add to trip</button>');
       it.push('<button role="menuitem" data-visit="'+p.id+'">'+(visited?'Visited ✓ (undo)':'Mark visited')+'</button>');
     }
     if(p.ph) it.push('<a role="menuitem" href="tel:'+esc(String(p.ph).replace(/[^0-9+]/g,""))+'">Call '+esc(p.ph)+'</a>');
@@ -4802,7 +4978,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
 })();
 
 /* Auto check-in: while the app is open, GPS notices when you've spent a minute at a place, adds it to the
-   Journal and Passport, and shows what's next. Plus Share recap and Send my location. Nothing leaves the phone
+   journal, and shows what's next. Plus Share recap and Send my location. Nothing leaves the phone
    unless you tap Share or Send. */
 (function(){
   const KEY = "nola-autocheck", SKIP = "nola-autocheck-skip", DWELL = 60000, MAX_ACC = 80;
@@ -4869,7 +5045,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     try{ navigator.vibrate && navigator.vibrate([90, 50, 90]); }catch(e){}
     try{
       if("Notification" in window && Notification.permission === "granted" && document.visibilityState !== "visible" && navigator.serviceWorker && navigator.serviceWorker.ready)
-        navigator.serviceWorker.ready.then(r => r.showNotification("You made it to " + p.n + "!", {body:(won[0] ? "Stamp earned: " + won[0].t + ". " : "") + (nx ? "Next up: " + nx.label + " (" + nx.when + ")" : ""), tag:"checkin", icon:"../icon.svg"}));
+        navigator.serviceWorker.ready.then(r => r.showNotification("You made it to " + p.n + "!", {body:(won[0] ? "Added to your journal: " + won[0].t + ". " : "") + (nx ? "Next up: " + nx.label + " (" + nx.when + ")" : ""), tag:"checkin", icon:"../icon.svg"}));
     }catch(e){}
   }
 
@@ -4879,7 +5055,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     const b = document.createElement("div"); b.className = "ci-banner"; b.setAttribute("role", "status");
     b.innerHTML = '<button class="ci-x" type="button" aria-label="Close">×</button>'
       + '<div class="ci-k">Checked in</div><b class="ci-t">You made it to ' + escH(p.n) + '!</b>'
-      + (stamp ? '<div class="ci-s">Passport stamp: <b>' + escH(stamp.g + " " + stamp.t) + '</b></div>' : '<div class="ci-s">Added to your journal.</div>')
+      + (stamp ? '<div class="ci-s">Added to your journal: <b>' + escH(stamp.g + " " + stamp.t) + '</b></div>' : '<div class="ci-s">Added to your journal.</div>')
       + (nx ? '<div class="ci-n"><span>Next up</span><b>' + escH(nx.label) + '</b><small>' + escH(nx.when) + (nx.place && nx.place.id !== p.id ? " · " + escH(walkFrom(at, nx.place)) : "") + '</small></div>' : '')
       + '<div class="ci-acts">'
       + (nx && nx.place ? '<a class="ci-btn gold" href="' + escH(dirUrl(nx.place)) + '" target="_blank" rel="noopener">Directions</a>' + (typeof uberLink === "function" ? '<a class="ci-btn" href="' + escH(uberLink(nx.place)) + '" target="_blank" rel="noopener">Uber</a>' : '') : nx ? '<a class="ci-btn gold" href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(nx.label + ", New Orleans, LA") + '" target="_blank" rel="noopener">Directions</a>' : '')
@@ -4903,9 +5079,9 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     const stamps = stampsFor(v);
     const byDay = {};
     ids.forEach(id => { const k = new Date(v[id].t).toLocaleDateString("en-US", {weekday:"short", month:"short", day:"numeric", timeZone:"America/Chicago"}); (byDay[k] = byDay[k] || []).push(BY[id].n + (v[id].r ? " " + "♥".repeat(v[id].r) : "") + (v[id].n ? ' ("' + v[id].n + '")' : "")); });
-    let t = "The NOLA Girls in New Orleans ⚜\n" + ids.length + " place" + (ids.length === 1 ? "" : "s") + " so far · " + stamps.length + " of " + STAMPS.length + " passport stamps\n";
+    let t = "The NOLA Girls in New Orleans ⚜\n" + ids.length + " place" + (ids.length === 1 ? "" : "s") + " in the journal so far\n";
     Object.keys(byDay).forEach(k => { t += "\n" + k + ": " + byDay[k].join(", "); });
-    if(stamps.length) t += "\n\nStamps: " + stamps.map(s => s.t).join(", ");
+    if(stamps.length) t += "\n\nJournal highlights: " + stamps.map(s => s.t).join(", ");
     if(!ids.length) t += "\nNothing checked in yet. Stay tuned.";
     return t;
   }
@@ -4923,11 +5099,11 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
   }
   window.nolaSendLocation = sendLocation;
 
-  /* the control card on Journal and Passport */
+  /* the control card on Journal */
   function card(){
     const on = pref() === "1";
     return '<div class="ci-card">'
-      + '<div class="ci-row"><div><b>Auto check-in</b><span>' + (on ? "On. When you spend a minute at a place, it's added here, stamps fill in, and I'll tell you what's next." : "Let GPS add places as you visit them, earn stamps, and show what's next. Works while the app is open.") + '</span></div>'
+      + '<div class="ci-row"><div><b>Auto check-in</b><span>' + (on ? "On. When you spend a minute at a place, it's added to your journal and I'll tell you what's next." : "Let GPS add places to your journal as you visit them, and show what's next. Works while the app is open.") + '</span></div>'
       + '<button class="ci-switch" type="button" role="switch" aria-checked="' + on + '" data-citoggle="1" aria-label="Auto check-in"><i></i></button></div>'
       + '<div class="ci-acts"><button class="ci-btn gold" type="button" data-cishare="1">Share recap</button><button class="ci-btn" type="button" data-ciloc="1">Send my location</button></div></div>';
   }
@@ -5117,7 +5293,6 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
   window.nolaFlightsCard = () => FLIGHTS.map(card).join("");
 
   const _vI = vInfo2; vInfo2 = function(){ return window.nolaFlightsCard() + _vI.apply(this, arguments); };
-  const _vT = vTrip; vTrip = function(){ return window.nolaFlightsCard() + _vT.apply(this, arguments); };
 
   /* add Emily's landing to Day 1 once (if someone deletes it, it stays deleted) */
   function addToPlan(){
@@ -5370,6 +5545,39 @@ html body nav.vswitch.vswitch{display:none!important}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="places.js"></script>
+<script>
+(function(){
+  var input = document.getElementById("gs"), panel = document.getElementById("gs-panel");
+  if(!input || !panel) return;
+  function paint(){
+    var q = input.value.trim();
+    input.setAttribute("aria-expanded", q.length >= 2 ? "true" : "false");
+    if(q.length < 2){ panel.hidden = true; panel.innerHTML = ""; return; }
+    var ql = q.toLowerCase(), N = nolaNow();
+    var places = P.filter(function(p){ return hay(p).includes(ql) || (p.story||"").toLowerCase().includes(ql); }).slice(0, 8);
+    var html = '<div class="gs-sec"><div class="xh">In the guide</div>';
+    if(!places.length) html += '<p class="xm">Nothing in the guide for “'+esc(q)+'”.</p>';
+    else html += places.map(function(p){
+      var mine = new Set(myPicks()).has(p.id);
+      return '<div class="res gs-hit"><button class="nm" type="button" data-open="'+esc(p.id)+'">'+esc(p.n)+'</button><div class="right">'+pill(statusAt(p,N))+'</div><div class="sub2"><span>'+esc(p.a||"")+'</span><button class="btn" type="button" data-heart="'+esc(p.id)+'" aria-pressed="'+mine+'">'+(mine?"✓ In my plans · Remove":"Add to my plans")+'</button>'+(typeof readOnly!=="undefined" && readOnly ? "" : '<button class="btn" type="button" data-addto="'+esc(p.id)+'">Add to trip</button>')+'</div></div>';
+    }).join("");
+    html += '</div><div id="gs-osm"></div>';
+    panel.innerHTML = html; panel.hidden = false;
+    if(window.nolaPaintOsm) window.nolaPaintOsm(document.getElementById("gs-osm"), q);
+  }
+  var t = null;
+  input.addEventListener("input", function(){ clearTimeout(t); t = setTimeout(paint, 180); });
+  document.addEventListener("click", function(e){
+    if(!e.target.closest) return;
+    var inSearch = e.target.closest("#gsearch");
+    if(inSearch && e.target.closest("[data-open],[data-addto]")){ panel.hidden = true; input.setAttribute("aria-expanded","false"); return; }
+    if(!inSearch){ panel.hidden = true; input.setAttribute("aria-expanded","false"); }
+  }, true);
+  document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ panel.hidden = true; input.setAttribute("aria-expanded","false"); } });
+  var r0 = render;
+  render = function(){ var o = r0.apply(this, arguments); if(input.value.trim().length>=2 && !panel.hidden) paint(); return o; };
+})();
+</script>
 <script src="rides.js"></script>
 <script src="config.js"></script>
 <script src="auth.js"></script>

@@ -119,7 +119,7 @@
     var btns = mode === "sheet"
       ? (ro ? "" : '<button class="btn" data-xreg="' + esc(r.osm) + '" data-xact="swap">Swap in</button><button class="btn" data-xreg="' + esc(r.osm) + '" data-xact="addp">Add</button>')
       : '<button class="btn" data-xreg="' + esc(r.osm) + '" data-xact="heart" aria-pressed="' + mine + '">' + (mine ? "✓ In my plans · Remove" : "Add to my plans") + '</button>' +
-        (ro ? "" : '<button class="btn" data-xreg="' + esc(r.osm) + '" data-xact="addto">Add to day plan</button>') +
+        (ro ? "" : '<button class="btn" data-xreg="' + esc(r.osm) + '" data-xact="addto">Add to trip</button>') +
         '<a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(r.name + (r.addr ? ", " + r.addr : "") + ", New Orleans") + '">Map</a>';
     return '<div class="xres"><div class="xn">' + esc(r.name) + '</div><div class="xm">' + esc(kindOf(r)) + (r.addr ? " · " + esc(r.addr) : "") + " · " + esc(mi(r.m)) + '</div><div class="xb">' + btns + '</div></div>';
   }
@@ -171,7 +171,7 @@
     var mine = typeof myPicks === "function" && new Set(myPicks()).has(p.id), ro = typeof readOnly !== "undefined" && readOnly;
     return '<div class="mpop"><div class="mpop-n">' + esc(p.n) + '</div>' + (p.ad ? '<div class="mpop-a">' + esc(p.ad) + '</div>' : '') +
       '<div class="mpop-b"><button type="button" class="mbtn save" data-heart="' + esc(p.id) + '" aria-pressed="' + mine + '">' + (mine ? "✓ In my plans · Remove" : "Add to my plans") + '</button>' +
-      (ro ? '' : '<button type="button" class="mbtn" data-addto="' + esc(p.id) + '">+ Add to plan</button>') +
+      (ro ? '' : '<button type="button" class="mbtn" data-addto="' + esc(p.id) + '">Add to trip</button>') +
       '<button type="button" class="mbtn ghost" data-open="' + esc(p.id) + '">Details</button></div></div>';
   }
   function hookMarkers(){
@@ -209,7 +209,7 @@
       tapRes[key] = { r: r, spot: spot };
       var ro = typeof readOnly !== "undefined" && readOnly, h = '<div class="mpop">';
       if (r) h += '<div class="mpop-k">Nearest place</div><div class="mpop-n">' + esc(r.name) + '</div><div class="mpop-a">' + esc(kindOf(r)) + (r.addr ? " · " + esc(r.addr) : "") + '</div>' +
-        '<div class="mpop-b"><button type="button" class="mbtn save" data-xtap="' + key + '" data-which="r" data-act="heart">Add to my plans</button>' + (ro ? "" : '<button type="button" class="mbtn" data-xtap="' + key + '" data-which="r" data-act="addto">+ Add to plan</button>') + '</div>';
+        '<div class="mpop-b"><button type="button" class="mbtn save" data-xtap="' + key + '" data-which="r" data-act="heart">Add to my plans</button>' + (ro ? "" : '<button type="button" class="mbtn" data-xtap="' + key + '" data-which="r" data-act="addto">Add to trip</button>') + '</div>';
       else h += '<div class="mpop-a">No named place right here.</div>';
       h += '<div class="mpop-b"><button type="button" class="mbtn ghost" data-xtap="' + key + '" data-which="s" data-act="heart">📍 Save this spot</button></div></div>';
       if (LMAP.hasLayer && pop.isOpen()) pop.setContent(h);
@@ -241,5 +241,22 @@
     ".mpop-b{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.mbtn{min-height:44px;min-width:44px;padding:0 14px;border-radius:999px;border:1px solid #23172C;background:#fff;color:#23172C;font:600 14px system-ui,sans-serif;cursor:pointer}.mbtn.save{background:#FF6B5B;border-color:#FF6B5B;color:#fff}.mbtn.ghost{border-style:dashed}" +
     ".xb{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.xsrc{font-size:.72rem;color:var(--muted,#7a6670);margin-top:6px}";
   document.head.appendChild(st);
+  window.nolaPaintOsm = function(el, raw){
+    if(!el) return;
+    var q = (raw || "").trim();
+    el.className = "xbox"; el.dataset.for = "gs";
+    if(q.length < 3){ el.innerHTML = ""; el._res = []; return; }
+    var res = cache[clean(q)];
+    if(!res){
+      el.innerHTML = '<div class="xh">Real places on the map</div><div class="xm">Searching OpenStreetMap…</div>';
+      el._res = [];
+      search(q).then(function(){ var inp = document.getElementById("gs"); if(inp && inp.value.trim() === q) window.nolaPaintOsm(el, q); });
+      return;
+    }
+    var known = new Set(builtinIds(q));
+    var list = res.filter(function(r){ return !known.has("osm-" + r.osm.toLowerCase()); });
+    el._res = list;
+    el.innerHTML = '<div class="xh">Real places on the map</div>' + (list.length ? list.map(function(r){ return rowHtml(r, "all"); }).join("") : '<div class="xm">No other matches on the map for “' + esc(q) + '”.</div>') + '<div class="xsrc">From OpenStreetMap via Photon/Nominatim. Add to my plans and it syncs to your account.</div>';
+  };
   if (n) try { render(); } catch(e){}
 })();
