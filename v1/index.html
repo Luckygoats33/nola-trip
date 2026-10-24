@@ -1651,7 +1651,7 @@ html body nav.vswitch.vswitch{display:none!important}
 </script>
 
 <script>
-/* shared app kit for every version: tap the logo to go home, an "Install app" button top right, and an install pop-up */
+/* shared app kit for every version: tap the logo to go home, an Add to home screen button, and an install pop-up */
 (function(){
   var PUBLIC = "https://luckygoats33.github.io/nola-trip/";
   var cur = document.querySelector('nav.vswitch a[aria-current="page"]');
@@ -1672,7 +1672,7 @@ html body nav.vswitch.vswitch{display:none!important}
   css.textContent =
     "header .top-row #sync,header #sub{display:none!important}" +
     ".nola-home{cursor:pointer;border-radius:8px}.nola-home:focus-visible{outline:3px solid #E0B65A;outline-offset:3px}" +
-    "button.nola-install{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:3px 10px;border-radius:999px;background:#E0B65A;color:#23172C;font:700 .72rem/1.1 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;white-space:nowrap;border:1px solid #23172C;box-shadow:0 1px 0 #23172C}" +
+    "button.nola-install{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;flex:none;min-height:28px;padding:3px 10px;border-radius:999px;background:#E0B65A;color:#23172C;font:700 .72rem/1.1 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;white-space:nowrap;border:1px solid #23172C;box-shadow:0 1px 0 #23172C}" +
     "button.nola-install:hover,button.nola-install:focus-visible{background:#F0CB7A;outline:none}" +
     "button.nola-install svg{width:13px;height:13px;flex:none}" +
     ".nola-pop{position:fixed;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:10000;max-width:440px;margin:0 auto;background:#FFF8F0;color:#23172C;border:2px solid #23172C;border-radius:20px;box-shadow:0 18px 50px rgba(35,23,44,.35);padding:18px 18px 16px;font:400 .95rem/1.45 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;animation:nolaPop .25s ease-out}" +
@@ -1687,8 +1687,8 @@ html body nav.vswitch.vswitch{display:none!important}
     ".nola-pop .nola-later{all:unset;cursor:pointer;box-sizing:border-box;min-height:44px;padding:10px 16px;border-radius:999px;border:1px solid #23172C;color:#23172C;font-weight:700}" +
     ".nola-pop .nola-go:focus-visible,.nola-pop .nola-later:focus-visible{outline:3px solid #E0B65A;outline-offset:2px}" +
     ".nola-pop .nola-x{all:unset;cursor:pointer;position:absolute;top:8px;right:10px;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;color:#23172C;font-size:1.3rem}" +
-    "@media (max-width:420px){button.nola-install{padding:3px 9px;font-size:.7rem}}" +
-    "button.nola-install.nola-compact{padding:0;width:30px;min-height:30px;justify-content:center;font-size:0;gap:0}button.nola-install.nola-compact svg{width:14px;height:14px}";
+    "@media (max-width:899px){header .top-row>.row{flex-wrap:wrap}button.nola-install{padding:3px 9px;font-size:.68rem}.gsearch,.gsearch .field{min-width:0}}" +
+    "button.nola-install.nola-compact{padding:3px 9px;width:auto;min-height:28px;font-size:.68rem;gap:6px}";
   document.head.appendChild(css);
 
   /* 1. the logo takes you home in this version */
@@ -1711,17 +1711,14 @@ html body nav.vswitch.vswitch{display:none!important}
     logo.addEventListener("keydown", function(e){ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); goHome(); } });
   }
 
-  /* 2. the Install app button, top right */
+  /* 2. Add to home screen, same install prompt, label stays readable */
   var btn = document.createElement("button");
   btn.className = "nola-install"; btn.type = "button";
-  btn.setAttribute("aria-label", "Install app"); btn.title = "Install app";
-  btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>Install app';
+  btn.setAttribute("aria-label", "Add to home screen"); btn.title = "Add to home screen";
+  btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>Add to home screen';
   btn.addEventListener("click", function(){ if(deferred && web){ deferred.prompt(); deferred.userChoice.finally(function(){ deferred = null; }); } else showPop(true); });
   var row = document.querySelector("header .top-row > .row");
   if(row && !standalone) row.insertBefore(btn, row.firstChild);
-  /* shrink to an icon when the header row runs out of room */
-  function fit(){ if(!btn.isConnected) return; btn.classList.remove("nola-compact"); var last = row.lastElementChild, r = (last && last.offsetParent ? last : row).getBoundingClientRect(); if(row.scrollWidth > row.clientWidth + 1 || r.right > document.documentElement.clientWidth - 4) btn.classList.add("nola-compact"); }
-  if(row){ fit(); addEventListener("resize", fit); setTimeout(fit, 300); }
 
   /* 3. the install pop-up */
   var pop = null;
@@ -1731,17 +1728,17 @@ html body nav.vswitch.vswitch{display:none!important}
     var name = vn === 1 ? "V1 Classic" : vn === 2 ? "V2" : "V3";
     var body, go = "";
     if(!web){
-      body = "<p>Apps install from the public site. Open " + name + " there, then use its <b>Install app</b> button.</p>";
+      body = "<p>Add it to your home screen from the public site. Open " + name + " there, then use its <b>Add to home screen</b> button.</p>";
       go = '<a class="nola-go" href="' + PUBLIC + "v" + vn + '/" target="_blank" rel="noopener">Open ' + name + ' to install</a>';
     } else if(deferred){
       body = "<p>Put the trip hub on your home screen. It opens full screen and keeps working with bad signal on the river.</p>";
-      go = '<button class="nola-go" type="button" data-nola-go="1">Install</button>';
+      go = '<button class="nola-go" type="button" data-nola-go="1">Add to home screen</button>';
     } else if(ios){
       body = "<p>Put the trip hub on your home screen:</p><ol><li>Tap <b>Share</b> (the square with an arrow) in Safari.</li><li>Scroll and tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>.</li></ol><p style=\"font-size:.85rem\">On iPhone this works in Safari. In Chrome, use the Share button at the top right.</p>";
     } else if(android){
-      body = "<p>Put the trip hub on your home screen:</p><ol><li>Tap the <b>⋮</b> menu in Chrome.</li><li>Tap <b>Install app</b> or <b>Add to Home screen</b>.</li></ol>";
+      body = "<p>Put the trip hub on your home screen:</p><ol><li>Tap the <b>⋮</b> menu in Chrome.</li><li>Tap <b>Add to Home screen</b>.</li></ol>";
     } else {
-      body = "<p>Install it like an app: click the <b>install icon</b> at the right end of Chrome's address bar, or open the <b>⋮</b> menu and choose <b>Cast, save and share → Install page as app</b>.</p><p style=\"font-size:.85rem\">Best on your phone: open this page there and tap Install app.</p>";
+      body = "<p>Add it to your home screen: click the install icon at the right end of Chrome's address bar, or open the <b>⋮</b> menu and choose <b>Cast, save and share</b>, then add the page.</p><p style=\"font-size:.85rem\">Best on your phone: open this page there and tap <b>Add to home screen</b>.</p>";
     }
     if(!fromButton) ls(KEY, "1");
     pop = document.createElement("div");
@@ -1863,7 +1860,7 @@ html body nav.vswitch.vswitch{display:none!important}
    ["top","The top of the screen",[
     ["Version bar","<b>V1 · Classic</b>, <b>V2</b> and <b>V3 · New</b> are three versions of the same trip app. The gold one is where you are. Tap another to switch."],
     ["The logo","Tap <b>The NOLA Girls</b> any time to jump back to "+NOW+"."],
-    ["Install app","Puts the app on your home screen so it opens full screen and keeps working with weak signal. On iPhone: Safari → Share → Add to Home Screen."],
+    ["Add to home screen","The <b>Add to home screen</b> button at the top puts the app on your home screen. It opens full screen and keeps working with weak signal. On iPhone: Safari → Share → Add to Home Screen."],
     V1 ? ["What's open now?","The big button opens <b>Open Now</b> set to this minute, so you see everything you can walk into right now."]
        : ["Trip info","Dates, hotel, booking checklist, safety tips and useful numbers."]]],
    ["bar", V1 ? "The tabs" : "The bottom bar", V1 ? [

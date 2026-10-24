@@ -3170,7 +3170,7 @@ const HELP = [
   ["Search","The search bar at the top looks through the guide and live places on the map. Tap a result for details, or <b>Save</b> to keep it. It stays on every screen."],
   ["Open now","The <b>Open now</b> chip on Home and Explore lists only what you can walk into this minute, with a time picker if you want to look ahead. The Map tab has the same filter."],
   ["The logo","Tap <b>The NOLA Girls</b> any time to jump back to Home."],
-  ["Install app","The round download button (or <b>Install app</b> on wider screens) puts the app on your home screen. It opens full screen and keeps working with weak signal. On iPhone: Safari → Share → Add to Home Screen."],
+  ["Add to home screen","The <b>Add to home screen</b> button at the top of every screen puts the app on your home screen. It opens full screen and keeps working with weak signal. On iPhone: Safari → Share → Add to Home Screen."],
   ["Day and evening look","The app switches to a darker evening look on its own after sunset in New Orleans. To keep it always light or always dark, open <b>Trip details & settings</b> at the top of this Help page → Look and feel."],
   ["Trip details & settings","Dates, hotel, the look-and-feel setting, booking info, safety tips and useful numbers. Open it with the button at the top of this Help page."]]],
  ["bar","The bottom bar",[
@@ -3178,7 +3178,7 @@ const HELP = [
   ["Map","Every place on a real map, plus your location and the hotel."],
   ["Explore","Search and thirteen hand-picked collections."],
   ["Calendar","The day-by-day trip, Wed Nov 4 through Sun Nov 8. Flight details start on the arrival day. Everything you add with <b>Add to trip</b> shows up here."],
-  ["Saved","The kitchen table: everyone's saves and votes, and your journal. The number badge counts saved places."],
+  ["Saved","The kitchen table: everyone's saves and votes. The number badge counts saved places."],
   ["? Help","This guide."]]],
  ["home","Home",[
   ["Greeting and countdown","Shows the time in New Orleans, days until you arrive (or which trip day it is), and the weather."],
@@ -3194,7 +3194,7 @@ const HELP = [
  ["place","Place details",[
   ["Open a place","Tap any place name or card. A panel slides up with everything you need."],
   ["What you'll see","Open or closed right now and today's hours, the 5-cat Google rating with a <b>See reviews on Google</b> link, why you'll love it, address, phone, price, music and reservation notes."],
-  ["Buttons","<b>Save</b> (the cheesecake) saves it to the kitchen table. <b>Add to trip</b> opens a calendar so you can pick a free time. <b>Maps</b> opens the place in Google Maps. <b>Mark visited</b> adds it to your journal. The hearts rate it after you've been. <b>Copy link</b> copies a link straight to this place. <b>Copy phone</b> and directions are there too. On the Calendar tab, tap a day to add a custom event."],
+  ["Buttons","<b>Save</b> (the cheesecake) saves it to the kitchen table. <b>Add to trip</b> opens a calendar so you can pick a free time. <b>Maps</b> opens the place in Google Maps. <b>Copy link</b> copies a link straight to this place. <b>Copy phone</b> and directions are there too. On the Calendar tab, tap a day to add a custom event."],
   ["Booking","Tours, cruises and tattoo shops show how to book, the price, and any deposit or ID rules."],
   ["Closing it","Tap the ×, tap outside the panel, or use your phone's back button."]]],
  ["map","Map",[
@@ -3208,9 +3208,8 @@ const HELP = [
   ["Add to trip","On any place, tap <b>Add to trip</b>. A calendar pops up with free and busy times. Pick a slot, confirm, and it shows on that day."],
   ["Editing","Add stops, move them, remove them, or swap in a Plan B if something is closed or it rains. Changes save automatically."],
   ["Route this day","Opens all of that day's stops as one walking route in Google Maps, starting at the hotel."]]],
- ["saved","Saved and journal",[
-  ["The kitchen table","Everything anyone saved with the cheesecake. Filter by person, or <b>Everyone's in</b> to see what all three of you want."],
-  ["Journal","Every place you've been, with your heart ratings and notes. Turn on <b>Auto check-in</b> at the top and GPS adds a place after you've spent about a minute there (while the app is open), and pops up what's next on the calendar. <b>Undo</b> on the pop-up or <b>Remove from journal</b> takes one back. <b>Share recap</b> texts your trip so far; <b>Send my location</b> texts where you are, with a map link."]]],
+ ["saved","Saved",[
+  ["The kitchen table","Everything anyone saved with the cheesecake. Filter by person, or <b>Everyone's in</b> to see what all three of you want."]]],
  ["more","Golden Girl picks",[
   ["Golden Girl picks","Every place belongs to one of the girls. Her page lists her picks with open ones first."]]],
  ["share","Saving, sharing and offline",[
@@ -3253,11 +3252,11 @@ const TOURS = {
   {go:"home", sel:"#main .surprise", g:"Sophia", t:"Surprise me", b:"The best button when you have a free afternoon. Pick a vibe, how many hours, and walk or ride, then tap <b>Find our adventure</b>. You get a route of places that are actually open. <b>Spin again</b> for another, <b>Add to trip</b> to put it on the Calendar."},
   {go:"explore", sel:"#uq", g:"Dorothy", t:"Search everything", b:"Type a place, a food, a neighborhood, or a bit of history. Results show up as you type, open places first."},
   {go:"explore", sel:"#main .cols", g:"Blanche", t:"Collections", b:"Thirteen hand-picked lists: Tonight, Jazz & Cocktails, Hidden Gems, Where the Locals Go, Cat Adventures, Romantic, Vegetarian Eats, Photo Spots and more. Each has <b>See on the map</b> and <b>Surprise me from these</b>."},
-  {go:"explore", sheet:"cdm", sel:"#sheet-root .sheet", g:"Rose", t:"Inside a place", b:"Tap any place and this opens: open or closed right now, hours, the 5-cat Google rating, why you'll love it, the address and a tap-to-call phone. Tap the <b>cheesecake</b> to save it, <b>Mark visited</b> once you've been, and <b>Copy link</b> to text it to someone."},
+  {go:"explore", sheet:"cdm", sel:"#sheet-root .sheet", g:"Rose", t:"Inside a place", b:"Tap any place and this opens: open or closed right now, hours, the 5-cat Google rating, why you'll love it, the address and a tap-to-call phone. Tap the <b>cheesecake</b> to save it, and <b>Copy link</b> to text it to someone."},
   {go:"map", sel:"#main .mapwrap", g:"Dorothy", t:"The map", b:"Every place, the hotel and (if you allow it) you. On phones tap <b>Tap here to move the map</b> to pan and zoom. The green, yellow and red areas show night-walking comfort: after dark, take a car for anything yellow or red."},
   {go:"cal", sel:"#main .cal-week", g:"Sophia", t:"Calendar", b:"Day by day from Nov 4 to Nov 8. Arrival day starts with Emily's flight and the other days start empty. Tap <b>Add to trip</b> on a place, pick a free time, and it shows up here. <b>Route this day in Google Maps</b> walks the day's stops from the hotel."},
-  {go:"saved", sel:"#main .view", g:"Sophia", t:"The kitchen table", b:"Everything anyone saved. Filter by person or tap <b>Everyone's in</b> to see what all three of you want. Mark places visited to keep a journal with heart ratings."},
-  {go:"help", sel:'#tabs [data-tab="help"]', g:"Rose", t:"You're ready", b:"That's everything. <b>Help</b> has the full written guide and this tour any time. Tip: tap <b>Install app</b> at the top to put it on your home screen. Now go have a beignet."}
+  {go:"saved", sel:"#main .view", g:"Sophia", t:"The kitchen table", b:"Everything anyone saved. Filter by person or tap <b>Everyone's in</b> to see what all three of you want."},
+  {go:"help", sel:'#tabs [data-tab="help"]', g:"Rose", t:"You're ready", b:"That's everything. <b>Help</b> has the full written guide and this tour any time. Tip: tap <b>Add to home screen</b> at the top to put it on your home screen. Now go have a beignet."}
  ]
 };
 let tourList = "quick", tourStep = -1;
@@ -3382,13 +3381,11 @@ function vTrip(){
   return vCalendar();
 }
 
-/* saved: my plans (default), group picks, journal, designs */
+/* saved: my plans (default) and group picks */
 S.savedTab = "mine"; S.person = "all";
 function vSaved2(){
-  if(S.savedTab==="passport") S.savedTab = "journal";
-  if(S.savedTab==="trip") S.savedTab = "mine";
-  if(S.savedTab==="designs") S.savedTab = "mine";
-  const tabs = [["mine","My plans"],["picks","Group picks"],["journal","Journal"]];
+  if(S.savedTab==="passport" || S.savedTab==="journal" || S.savedTab==="trip" || S.savedTab==="designs") S.savedTab = "mine";
+  const tabs = [["mine","My plans"],["picks","Group picks"]];
   const mineCount = myPicks().size;
   const emptyMine = S.savedTab==="mine" && mineCount===0;
   /* Completely blank Saved until this account adds something */
@@ -3399,7 +3396,6 @@ function vSaved2(){
   }
   let h = talk("saved") + '<div class="head"><span class="eyebrow">The kitchen table</span><h2>Saved</h2></div><div class="seg" role="tablist">'+tabs.map(([k,l])=>'<button class="chip" data-savedtab="'+k+'" aria-pressed="'+(S.savedTab===k)+'">'+l+(k==="mine"&&mineCount?' · '+mineCount:'')+'</button>').join("")+'</div>';
   if(S.savedTab==="mine") return h + vSaved({mineOnly:true});
-  if(S.savedTab==="journal") return h + vJournal();
   /* group picks with person filter and "everyone's in" */
   const people = [...new Set([...Object.keys(picks), ...Object.keys(votes)])].filter(k=>k!==LOCAL && ((picks[k]&&picks[k].size) || Object.keys(votes[k]||{}).length));
   const wants = (k,id) => (picks[k] && picks[k].has(id)) || ["must","maybe"].includes((votes[k]||{})[id]);
@@ -3423,15 +3419,7 @@ function vPassport(){
   if(next.length) h += '<div class="box"><h3>Easy stamps to get next</h3><ul>'+next.map(s=>{ const p = P.filter(s.f).sort((a,b)=>{ const x=distInfo(a),y=distInfo(b); return (x&&y)?x.m-y.m:a.d-b.d; })[0]; return '<li><b>'+esc(s.t)+':</b> '+(p?'<button class="plink" data-open="'+p.id+'">'+esc(p.n)+'</button>':'')+'</li>'; }).join("")+'</ul></div>';
   return h;
 }
-function vJournal(){
-  const vis = myVisited(), ids = Object.keys(vis).filter(id=>BY[id]).sort((a,b)=>vis[b].t-vis[a].t);
-  if(!ids.length) return '<div class="empty">Your journal is empty. Open any place and tap Mark visited.</div>';
-  return ids.map(id=>{ const p=BY[id], v=vis[id];
-    return '<div class="res"><button class="nm" data-open="'+id+'">'+esc(p.n)+'</button><span class="small muted">'+new Date(v.t).toLocaleString("en-US",{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})+'</span>'
-      + '<div class="hearts" style="grid-column:1 / -1" role="group" aria-label="Your rating">'+[1,2,3,4,5].map(n=>'<button class="'+(n<=(v.r||0)?'on':'')+'" data-rate="'+id+'|'+n+'" aria-label="'+n+' of 5">♥</button>').join("")+'</div>'
-      + '<input class="field" style="grid-column:1 / -1" id="jn-'+id+'" placeholder="A memory from this place…" value="'+esc(v.n||"")+'">'
-      + '<div class="sub2"><button class="btn" data-visit="'+id+'">Remove from journal</button></div></div>'; }).join("");
-}
+function vJournal(){ return ""; }
 
 /* time machine */
 S.tm = 0;
@@ -3571,9 +3559,8 @@ vSheet = function(){
     if(x.detail) h += '<p class="small">'+esc(x.detail)+'</p>';
   }
   h += '<dl class="kv"><dt>Area</dt><dd>'+esc(p.a)+'</dd>'+(p.ad?'<dt>Address</dt><dd>'+esc(p.ad)+(p.adNote?' <span class="small muted">('+esc(p.adNote)+')</span>':'')+'</dd>':'')+'<dt>Distance</dt><dd>'+esc(distLabel(p))+'</dd><dt>Price</dt><dd>'+esc((x&&x.price)||p.pr||"–")+'</dd>'+(x&&x.reserve?'<dt>Booking</dt><dd>'+esc(x.reserve)+'</dd>':'')+(p.ph?'<dt>Phone</dt><dd><a class="mono" href="tel:'+String(p.ph).replace(/[^0-9+]/g,'')+'">'+esc(p.ph)+'</a>'+(p.phw?' <span class="small muted">('+esc(p.phw)+')</span>':'')+'</dd>':(p.contact?'<dt>Contact</dt><dd>'+esc(p.contact)+'</dd>':''))+'</dl>';
-  if(v) h += '<div class="box"><b>In your journal</b><div class="hearts" role="group" aria-label="Your rating">'+[1,2,3,4,5].map(n=>'<button class="'+(n<=(v.r||0)?'on':'')+'" data-rate="'+p.id+'|'+n+'" aria-label="'+n+' of 5">♥</button>').join("")+'</div><input class="field" id="jn-'+p.id+'" placeholder="A memory from this place…" value="'+esc(v.n||"")+'"></div>';
   if(x && x.source) h += '<p class="srcline">Hours source: <a href="'+esc(x.source.split(" ")[0])+'" target="_blank" rel="noopener">'+esc(x.source.replace(/^https?:\/\/(www\.)?/,'').split('/')[0])+'</a>'+(x.confidence?' · confidence '+esc(x.confidence):'')+'</p>';
-  h += '<div class="stickybar">'+cakeBtn(p)+'<a class="btn primary" href="'+dirUrl(p)+'" target="_blank" rel="noopener">Directions</a><a class="btn" href="'+mapsPlaceUrl(p)+'" target="_blank" rel="noopener">Maps</a>'+(readOnly?'':'<button class="btn" data-addto="'+p.id+'">Add to trip</button><button class="btn" data-visit="'+p.id+'">'+(v?'Visited ✓':'Mark visited')+'</button>')+(p.url?'<a class="btn" href="'+esc(p.url)+'" target="_blank" rel="noopener">Website</a>':'')+(p.ph?'<button class="btn" data-copy="'+esc(p.ph)+'">Copy phone</button>':'')+'<button class="btn" data-share="1">Copy link</button></div>';
+  h += '<div class="stickybar">'+cakeBtn(p)+'<a class="btn primary" href="'+dirUrl(p)+'" target="_blank" rel="noopener">Directions</a><a class="btn" href="'+mapsPlaceUrl(p)+'" target="_blank" rel="noopener">Maps</a>'+(readOnly?'':'<button class="btn" data-addto="'+p.id+'">Add to trip</button>')+(p.url?'<a class="btn" href="'+esc(p.url)+'" target="_blank" rel="noopener">Website</a>':'')+(p.ph?'<button class="btn" data-copy="'+esc(p.ph)+'">Copy phone</button>':'')+'<button class="btn" data-share="1">Copy link</button></div>';
   return '<div class="scrim" data-scrim="1"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">'+h+'</div></div>';
 };
 
@@ -3600,7 +3587,7 @@ function applyRoute(hash){
   S.tab = view;
   if(view==="col" && arg && COL[arg]) S.col = arg;
   if(view==="cal" && arg) S.day = +arg || 1;
-  if(view==="saved") S.savedTab = arg==="passport" ? "journal" : (arg==="trip" ? "mine" : (["mine","picks","journal"].includes(arg) ? arg : "mine"));
+  if(view==="saved") S.savedTab = ["picks"].includes(arg) ? arg : "mine";
   if(view==="map") S.mapCol = arg && COL[arg] ? arg : "all";
   if(view==="girl") S.girl = GIRLS[arg] ? arg : "Blanche";
   S.sheet = null;
@@ -3700,7 +3687,7 @@ document.addEventListener("click", e=>{
   if(!el) return; const d = el.dataset;
   if(d.surp){ const [k,v]=d.surp.split(":"), nv = k==="hrs" ? +v : v; S.surp[k] = S.surp[k]===nv ? null : nv; S.surpRes = (S.surp.mood||S.surp.hrs||S.surp.mode) ? surpriseNow() : null; if(!d.go){ render(); return; } }
   if(d.surpclear){ S.surp.mood = S.surp.hrs = S.surp.mode = null; S.surpRes = null; render(); return; }
-  if(d.savedtab){ S.savedTab = d.savedtab; if(!d.go){ render(); return; } }
+  if(d.savedtab){ S.savedTab = d.savedtab==="picks" ? "picks" : "mine"; if(!d.go){ render(); return; } }
   if(d.go){ let [v,arg] = d.go.split(":"); if(v==="trip"||v==="plan") v="cal"; if(v==="ink"||v==="time"||v==="birthday") v="home"; S.tab = v; if(v==="col") S.col = arg; if(v==="cal" && arg) S.day = +arg; S.sheet = null; window.scrollTo(0,0); render(); if(d.surp) document.getElementById("surprise")?.scrollIntoView({block:"start"}); return; }
   if(d.col){ S.tab = "col"; S.col = d.col; S.sheet = null; window.scrollTo(0,0); render(); return; }
   if(d.surprun){ if(d.surprun==="again") S.surp.seed++; S.surpRes = surpriseNow(); render(); setTimeout(()=>document.getElementById("adv")?.scrollIntoView({block:"nearest", behavior:"smooth"}),30); return; }
@@ -3708,7 +3695,7 @@ document.addEventListener("click", e=>{
     R.stops.forEach(st=>{ const m = st.at%1440; day.items.push({k:uidk(), t:String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0"), h:st.p.n, d:"From Surprise Me", p:[st.p.id]}); });
     S.tab = "cal"; S.day = day.n; savePlan("Added "+R.stops.length+" stops to the calendar · Day "+day.n+"."); return; }
   if(d.tm){ return; }
-  if(d.visit){ toggleVisit(d.visit); return; }
+  if(d.visit || d.rate){ return; }
   if(d.rate){ const [id,n] = d.rate.split("|"); const v = Object.assign({}, myVisited()); if(!v[id]) return; v[id] = Object.assign({}, v[id], {r: v[id].r===+n ? 0 : +n}); visited[me()] = v; render(); persistPicks(); return; }
   if(d.person){ S.person = d.person; render(); return; }
   if(d.modebtn){ S.mode = {auto:"day", day:"night", night:"auto"}[S.mode]; try{ localStorage.setItem("nola2-mode", S.mode); }catch(_){} render(); toast(S.mode==="auto"?"Auto: After Dark switches on at sunset.":S.mode==="night"?"After Dark mode.":"Day mode."); return; }
@@ -3727,7 +3714,7 @@ document.addEventListener("input", e=>{ if(e.target.id==="uq"){ S.uq = e.target.
 document.addEventListener("change", e=>{
   const id = e.target.id||"";
   if(id==="bday"){ S.bday = +e.target.value; render(); return; }
-  if(id.startsWith("jn-")){ const pid = id.slice(3), v = Object.assign({}, myVisited()); if(!v[pid]) return; v[pid] = Object.assign({}, v[pid], {n:e.target.value.slice(0,400)}); visited[me()] = v; persistPicks(); toast("Saved to your journal."); }
+  if(id.startsWith("jn-")) return;
 });
 setInterval(()=>{ if(S.mode==="auto"){ const was = document.documentElement.getAttribute("data-mode"); applyMode(); if(was !== document.documentElement.getAttribute("data-mode")) render(); } }, 120000);
 loadWX(); setInterval(loadWX, 30*60*1000);
@@ -4277,7 +4264,7 @@ var SAFE_CONTACTS = {"groups":[{"title":"Emergency","items":[{"name":"Police / F
       + '<button type="button" data-go="map"><b>Find my way</b><span>Map & directions</span></button>'
       + '<button type="button" data-myink="1"><b>Design a tattoo</b><span>With AI</span></button>'
       + '<button type="button" data-go="info"><b>Trip details</b><span>Dates, hotel, settings</span></button>'
-      + '<button type="button" data-installnow="1"><b>Install the app</b><span>Home screen</span></button></div>';
+      + '<button type="button" data-installnow="1"><b>Add to home screen</b><span>Opens full screen</span></button></div>';
     h += '<div class="sh"><h3>How everything works</h3></div><p class="small muted" style="margin:0 0 8px">Tap a topic to open it.</p>';
     h += HELP.filter(s=>s[0]!=="safe").map(([k,t,items])=>'<details class="help-acc" id="help-'+k+'"><summary>'+esc(t)+'</summary><dl>'+items.map(([q,a])=>'<dt>'+esc(q)+'</dt><dd>'+a+'</dd>').join("")+'</dl></details>').join("");
     h += '<details class="help-acc"><summary>Settings</summary><label class="doro-set"><input type="checkbox" data-dorotoggle="1"'+(dorothyOn()?' checked':'')+'> Dorothy nudges me after 33 seconds on one screen</label></details>';
@@ -5080,9 +5067,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
   window.addEventListener("hashchange", show);
 })();
 
-/* Auto check-in: while the app is open, GPS notices when you've spent a minute at a place, adds it to the
-   journal, and shows what's next. Plus Share recap and Send my location. Nothing leaves the phone
-   unless you tap Share or Send. */
+/* Send my location stays on Help. The journal and auto check-in are gone, so this no longer watches GPS or writes visits. */
 (function(){
   const KEY = "nola-autocheck", SKIP = "nola-autocheck-skip", DWELL = 60000, MAX_ACC = 80;
   const pref = () => { try{ return localStorage.getItem(KEY); }catch(e){ return null; } };
@@ -5113,12 +5098,8 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     if(Date.now() - cand.since >= DWELL){ cand = null; checkIn(id); }
   }
 
-  function start(){
-    if(watchId !== null || pref() !== "1" || !navigator.geolocation) return;
-    try{ watchId = navigator.geolocation.watchPosition(onPos, err => { if(err && err.code === 1){ setPref("0"); stop(); if(typeof render === "function") render(); toast("Location is off for this app, so auto check-in is paused."); } }, {enableHighAccuracy:true, maximumAge:15000, timeout:30000}); }catch(e){ watchId = null; }
-  }
+  function start(){}
   function stop(){ if(watchId !== null){ try{ navigator.geolocation.clearWatch(watchId); }catch(e){} } watchId = null; cand = null; }
-  document.addEventListener("visibilitychange", () => document.visibilityState === "visible" ? start() : stop());
 
   /* what's next: the next stop on today's plan, or else the closest open place you haven't been to */
   function nextUp(fromId){
@@ -5202,33 +5183,11 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
   }
   window.nolaSendLocation = sendLocation;
 
-  /* the control card on Journal */
-  function card(){
-    const on = pref() === "1";
-    return '<div class="ci-card">'
-      + '<div class="ci-row"><div><b>Auto check-in</b><span>' + (on ? "On. When you spend a minute at a place, it's added to your journal and I'll tell you what's next." : "Let GPS add places to your journal as you visit them, and show what's next. Works while the app is open.") + '</span></div>'
-      + '<button class="ci-switch" type="button" role="switch" aria-checked="' + on + '" data-citoggle="1" aria-label="Auto check-in"><i></i></button></div>'
-      + '<div class="ci-acts"><button class="ci-btn gold" type="button" data-cishare="1">Share recap</button><button class="ci-btn" type="button" data-ciloc="1">Send my location</button></div></div>';
-  }
-  const _vJ = vJournal, _vP = vPassport;
-  vJournal = function(){ return card() + _vJ().replace("Your journal is empty. Open any place and tap Mark visited.", "Your journal is empty. Turn on auto check-in and places fill in as you go, or open any place and tap Mark visited."); };
-  vPassport = function(){ return card() + _vP().replace("Mark places visited from their details to earn stamps.", "Stamps fill in as you check in (or tap Mark visited on a place)."); };
-
   document.addEventListener("click", e => {
-    const t = e.target.closest && e.target.closest("[data-citoggle],[data-cishare],[data-ciloc],a[href$='#sendloc']");
+    const t = e.target.closest && e.target.closest("[data-ciloc],a[href$='#sendloc']");
     if(!t) return;
     e.preventDefault(); e.stopPropagation();
-    if(t.dataset.cishare){ window.nolaShareRecap(); return; }
-    if(t.dataset.ciloc || /#sendloc$/.test(t.getAttribute("href") || "")){ sendLocation(); return; }
-    if(t.dataset.citoggle){
-      if(pref() === "1"){ setPref("0"); stop(); toast("Auto check-in is off."); if(typeof render === "function") render(); return; }
-      if(!navigator.geolocation){ toast("Location isn't available in this browser."); return; }
-      navigator.geolocation.getCurrentPosition(() => {
-        setPref("1"); start(); toast("Auto check-in is on. Go see something.");
-        try{ if("Notification" in window && Notification.permission === "default") Notification.requestPermission(); }catch(_){}
-        if(typeof render === "function") render();
-      }, err => toast(err && err.code === 1 ? "Location was declined, so auto check-in stays off." : "Couldn't get your location here. Try the public site link on your phone."), {enableHighAccuracy:true, timeout:15000, maximumAge:60000});
-    }
+    sendLocation();
   }, true);
 
   /* Ask Dorothy: "send my location" / "share our recap" */
@@ -5236,15 +5195,12 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
   window.askAction = function(q){
     const s = String(q || "").toLowerCase();
     if(/\b(send|share|text)\b.*\b(my )?(location|where i am|spot)\b|\bwhere i am\b.*\b(send|share)/.test(s)) return {text:"Tap below and I'll put your spot in a text. Pick who gets it.", ids:[], actions:[{label:"Send my location", href:"#sendloc", kind:"call"}]};
-    if(/\b(share|send)\b.*\b(recap|journal|passport|trip so far)\b/.test(s)){ return {text:"Here's your recap so far:\n" + recapText(), ids:[], actions:[{label:"Share recap", copy:recapText()}]}; }
     return prevAct ? prevAct(q) : null;
   };
 
   /* Help: the safety box gets a Send my location button */
   const _render = render;
   render = function(){ const r = _render.apply(this, arguments); try{ if(S.tab === "help"){ const sos = document.querySelector("#main .sos"); if(sos && !sos.querySelector("[data-ciloc]")){ const b = document.createElement("button"); b.type = "button"; b.className = "ci-btn gold"; b.dataset.ciloc = "1"; b.textContent = "Send my location to someone"; b.style.marginTop = "10px"; sos.appendChild(b); } } }catch(e){} return r; };
-
-  start();
 })();
 
 /* Find anything nearby: when the guide doesn't have it, search free OpenStreetMap data (Photon + Nominatim,
@@ -5454,7 +5410,7 @@ html body nav.vswitch.vswitch{display:none!important}
 </script>
 
 <script>
-/* shared app kit for every version: tap the logo to go home, an "Install app" button top right, and an install pop-up */
+/* shared app kit for every version: tap the logo to go home, an Add to home screen button, and an install pop-up */
 (function(){
   var PUBLIC = "https://luckygoats33.github.io/nola-trip/";
   var cur = document.querySelector('nav.vswitch a[aria-current="page"]');
@@ -5475,7 +5431,7 @@ html body nav.vswitch.vswitch{display:none!important}
   css.textContent =
     "header .top-row #sync,header #sub{display:none!important}" +
     ".nola-home{cursor:pointer;border-radius:8px}.nola-home:focus-visible{outline:3px solid #E0B65A;outline-offset:3px}" +
-    "button.nola-install{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:3px 10px;border-radius:999px;background:#E0B65A;color:#23172C;font:700 .72rem/1.1 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;white-space:nowrap;border:1px solid #23172C;box-shadow:0 1px 0 #23172C}" +
+    "button.nola-install{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;flex:none;min-height:28px;padding:3px 10px;border-radius:999px;background:#E0B65A;color:#23172C;font:700 .72rem/1.1 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;white-space:nowrap;border:1px solid #23172C;box-shadow:0 1px 0 #23172C}" +
     "button.nola-install:hover,button.nola-install:focus-visible{background:#F0CB7A;outline:none}" +
     "button.nola-install svg{width:13px;height:13px;flex:none}" +
     ".nola-pop{position:fixed;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:10000;max-width:440px;margin:0 auto;background:#FFF8F0;color:#23172C;border:2px solid #23172C;border-radius:20px;box-shadow:0 18px 50px rgba(35,23,44,.35);padding:18px 18px 16px;font:400 .95rem/1.45 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;animation:nolaPop .25s ease-out}" +
@@ -5490,8 +5446,8 @@ html body nav.vswitch.vswitch{display:none!important}
     ".nola-pop .nola-later{all:unset;cursor:pointer;box-sizing:border-box;min-height:44px;padding:10px 16px;border-radius:999px;border:1px solid #23172C;color:#23172C;font-weight:700}" +
     ".nola-pop .nola-go:focus-visible,.nola-pop .nola-later:focus-visible{outline:3px solid #E0B65A;outline-offset:2px}" +
     ".nola-pop .nola-x{all:unset;cursor:pointer;position:absolute;top:8px;right:10px;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;color:#23172C;font-size:1.3rem}" +
-    "@media (max-width:420px){button.nola-install{padding:3px 9px;font-size:.7rem}}" +
-    "button.nola-install.nola-compact{padding:0;width:30px;min-height:30px;justify-content:center;font-size:0;gap:0}button.nola-install.nola-compact svg{width:14px;height:14px}";
+    "@media (max-width:899px){header .top-row>.row{flex-wrap:wrap}button.nola-install{padding:3px 9px;font-size:.68rem}.gsearch,.gsearch .field{min-width:0}}" +
+    "button.nola-install.nola-compact{padding:3px 9px;width:auto;min-height:28px;font-size:.68rem;gap:6px}";
   document.head.appendChild(css);
 
   /* 1. the logo takes you home in this version */
@@ -5514,17 +5470,14 @@ html body nav.vswitch.vswitch{display:none!important}
     logo.addEventListener("keydown", function(e){ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); goHome(); } });
   }
 
-  /* 2. the Install app button, top right */
+  /* 2. Add to home screen, same install prompt, label stays readable */
   var btn = document.createElement("button");
   btn.className = "nola-install"; btn.type = "button";
-  btn.setAttribute("aria-label", "Install app"); btn.title = "Install app";
-  btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>Install app';
+  btn.setAttribute("aria-label", "Add to home screen"); btn.title = "Add to home screen";
+  btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>Add to home screen';
   btn.addEventListener("click", function(){ if(deferred && web){ deferred.prompt(); deferred.userChoice.finally(function(){ deferred = null; }); } else showPop(true); });
   var row = document.querySelector("header .top-row > .row");
   if(row && !standalone) row.insertBefore(btn, row.firstChild);
-  /* shrink to an icon when the header row runs out of room */
-  function fit(){ if(!btn.isConnected) return; btn.classList.remove("nola-compact"); var last = row.lastElementChild, r = (last && last.offsetParent ? last : row).getBoundingClientRect(); if(row.scrollWidth > row.clientWidth + 1 || r.right > document.documentElement.clientWidth - 4) btn.classList.add("nola-compact"); }
-  if(row){ fit(); addEventListener("resize", fit); setTimeout(fit, 300); }
 
   /* 3. the install pop-up */
   var pop = null;
@@ -5534,17 +5487,17 @@ html body nav.vswitch.vswitch{display:none!important}
     var name = vn === 1 ? "V1 Classic" : vn === 2 ? "V2" : "V3";
     var body, go = "";
     if(!web){
-      body = "<p>Apps install from the public site. Open " + name + " there, then use its <b>Install app</b> button.</p>";
+      body = "<p>Add it to your home screen from the public site. Open " + name + " there, then use its <b>Add to home screen</b> button.</p>";
       go = '<a class="nola-go" href="' + PUBLIC + "v" + vn + '/" target="_blank" rel="noopener">Open ' + name + ' to install</a>';
     } else if(deferred){
       body = "<p>Put the trip hub on your home screen. It opens full screen and keeps working with bad signal on the river.</p>";
-      go = '<button class="nola-go" type="button" data-nola-go="1">Install</button>';
+      go = '<button class="nola-go" type="button" data-nola-go="1">Add to home screen</button>';
     } else if(ios){
       body = "<p>Put the trip hub on your home screen:</p><ol><li>Tap <b>Share</b> (the square with an arrow) in Safari.</li><li>Scroll and tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>.</li></ol><p style=\"font-size:.85rem\">On iPhone this works in Safari. In Chrome, use the Share button at the top right.</p>";
     } else if(android){
-      body = "<p>Put the trip hub on your home screen:</p><ol><li>Tap the <b>⋮</b> menu in Chrome.</li><li>Tap <b>Install app</b> or <b>Add to Home screen</b>.</li></ol>";
+      body = "<p>Put the trip hub on your home screen:</p><ol><li>Tap the <b>⋮</b> menu in Chrome.</li><li>Tap <b>Add to Home screen</b>.</li></ol>";
     } else {
-      body = "<p>Install it like an app: click the <b>install icon</b> at the right end of Chrome's address bar, or open the <b>⋮</b> menu and choose <b>Cast, save and share → Install page as app</b>.</p><p style=\"font-size:.85rem\">Best on your phone: open this page there and tap Install app.</p>";
+      body = "<p>Add it to your home screen: click the install icon at the right end of Chrome's address bar, or open the <b>⋮</b> menu and choose <b>Cast, save and share</b>, then add the page.</p><p style=\"font-size:.85rem\">Best on your phone: open this page there and tap <b>Add to home screen</b>.</p>";
     }
     if(!fromButton) ls(KEY, "1");
     pop = document.createElement("div");
