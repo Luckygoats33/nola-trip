@@ -4382,18 +4382,18 @@ var SAFE_CONTACTS = {"groups":[{"title":"Emergency","items":[{"name":"Police / F
   const cache = {};
   window.safetyOf = function(p){
     if(!p) return null; if(cache[p.id]) return cache[p.id];
-    const c = coordOf(p); let lv = null, zone = null;
+    const c = coordOf(p); let lv = null, zone = null, src = null;
     /* where zones overlap, the smallest (most specific) zone wins */
     const area = poly => Math.abs(poly.reduce((acc, [y1, x1], i) => { const [y2, x2] = poly[(i + 1) % poly.length]; return acc + x1 * y2 - x2 * y1; }, 0)) / 2;
-    let best = Infinity; if(c) SAFETY.forEach(([l, nm, poly])=>{ if(inPoly(c[0], c[1], poly)){ const A = area(poly); if(A < best){ best = A; lv = l; zone = nm; } } });
+    let best = Infinity; if(c) SAFETY.forEach(([l, nm, poly])=>{ if(inPoly(c[0], c[1], poly)){ const A = area(poly); if(A < best){ best = A; lv = l; zone = nm; src = "zone"; } } });
     const FIX = {palmpine:["yellow","Rampart St edge of the Quarter"], soileddove:["yellow","Rampart St edge of the Quarter"]};
-    if(FIX[p.id]){ lv = FIX[p.id][0]; zone = FIX[p.id][1]; }
+    if(FIX[p.id]){ lv = FIX[p.id][0]; zone = FIX[p.id][1]; src = "place"; }
     let why;
     if(lv) why = zone + ". " + SAFE_TXT[lv];
-    else if(p.c.includes("river")) { lv = "green"; why = "A staffed riverboat or ferry from the French Quarter riverfront. Walk to the dock along busy, well-lit Decatur St."; }
-    else if((p.d||0) >= 15 || p.c.includes("daytrip")) { lv = "green"; why = "An out-of-town daytime trip by car or tour van. Low risk; plan to be back before dark."; }
-    else { lv = "yellow"; why = "Outside the main visitor zones. Fine by day; take a rideshare after dark."; }
-    return cache[p.id] = {lv, why, label:LABEL[lv]};
+    else if(p.c.includes("river")) { lv = "green"; src = "place"; why = "A staffed riverboat or ferry from the French Quarter riverfront. Walk to the dock along busy, well-lit Decatur St."; }
+    else if((p.d||0) >= 15 || p.c.includes("daytrip")) { lv = "green"; src = "place"; why = "An out-of-town daytime trip by car or tour van. Low risk; plan to be back before dark."; }
+    else { lv = "yellow"; src = "fallback"; why = "Outside the main visitor zones. Fine by day; take a rideshare after dark."; }
+    return cache[p.id] = {lv, why, label:LABEL[lv], src, zone: zone || ""};
   };
   function badge(p){ const s = safetyOf(p); return '<div class="safe-badge '+s.lv+'"><span class="sdot '+s.lv+'" aria-hidden="true"></span><div><b>'+s.label+'</b><span>'+esc(s.why)+'</span></div></div>'; }
   function dot(p){ const s = safetyOf(p); return '<span class="sdot '+s.lv+' mini" role="img" aria-label="'+esc(s.label)+'" title="'+esc(s.label+": "+s.why)+'"></span>'; }
@@ -5619,6 +5619,27 @@ html body nav.vswitch.vswitch{display:none!important}
   }
   function count(n){ return n>=10000 ? Math.round(n/1000)+'k' : n>=1000 ? (n/1000).toFixed(1).replace(/\.0$/,'')+'k' : String(n); }
   function gUrl(id, name){ var x = R[id]; var q = (x && x.mapsQuery) || (name + ", New Orleans, LA"); return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q); }
+  /* Map tab only. Green/yellow/red zones (and the few place-level safety rules) blend with Google stars.
+     A place outside every zone is not given a made-up safety score. No stars and no zone means no number. */
+  var SAFE_PTS = {green:4, yellow:3, red:1.5};
+  function blend(id){
+    var p = (typeof BY !== "undefined") ? BY[id] : null;
+    var x = R[id] || {};
+    var rev = typeof x.r === "number" ? x.r : null;
+    var n = typeof x.n === "number" && x.n > 0 ? x.n : null;
+    var s = p && typeof safetyOf === "function" ? safetyOf(p) : null;
+    var real = !!(s && s.src && s.src !== "fallback" && SAFE_PTS[s.lv] != null);
+    var pts = real ? SAFE_PTS[s.lv] : null;
+    if(rev != null && pts != null){
+      var score = Math.round((rev * 0.55 + pts * 0.45) * 10) / 10;
+      score = Math.max(0.5, Math.min(5, score));
+      return {score:score, n:n, lv:s.lv, tag:"Safety + reviews", reviews:rev, tip:score.toFixed(1)+" blends the "+s.lv+" night-walking zone with "+rev.toFixed(1)+" Google stars"+(n?" ("+count(n)+" reviews)":"")+". Not a plain review score."};
+    }
+    if(rev != null) return {score:rev, n:n, lv:null, tag:"Reviews", reviews:rev, tip:rev.toFixed(1)+" from Google reviews"+(n?" ("+count(n)+")":"")+". This place isn't inside a mapped walking zone, so safety isn't in the score."};
+    if(pts != null) return {score:pts, n:null, lv:s.lv, tag:"Safety", reviews:null, tip:"No review score on file. "+pts.toFixed(1)+" is the "+s.lv+" night-walking zone only, not a review average."};
+    return {score:null, n:null, lv:null, tag:"", reviews:null, tip:"No review score on file, and this place isn't inside a mapped walking zone."};
+  }
+  window.nolaSafetyRating = blend;
   function html(id, name){
     var x = R[id], link = '<a class="rt-g" href="'+gUrl(id,name)+'" target="_blank" rel="noopener">';
     if(x && typeof x.r === "number"){
@@ -5626,9 +5647,25 @@ html body nav.vswitch.vswitch{display:none!important}
     }
     return '<div class="rt" data-rt="'+esc(id)+'"><span class="rt-none">No rating on file</span>'+link+'See reviews on Google</a></div>';
   }
+  function mapHtml(id, name){
+    var b = blend(id);
+    var link = '<a class="rt-g" href="'+gUrl(id,name)+'" target="_blank" rel="noopener">'+(b.reviews!=null?'Google reviews':'See reviews on Google')+'</a>';
+    if(b.score==null) return '<div class="rt rt-safe" data-rt="'+esc(id)+'" title="'+esc(b.tip)+'"><span class="rt-none">No safety or review score</span>'+link+'</div>';
+    var dot = b.lv ? '<span class="sdot '+b.lv+' mini" role="img" aria-label="'+esc(b.lv+' walking zone')+'"></span>' : '';
+    return '<div class="rt rt-safe" data-rt="'+esc(id)+'" title="'+esc(b.tip)+'" aria-label="'+esc(b.score.toFixed(1)+' out of 5, '+b.tag)+'">'+dot+cats(b.score)+'<b class="rt-num">'+b.score.toFixed(1)+'</b>'+(b.n?'<span class="rt-n">('+count(b.n)+')</span>':'')+'<span class="rt-tag">'+esc(b.tag)+'</span>'+link+'</div>';
+  }
   function after(el, markup){ el.insertAdjacentHTML("afterend", markup); }
+  function onMapList(el){ return typeof S !== "undefined" && S.tab === "map" && !!(el.closest && el.closest("#maplist, #main")); }
+  function stamp(markup, cls, style){
+    var safe = markup.indexOf('class="rt rt-safe"') >= 0;
+    var from = safe ? 'class="rt rt-safe"' : 'class="rt"';
+    return markup.replace(from, 'class="'+(safe?'rt rt-safe':'rt')+(cls?' '+cls:'')+'"'+(style?' style="'+style+'"':''));
+  }
+  function rowMarkup(id, name, el){
+    return stamp(onMapList(el) ? mapHtml(id, name) : html(id, name), "", "grid-column:1 / -1");
+  }
   function enhance(){
-    /* cards */
+    /* cards stay on the Google review score; the map list and map pin sheet use safety + reviews */
     document.querySelectorAll(".card").forEach(function(c){
       if(c.querySelector(".rt")) return;
       var b = c.querySelector("h3 [data-open]"), top = c.querySelector(".card-top");
@@ -5639,7 +5676,7 @@ html body nav.vswitch.vswitch{display:none!important}
       if(r.querySelector(".rt")) return;
       var b = r.querySelector(".nm[data-open]"); if(!b) return;
       var right = r.querySelector(".right"); var id = b.getAttribute("data-open");
-      var m = html(id, b.textContent).replace('class="rt"', 'class="rt" style="grid-column:1 / -1"');
+      var m = rowMarkup(id, b.textContent, r);
       if(right) after(right, m); else after(b, m);
     });
     /* details panel */
@@ -5647,7 +5684,8 @@ html body nav.vswitch.vswitch{display:none!important}
     if(sh && !sh.querySelector(".sheet-rt")){
       var hb = sh.querySelector(".sheet-top"), heart = sh.querySelector("[data-heart]"), t = sh.querySelector("#sheet-title");
       var id = heart && heart.getAttribute("data-heart");
-      if(hb && id && !/^(ink|ai)-/.test(id) && t) after(hb, html(id, t.textContent).replace('class="rt"', 'class="rt sheet-rt"'));
+      var useMap = typeof S !== "undefined" && S.tab === "map";
+      if(hb && id && !/^(ink|ai)-/.test(id) && t) after(hb, stamp(useMap ? mapHtml(id, t.textContent) : html(id, t.textContent), "sheet-rt", ""));
     }
   }
   var queued = false;
@@ -5665,6 +5703,8 @@ html body nav.vswitch.vswitch{display:none!important}
     + ".rt-f .rt-face *{fill:var(--surface,#fff);stroke:none}"
     + ".rt-num{font-weight:800;color:var(--ink,#222)}"
     + ".rt-n{color:var(--muted,#666)}"
+    + ".rt-tag{font-weight:700;font-size:.75rem;color:var(--muted,#666)}"
+    + ".rt-safe .sdot{margin-right:2px}"
     + ".rt-none{color:var(--muted,#666);font-style:italic}"
     + ".rt-g{font-weight:700;color:var(--coral,#7B2446);text-decoration:underline;text-underline-offset:2px}"
     + ":root[data-mode='night'] .rt-g{color:var(--brass,#D9A441)}"
