@@ -3858,7 +3858,12 @@ document.addEventListener("change", e=>{
     const nolaish = /new orleans|nola|french quarter/i.test(q+" "+alt);
     if(hits.length < 2 && !nolaish) await wiki(q+" New Orleans");
     if(hits.length < 2) await ddg(nolaish ? q : q+" New Orleans");
-    return hits.slice(0, 5);
+    const words = (q+" "+alt).toLowerCase().replace(/[^a-z0-9 ]/g," ").split(/\s+/).filter(w => w.length>=4 && !/^(what|whats|where|when|which|this|that|with|from|about|have|does|tell|please|there|their|they|them|your|into|near|open|find|show|give|need|want|know|like|just|some|more|than|then|also|only|very|really|would|could|should|orleans|nola|guide|honey)$/.test(w));
+    const score = h => words.reduce((n,w)=> n + (h.title.toLowerCase().includes(w) ? 1 : 0), 0);
+    const min = words.length >= 2 ? 2 : 1;
+    const strong = words.length ? hits.filter(h => score(h) >= min) : hits;
+    const titled = strong.length ? strong : hits.filter(h => score(h) > 0);
+    return (titled.length ? titled : hits).slice(0, 5);
   };
   window.nolaRenderWeb = function(bubble, hits){
     if(!bubble || !hits || !hits.length) return;
