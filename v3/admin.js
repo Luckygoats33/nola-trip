@@ -1,10 +1,18 @@
 /* fix6: in-app Admin tab. Shown only when the signed-in email is the admin (config.js). Row-level security is the real gate:
    anyone else's queries only ever return their own rows, and this view refuses to load for them anyway. */
 (function(){
-  var CFG = window.NOLA_SUPABASE || {}, ADMIN = String(CFG.admin || "").toLowerCase();
+  var CFG = window.NOLA_SUPABASE || {};
 
   /* ---------- pure logic (unit-tested) ---------- */
-  function isAdminEmail(email){ return !!email && !!ADMIN && String(email).trim().toLowerCase() === ADMIN; }
+  function isAdminEmail(email){
+    if (typeof window.NolaIsAdminEmail === "function") return window.NolaIsAdminEmail(email);
+    var raw = CFG.admins || CFG.admin || [];
+    if (typeof raw === "string") raw = [raw];
+    var e = String(email || "").trim().toLowerCase();
+    if (!e) return false;
+    for (var i = 0; i < raw.length; i++){ if (String(raw[i] || "").trim().toLowerCase() === e) return true; }
+    return false;
+  }
   function planRefs(list){ var out = []; ((list && list.data && list.data.days) || []).forEach(function(d){ (d.items || []).forEach(function(it){ (it.p || []).forEach(function(id){ out.push({ id: String(id), day: d.n, t: it.t, h: it.h }); }); }); }); return out; }
   /* per person: what they saved, grouped */
   function summarize(people, lists, items, likes){
@@ -18,15 +26,15 @@
       var liked = ks.filter(function(k){ return k.kind === "like"; }).map(function(k){ return k.item_ref; });
       var voted = ks.filter(function(k){ return k.kind === "vote"; }).map(function(k){ return k.item_ref; });
       var visited = ks.filter(function(k){ return k.kind === "visited"; }).map(function(k){ return k.item_ref; });
-      if (liked.length) groups.push({ title: "Saved (kitchen table)", ids: liked });
-      if (plan.length) groups.push({ title: "In their plan", ids: plan.map(function(x){ return x.id; }), plan: plan });
-      if (voted.length) groups.push({ title: "Voted for", ids: voted });
-      if (visited.length) groups.push({ title: "Visited", ids: visited });
+      if (liked.length) groups.push({ title: "Saved (kitchen table)", how: "saved", ids: liked });
+      if (plan.length) groups.push({ title: "In their plan", how: "in their plan", ids: plan.map(function(x){ return x.id; }), plan: plan });
+      if (voted.length) groups.push({ title: "Voted for", how: "voted", ids: voted });
+      if (visited.length) groups.push({ title: "Visited", how: "visited", ids: visited });
       ls.forEach(function(l){ if (l.kind === "itinerary" || l.kind === "custom") return;
         var its = items.filter(function(i){ return i.list_id === l.id; }).map(function(i){ return i.item_ref; });
         if (l.kind === "search") return;
-        if (its.length) groups.push({ title: (l.title || l.kind), ids: its }); });
-      if (mapPlaces.length) groups.push({ title: "Places from the map", ids: mapPlaces.map(function(x){ return x.id; }) });
+        if (its.length) groups.push({ title: (l.title || l.kind), how: (l.title || l.kind), ids: its }); });
+      if (mapPlaces.length) groups.push({ title: "Places from the map", how: "saved on the map", ids: mapPlaces.map(function(x){ return x.id; }) });
       return { id: p.id, name: p.name || (p.email || "").split("@")[0] || "Someone", email: p.email || "", created_at: p.created_at,
         likes: liked.length, lists: ls.length, planItems: plan.length, searches: ls.filter(function(l){ return l.kind === "search"; }).map(function(l){ return l.title; }),
         groups: groups, mapNames: mapPlaces.reduce(function(o, x){ o[x.id] = x.n; return o; }, {}) };
@@ -46,7 +54,7 @@
   window.NolaAdminLogic = { isAdminEmail: isAdminEmail, summarize: summarize, rankOverlap: rankOverlap, planRefs: planRefs };
 
   /* ---------- view ---------- */
-  var A = { savedMode: "mine", data: null, loading: false, err: null, sec: "align", person: "all", cat: "all", open: {} };
+  var A = { savedMode: "mine", data: null, loading: false, err: null, sec: "align", person: "all", cat: "all", open: { solo: true } };
   /* fix7: Saved > All trip plans also waits on this data, so re-render there too (was Admin tab only, which left Saved > All stuck on "Loading everyone…") */
   function needsData(){ return typeof S !== "undefined" && (S.tab === "admin" || (S.tab === "saved" && A.savedMode === "all")); }
   function amAdmin(){ return !!(window.NolaAccount && window.NolaAccount.isAdmin); }
@@ -56,7 +64,30 @@
   function catsOf(id){ var p = place(id); return p && p.c ? p.c : []; }
   var COLORS = ["var(--coral)", "var(--lav)", "var(--gold)", "var(--accent)", "var(--leaf)", "var(--ink)"];
   function initial(s, i){ return '<span class="adm-av" style="background:' + COLORS[i % COLORS.length] + '" title="' + e(s.name) + '">' + e((s.name || "?").trim().charAt(0).toUpperCase()) + '</span>'; }
-  function avs(ids){ var S2 = A.data.summary; return '<span class="adm-avs">' + ids.map(function(id){ var i = S2.findIndex(function(s){ return s.id === id; }); return i < 0 ? "" : initial(S2[i], i); }).join("") + '</span>'; }
+  function howsFor(personId, placeId){
+    var s = null;
+    (A.data.summary || []).forEach(function(x){ if (x.id === personId) s = x; });
+    if (!s) return [];
+    var hows = [];
+    s.groups.forEach(function(g){
+      if (g.ids.indexOf(placeId) < 0) return;
+      var label = g.how || g.title;
+      if (label && hows.indexOf(label) < 0) hows.push(label);
+    });
+    return hows;
+  }
+  /* Visible names, not just avatar initials. Each chip says who, and how they picked it. */
+  function whoLine(r){
+    var S2 = A.data.summary || [];
+    var chips = r.who.map(function(id){
+      var i = S2.findIndex(function(s){ return s.id === id; });
+      var s = i < 0 ? { name: "Someone" } : S2[i];
+      var hows = howsFor(id, r.id);
+      return '<span class="adm-pick">' + (i < 0 ? "" : initial(s, i)) + '<b>' + e(s.name) + '</b>'
+        + (hows.length ? '<span class="adm-how">' + e(hows.join(" · ")) + '</span>' : "") + '</span>';
+    }).join("");
+    return '<div class="adm-who"><span class="adm-who-k">Picked by</span>' + chips + '</div>';
+  }
   async function load(){
     if (A.loading || !amAdmin()) return; A.loading = true; A.err = null;
     try {
@@ -104,7 +135,13 @@
   }
   function groupPicksHtml(rank, okCat){ var h = "";
     var rows = rank.rows.filter(function(r){ return okCat(r.id) && (A.person === "all" || r.who.indexOf(A.person) >= 0); });
-    var row = function(r){ return '<div class="res adm-row adm-' + r.tier + '"><button class="nm" ' + (place(r.id) ? 'data-open="' + e(r.id) + '"' : "") + '>' + e(r.name) + '</button><div class="right"><span class="mono adm-n">' + r.pct + '%</span><span class="small muted">' + r.n + ' of ' + rank.total + '</span></div><div class="sub2">' + avs(r.who) + (r.tier === "everyone" ? '<span class="st open">Everyone agrees</span>' : r.tier === "most" ? '<span class="st later">Most of you</span>' : "") + (catsOf(r.id)[0] && CATS[catsOf(r.id)[0]] ? '<span>' + e(CATS[catsOf(r.id)[0]]) + '</span>' : "") + '</div></div>'; };
+    var row = function(r){
+      var p = place(r.id);
+      var area = p && p.a ? '<span>' + e(p.a) + '</span>' : "";
+      var cat = (catsOf(r.id)[0] && typeof CATS !== "undefined" && CATS[catsOf(r.id)[0]]) ? '<span>' + e(CATS[catsOf(r.id)[0]]) + '</span>' : "";
+      var agree = r.tier === "everyone" ? '<span class="st open">Everyone agrees</span>' : r.tier === "most" ? '<span class="st later">Most of you</span>' : r.tier === "some" ? '<span class="st">Some of you</span>' : '<span class="st">Only one person</span>';
+      return '<div class="res adm-row adm-' + r.tier + '"><button class="nm" ' + (p ? 'data-open="' + e(r.id) + '"' : "") + '>' + e(r.name) + '</button><div class="right"><span class="mono adm-n">' + r.pct + '%</span><span class="small muted">' + r.n + ' of ' + rank.total + ' agree</span></div>' + whoLine(r) + '<div class="sub2">' + agree + area + cat + '</div></div>';
+    };
     var shared = rows.filter(function(r){ return r.n > 1; }), solo = rows.filter(function(r){ return r.n === 1; });
     h += '<div class="box adm-sum"><b>' + rows.filter(function(r){ return r.tier === "everyone"; }).length + ' everyone agrees on</b><span class="small muted">' + rows.filter(function(r){ return r.tier === "most"; }).length + ' most of you like · ' + solo.length + ' only one person picked</span></div>';
     var top = shared.slice(0, 3);
@@ -119,7 +156,11 @@
     ".adm-filter{margin:6px 0}.adm-filter .chip{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.adm-filter .adm-av{width:22px;height:22px;font-size:.7rem;border:0}" +
     ".adm-person{margin:10px 0}.adm-ptop{all:unset;cursor:pointer;display:flex;gap:10px;align-items:center;min-height:44px}.adm-ptop .adm-av{width:40px;height:40px;font-size:1rem}.adm-pn{display:grid;flex:1;min-width:0}.adm-pn .small{overflow:hidden;text-overflow:ellipsis}.adm-caret{font-size:1.4rem;color:var(--muted)}" +
     ".adm-stats{display:flex;flex-wrap:wrap;gap:6px}.adm-group{display:grid;gap:6px;margin-top:6px}.adm-tags{display:flex;flex-wrap:wrap;gap:6px}" +
-    ".adm-h{margin:14px 0 6px}.adm-row{margin:8px 0}.adm-everyone{border-color:var(--leaf);box-shadow:inset 4px 0 0 var(--leaf)}.adm-most{box-shadow:inset 4px 0 0 var(--gold)}.adm-n{font-weight:800}.adm-sum{margin:10px 0}.adm-solo{margin-top:14px}.adm-top{margin:10px 0}.adm-row .right{display:grid;justify-items:end}";
+    ".adm-h{margin:14px 0 6px}.adm-row{margin:8px 0}.adm-everyone{border-color:var(--leaf);box-shadow:inset 4px 0 0 var(--leaf)}.adm-most{box-shadow:inset 4px 0 0 var(--gold)}.adm-n{font-weight:800}.adm-sum{margin:10px 0}.adm-solo{margin-top:14px}.adm-top{margin:10px 0}.adm-row .right{display:grid;justify-items:end}" +
+    ".adm-who{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:6px;align-items:center}" +
+    ".adm-who-k{font-family:var(--mono,ui-monospace,monospace);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;font-weight:800;color:var(--muted)}" +
+    ".adm-pick{display:inline-flex;align-items:center;gap:5px;max-width:100%;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:2px 8px 2px 2px;color:var(--ink);font-size:.84rem;line-height:1.2}" +
+    ".adm-pick b{font-weight:800}.adm-pick .adm-how{color:var(--muted);font-weight:600;font-size:.75rem}.adm-pick .adm-av{width:22px;height:22px;font-size:.68rem;border:0}";
   var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
 
   /* ---------- wire into the app ---------- */

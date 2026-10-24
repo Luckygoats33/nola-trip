@@ -579,6 +579,8 @@ h3{font-family:var(--display);font-style:normal;font-weight:600}
 .ai-card .m b{font-size:.92rem}
 .ai-big img{display:block;width:100%;max-width:520px;margin:0 auto;border-radius:12px;background:#F7F3EC}
 .badge-every{font-family:var(--mono);font-size:.7rem;padding:2px 9px;border-radius:999px;background:var(--accent);color:var(--accent-ink)}
+.who-picked{grid-column:1 / -1;margin:0;font-size:.9rem;line-height:1.35;color:var(--ink)}
+.who-picked b{font-weight:800}
 .who-chip{display:inline-flex;align-items:center;gap:6px}
 .who-chip img{width:20px;height:20px;border-radius:50%}
 @media (min-width:1024px){ .wrap{max-width:1180px} }
@@ -2276,6 +2278,23 @@ function setVote(id, v){
   render(); persistPicks();
   if(mv[id]) toast({must:"Must do. Blanche is already dressed.", maybe:"Marked interested.", skip:"Skipped. Sophia agrees."}[v]);
 }
+function whoPickedLine(saved){
+  if(!saved || !saved.length) return "";
+  const keys = new Set();
+  Object.keys(picks).forEach(k=>{ if(picks[k] && picks[k].size) keys.add(k); });
+  Object.keys(votes).forEach(k=>{ if(votes[k] && Object.keys(votes[k]).length) keys.add(k); });
+  if(keys.size < 2 && !shared) return "";
+  const total = Math.max(keys.size, 1);
+  const pct = Math.round(saved.length / total * 100);
+  const names = saved.map(id=>{
+    if(id===LOCAL) return "You";
+    const pr = profiles[id];
+    if(pr && pr.name) return pr.name;
+    if(id===uid) return "You";
+    return "Someone";
+  });
+  return '<p class="who-picked">Picked by <b>'+esc(names.join(", "))+'</b> · <b>'+pct+'%</b> <span class="muted">'+saved.length+' of '+total+' agree</span></p>';
+}
 function vSaved(opts){
   opts = opts || {};
   const mineOnly = !!opts.mineOnly;
@@ -2298,6 +2317,7 @@ function vSaved(opts){
     const p=r.p, mv=myVotes()[p.id], ip=inPlan(p.id), mine=myPicks().has(p.id);
     return '<div class="res"><button class="nm" data-open="'+p.id+'">'+esc(p.n)+'</button><div class="right">'+pill(statusAt(p,N))+cakeBtn(p)+'</div>'
       + (WHY[p.id]?'<p class="why" style="grid-column:1 / -1">'+esc(WHY[p.id])+'</p>':'')
+      + (mineOnly?'':whoPickedLine(r.saved))
       + (mineOnly?'':('<div class="votes" role="group" aria-label="Your vote on '+esc(p.n)+'">'+[["must","Must do"],["maybe","Interested"],["skip","Skip"]].map(([k,l])=>'<button class="vote v-'+k+'" data-vote="'+p.id+'|'+k+'" aria-pressed="'+(mv===k)+'">'+l+' <span class="cn">'+r[k].length+'</span>'+(shared?faces(r[k]):'')+'</button>').join("")+'</div>'))
       + '<div class="sub2"><span>'+esc(p.a)+' · '+esc(shortDist(p))+'</span>'
       + '<button class="btn '+(mine?'primary':'')+'" data-heart="'+p.id+'" aria-pressed="'+mine+'">'+(mine?'✓ Saved · Remove':'Save')+'</button>'

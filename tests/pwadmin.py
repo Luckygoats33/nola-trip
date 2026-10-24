@@ -33,7 +33,7 @@ def handler(route):
     if "/auth/v1/logout" in path: return route.fulfill(status=204,body="")
     if "/auth/v1/" in path: return route.fulfill(status=200,body="{}",content_type="application/json")
     if "/rest/v1/" not in path: return route.fulfill(status=404,body="")
-    t=path.split("/rest/v1/")[1]; sub,email=who(req); admin=email=="will.wiedenmann@gmail.com"
+    t=path.split("/rest/v1/")[1]; sub,email=who(req); admin=email in ("will.wiedenmann@gmail.com","purplepanic12@gmail.com")
     q=urllib.parse.parse_qs(u.query); filt={k:v[0][3:] for k,v in q.items() if v[0].startswith("eq.")}
     own="id" if t=="profiles" else "user_id"
     vis=lambda r: r.get(own)==sub or (admin and req.method=="GET")
@@ -88,7 +88,7 @@ with sync_playwright() as p:
     L=pg
     pg.goto(B); ready()
     ck("guest: no Admin tab", "admin" not in tabs())
-    ck("logic: isAdminEmail exact/case-insensitive", pg.evaluate("NolaAdminLogic.isAdminEmail('Will.Wiedenmann@gmail.com') && !NolaAdminLogic.isAdminEmail('will.wiedenmann@gmail.co') && !NolaAdminLogic.isAdminEmail('') && !NolaAdminLogic.isAdminEmail(null)"))
+    ck("logic: isAdminEmail exact/case-insensitive", pg.evaluate("NolaAdminLogic.isAdminEmail('Will.Wiedenmann@gmail.com') && NolaAdminLogic.isAdminEmail('PurplePanic12@gmail.com') && !NolaAdminLogic.isAdminEmail('will.wiedenmann@gmail.co') && !NolaAdminLogic.isAdminEmail('purplepanic12@gmail.co') && !NolaAdminLogic.isAdminEmail('') && !NolaAdminLogic.isAdminEmail(null)"))
     rk=pg.evaluate("""(()=>{const s=NolaAdminLogic.summarize([{id:'a',name:'A'},{id:'b',name:'B'},{id:'c',name:'C'}],
       [{id:'L',user_id:'c',kind:'itinerary',data:{days:[{n:1,items:[{p:['x']}]}]}}],[],
       [{user_id:'a',kind:'like',item_ref:'x'},{user_id:'b',kind:'like',item_ref:'x'},{user_id:'a',kind:'like',item_ref:'y'},{user_id:'b',kind:'like',item_ref:'y'},{user_id:'c',kind:'like',item_ref:'z'},{user_id:'a',kind:'like',item_ref:'q'}]);
@@ -173,7 +173,7 @@ with sync_playwright() as p:
     tg.nth(1).click(); WAIT(1200)
     t=pg.inner_text("#main")
     ck("admin Saved all: grouped by person + group picks", "All trip plans" in t and "bob@example.com" in t and "alice@example.com" in t and "Group picks" in t)
-    ck("group picks: % and count and names", "100%" in t and "4 of 4" in t and "50%" in t)
+    ck("group picks: % and count and names", "100%" in t and "4 of 4" in t and "50%" in t and "Picked by" in t and "Alice" in t and "Bob" in t and "Will" in t)
     pg.evaluate("document.getElementById('group-picks').scrollIntoView({block:'start'}); window.scrollBy(0,-70)"); WAIT(300)
     pg.screenshot(path=OUT+"group-picks-390.png")
     pg.locator(".adm-savedtoggle button").nth(0).click(); WAIT(400)

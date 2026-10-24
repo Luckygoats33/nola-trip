@@ -33,7 +33,7 @@ def handler(route):
     if "/auth/v1/logout" in path: return route.fulfill(status=204,body="")
     if "/auth/v1/" in path: return route.fulfill(status=200,body="{}",content_type="application/json")
     if "/rest/v1/" not in path: return route.fulfill(status=404,body="")
-    t=path.split("/rest/v1/")[1]; sub,email=who(req); admin=email=="will.wiedenmann@gmail.com"
+    t=path.split("/rest/v1/")[1]; sub,email=who(req); admin=email in ("will.wiedenmann@gmail.com","purplepanic12@gmail.com")
     q=urllib.parse.parse_qs(u.query); filt={k:v[0][3:] for k,v in q.items() if v[0].startswith("eq.")}
     own="id" if t=="profiles" else "user_id"
     vis=lambda r: r.get(own)==sub or (admin and req.method=="GET")

@@ -4,6 +4,15 @@
 (function(){
   "use strict";
   var CFG = window.NOLA_SUPABASE || {};
+  function isAdminEmail(email){
+    if (typeof window.NolaIsAdminEmail === "function") return window.NolaIsAdminEmail(email);
+    var raw = CFG.admins || CFG.admin || [];
+    if (typeof raw === "string") raw = [raw];
+    var e = String(email || "").trim().toLowerCase();
+    if (!e) return false;
+    for (var i = 0; i < raw.length; i++){ if (String(raw[i] || "").trim().toLowerCase() === e) return true; }
+    return false;
+  }
   // The claude.ai artifact build has its own shared/read-only group plan; leave that mode alone.
   var ARTIFACT = !!(window.claude && window.claude.use);
   if (ARTIFACT || !window.supabase || !CFG.url || !CFG.key) return;
@@ -182,7 +191,7 @@
       '<h2 id="nform-h" class="nf-vh"></h2><div class="small">We\'ll email you a sign-in link. No password.</div>'+
       '<div id="nf-namewrap"><label for="nf-name">Name</label><input id="nf-name" name="name" autocomplete="name"></div>'+
       '<label for="nf-email">Email</label><input id="nf-email" name="email" type="email" autocomplete="email" inputmode="email" required>'+
-      '<div id="nf-codewrap" hidden><label for="nf-code">Or type the code from your email (optional)</label><input id="nf-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" pattern="[0-9]{6,10}"></div>'+
+      '<div id="nf-codewrap" hidden><label for="nf-code">Type the code from your email</label><input id="nf-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" pattern="[0-9]{6,10}"></div>'+
       '<div class="row"><button type="button" class="x" id="nf-cancel">Cancel</button><button type="submit" class="go" id="nf-go">Send my link</button></div>'+
       '<div class="msg" id="nf-msg" aria-live="polite"></div></form></div>');
     document.body.appendChild(modal);
@@ -220,7 +229,7 @@
         }
         stage = "code"; go.textContent = "Verify code";
         modal.querySelector("#nf-codewrap").hidden = false; modal.querySelector("#nf-code").focus();
-        msg.textContent = "Check " + email + " and tap the link in it. Or type the code from your email here.";
+        msg.textContent = "Check " + email + ". Type the code from that email here. The link in the email signs you in too.";
       } else {
         var code = f.querySelector("#nf-code").value.replace(/\s+/g, "");
         if (!/^\d{6,10}$/.test(code)) { msg.textContent = "Enter the code from your email (numbers only)."; return; }
@@ -244,7 +253,7 @@
   function helpSignOut(){
     var main = document.getElementById("main"); if (!main || typeof S === "undefined" || S.tab !== "help") return;
     var old = main.querySelector(".nhelp"); if (!session) { if (old) old.remove(); return; } if (old) return;
-    var u = session.user, b = el('<div class="nhelp"><div class="nw-kick">Your account</div><p>Signed in as <b>'+esc(nameOf(u))+'</b> ('+esc(u.email)+'). Your likes, plan, lists and saved searches sync to this account.</p><button type="button" class="nbar-cta" id="nhelp-out">Sign out</button>'+(u.email === CFG.admin ? ' <a href="#admin" data-tab="admin">Admin</a>' : '')+'</div>');
+    var u = session.user, b = el('<div class="nhelp"><div class="nw-kick">Your account</div><p>Signed in as <b>'+esc(nameOf(u))+'</b> ('+esc(u.email)+'). Your likes, plan, lists and saved searches sync to this account.</p><button type="button" class="nbar-cta" id="nhelp-out">Sign out</button>'+(isAdminEmail(u.email) ? ' <a href="#admin" data-tab="admin">Admin</a>' : '')+'</div>');
     var sec = main.querySelector(".view") || main; sec.insertBefore(b, sec.firstChild);
     b.querySelector("#nhelp-out").addEventListener("click", function(){ window.NolaAccount.signOut(); });
   }
@@ -268,7 +277,7 @@
 
   async function onSession(s, evt){
     var had = uid(); session = s;
-    window.NolaAccount.email = s && s.user && s.user.email ? String(s.user.email).toLowerCase() : null; window.NolaAccount.isAdmin = !!window.NolaAccount.email && window.NolaAccount.email === String(CFG.admin || "").toLowerCase();
+    window.NolaAccount.email = s && s.user && s.user.email ? String(s.user.email).toLowerCase() : null; window.NolaAccount.isAdmin = isAdminEmail(window.NolaAccount.email);
     if (typeof window.nolaAuthChanged === "function") { try { window.nolaAuthChanged(); } catch(e){ warn(e); } }
     if (s) { hideBar(); closeForm(); }
     else mountBar();
