@@ -3472,7 +3472,7 @@ function tripDayParts(n){
   let extra = "";
   if(ti.D && x>ti.D) extra = "After you leave";
   else if(ti.D && x.getTime()===ti.D.getTime()) extra = "Departure day";
-  return {chip:fmtD(x,{weekday:"short",day:"numeric"}), long:fmtD(x,{weekday:"long",month:"long",day:"numeric"}), extra};
+  return {chip:fmtD(x,{weekday:"short"})+" "+x.getUTCDate(), long:fmtD(x,{weekday:"long",month:"long",day:"numeric"}), extra};
 }
 function goDayView(n){
   const day = plan.days.find(x=>x.n===+n);
