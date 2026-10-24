@@ -158,8 +158,7 @@
     ".nwel{max-width:440px;max-height:88vh;overflow:auto}.nwel h2{font-size:1.45rem;margin:2px 0 10px}.nwel h3{font-size:.95rem;margin:12px 0 4px}.nwel ul{margin:0;padding-left:1.1em}.nwel li{margin:3px 0}"+
     ".nw-kick{font-family:var(--mono,monospace);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#FF6B5B}.nw-out{margin:12px 0 0;font-size:.9rem}"+
     ".nhelp{margin:0 0 16px;padding:12px 14px;border:1px solid var(--line,#c9b8bf);border-radius:14px}.nhelp p{margin:6px 0 10px}.nhelp a{margin-left:10px;color:inherit}"+
-    ".nbar-in{background:none;border:0;color:#FFF4EF;text-decoration:underline;padding:8px 4px;min-height:44px;cursor:pointer;font-weight:600;white-space:nowrap}@media(max-width:420px){.nbar>span{flex-basis:100%}.nbar{gap:2px 8px;padding-top:6px;padding-bottom:4px}}.nf-switch{margin:10px 0 0;font-size:.9rem;text-align:center}.nf-switch a,.nform .msg a{color:#c2412f;font-weight:600}"+
-    ".nme{font:12px system-ui;opacity:.75;text-align:center;padding:6px}.nme a{color:inherit}";
+    ".nbar-in{background:none;border:0;color:#FFF4EF;text-decoration:underline;padding:8px 4px;min-height:44px;cursor:pointer;font-weight:600;white-space:nowrap}@media(max-width:420px){.nbar>span{flex-basis:100%}.nbar{gap:2px 8px;padding-top:6px;padding-bottom:4px}}.nf-switch{margin:10px 0 0;font-size:.9rem;text-align:center}.nf-switch a,.nform .msg a{color:#c2412f;font-weight:600}";
   function el(h){ var d = document.createElement("div"); d.innerHTML = h.trim(); return d.firstChild; }
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 
@@ -249,13 +248,22 @@
     var sec = main.querySelector(".view") || main; sec.insertBefore(b, sec.firstChild);
     b.querySelector("#nhelp-out").addEventListener("click", function(){ window.NolaAccount.signOut(); });
   }
-  function footer(){
-    var old = document.getElementById("nme"); if (old) old.remove();
-    if (!session) return;
-    var u = session.user, nm = (u.user_metadata && u.user_metadata.name) || u.email;
-    var f = el('<div class="nme" id="nme">Signed in as '+esc(nm)+' · <a href="#" id="nme-out">sign out</a>'+(u.email === CFG.admin ? ' · <a href="#admin" data-tab="admin">admin</a>' : '')+'</div>');
-    document.body.appendChild(f);
-    f.querySelector("#nme-out").addEventListener("click", function(e){ e.preventDefault(); window.NolaAccount.signOut(); });
+  function paintWho(){
+    var slot = document.getElementById("nwho"); if (!slot) return;
+    slot.hidden = false;
+    if (!session || !session.user) {
+      slot.className = "nwho nwho-guest";
+      slot.removeAttribute("aria-label");
+      slot.innerHTML = '<button type="button" class="nwho-in" id="nwho-signin">Sign in</button>';
+      return;
+    }
+    var u = session.user, name = nameOf(u), email = u.email || "";
+    var showMail = !!(email && email.toLowerCase() !== String(name).toLowerCase());
+    slot.className = "nwho";
+    slot.setAttribute("aria-label", "Signed in as " + name + (showMail ? ", " + email : ""));
+    slot.innerHTML = '<div class="nwho-id"><span class="nwho-name">'+esc(name)+'</span>'
+      + (showMail ? '<span class="nwho-mail">'+esc(email)+'</span>' : '')
+      + '</div><button type="button" class="nwho-out" id="nwho-out">Sign out</button>';
   }
 
   async function onSession(s, evt){
@@ -265,7 +273,7 @@
     if (s) { hideBar(); closeForm(); }
     else mountBar();
     helpSignOut();
-    footer();
+    paintWho();
     if (s && s.user.id !== had) {
       var pk = "nola-pulled-" + s.user.id, owned = LS.getItem("nola-owner") === s.user.id;
       try { if (!owned || !sessionStorage.getItem(pk)) { var changed = await pull(); sessionStorage.setItem(pk, "1");
@@ -293,7 +301,12 @@
       return r && r.data && r.data.session;
     } catch(e){ warn(e); toast("Sign-in link didn't work. Try sending a new one."); return null; }
   }
-  function nameOf(u){ return (u.user_metadata && u.user_metadata.name) || u.email; }
+  function nameOf(u){
+    var m = (u && u.user_metadata) || {};
+    var n = m.name || m.full_name || m.display_name;
+    if (n && String(n).trim()) return String(n).trim();
+    return (u && u.email) || "Signed in";
+  }
   function signedToast(s){ toast("Signed in as " + nameOf(s.user)); }
   async function greet(s){
     var u = s.user, key = "nola-welcomed-" + u.id;
@@ -308,7 +321,7 @@
       '<div class="nw-kick">Welcome to the trip</div><h2 id="nw-h">You\'re in, '+esc(nameOf(u))+'!</h2>'+
       '<h3>What you can do now</h3><ul><li>♥ Like ideas you want to try</li><li>🗓 Build your own day-by-day itinerary</li><li>📋 Make lists</li><li>🔎 Save searches</li><li>✓ Mark places visited</li><li>📍 Search finds real bars and restaurants too, not just the ones in our guide</li></ul>'+
       '<h3>How your info is saved</h3><ul><li>It saves to your account automatically and syncs across your devices when you\'re signed in.</li><li>It still works offline and syncs when you\'re back online.</li><li>Only you can see your lists. Will, the trip organizer, can view them too.</li></ul>'+
-      '<p class="nw-out">Sign out lives under <b>Help</b>.</p>'+
+      '<p class="nw-out">Sign out is at the top right, and also under <b>Help</b>.</p>'+
       '<div class="row"><button type="button" class="go" id="nw-go">Let\'s go</button></div></div></div>');
     document.body.appendChild(w); var go = w.querySelector("#nw-go"); go.focus();
     go.addEventListener("click", function(){
@@ -321,6 +334,13 @@
     var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
     var t = document.createElement("div"); t.id = "nbar-toast"; t.hidden = true; t.setAttribute("role", "status"); document.body.appendChild(t);
     decorateSearch(); new MutationObserver(function(){ decorateSearch(); helpSignOut(); }).observe(document.getElementById("main") || document.body, { childList: true, subtree: true });
+    document.addEventListener("click", function(e){
+      var t = e.target && e.target.closest && e.target.closest("#nwho-signin,#nwho-out");
+      if (!t) return;
+      e.preventDefault();
+      if (t.id === "nwho-out") window.NolaAccount.signOut();
+      else openForm("signin");
+    });
     consumeReturn().then(function(fresh){
       return sb.auth.getSession().then(function(r){ var s = r.data.session || fresh; return onSession(s, "INITIAL").then(function(rv){ if (rv === "reload") return;
         if (s && (fresh || !sessionStorage.getItem("nola-greeted"))) { sessionStorage.setItem("nola-greeted", "1"); greet(s).catch(warn); } }); });
