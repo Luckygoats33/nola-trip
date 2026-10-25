@@ -1,5 +1,5 @@
 /* Offline: keep both app versions and their libraries; map tiles and live data are not cached. */
-const CACHE = "nola-hub-v28";
+const CACHE = "nola-hub-v29";
 const SHELL = ["./", "index.html", "v1/", "v1/index.html", "v2/", "v2/index.html", "v3/", "v3/index.html", "v3/auth.js", "v3/places.js", "v3/rides.js", "v3/config.js", "v3/admin.js", "manifest.webmanifest", "icon.svg",
   "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js",
   "https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"];
