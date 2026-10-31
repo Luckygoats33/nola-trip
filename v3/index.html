@@ -3364,7 +3364,6 @@ const HELP = [
   ["Who's signed in","The top right shows who is logged in: your name, and your email under it when that isn't the same as the name. <b>Sign out</b> sits beside it. Signed out, that spot is <b>Sign in</b>, which opens the same form as the bar at the top of the page."],
   ["Open now","The <b>Open now</b> chip on Home and Explore lists only what you can walk into this minute, with a time picker if you want to look ahead. The Map tab has the same filter."],
   ["The logo","Tap <b>The NOLA Girls</b> any time to jump back to Home."],
-  ["Add to home screen","The <b>Add to home screen</b> button at the top of every screen puts the app on your home screen. It opens full screen and keeps working with weak signal. On iPhone: Safari → Share → Add to Home Screen."],
   ["Day and evening look","The app switches to a darker evening look on its own after sunset in New Orleans. To keep it always light or always dark, open <b>Trip details & settings</b> at the top of this Help page → Look and feel."],
   ["Trip details & settings","Dates, hotel, the look-and-feel setting, booking info, safety tips and useful numbers. Open it with the button at the top of this Help page."]]],
  ["bar","The bottom bar",[
@@ -3450,7 +3449,7 @@ const TOURS = {
   {go:"map", sel:"#main .mapwrap", g:"Dorothy", t:"The map", b:"Every place, the hotel and (if you allow it) you. On phones tap <b>Tap here to move the map</b> to pan and zoom. The green, yellow and red areas show night-walking comfort: after dark, take a car for anything yellow or red."},
   {go:"cal", sel:"#main .daynav", g:"Sophia", t:"Calendar", b:"Day by day from Nov 4 to Nov 8. Calendar opens to Day 1's hourly view. Prev, Next, and the day buttons switch days. Tap the pencil on any event to edit start and end times. <b>Add a custom event</b> and <b>Share</b> are at the bottom. Tap <b>Add to trip</b> on a place to drop it into a free time."},
   {go:"saved", sel:"#main .view", g:"Sophia", t:"The kitchen table", b:"Everything anyone saved. Filter by person or tap <b>Everyone's in</b> to see what all three of you want."},
-  {go:"help", sel:'#tabs [data-tab="help"]', g:"Rose", t:"You're ready", b:"That's everything. <b>Help</b> has the full written guide and this tour any time. Tip: tap <b>Add to home screen</b> at the top to put it on your home screen. Now go have a beignet."}
+  {go:"help", sel:'#tabs [data-tab="help"]', g:"Rose", t:"You're ready", b:"That's everything. <b>Help</b> has the full written guide and this tour any time. Now go have a beignet."}
  ]
 };
 let tourList = "quick", tourStep = -1;
@@ -4573,7 +4572,7 @@ var SAFE_CONTACTS = {"groups":[{"title":"Emergency","items":[{"name":"Police / F
       + '<button type="button" data-go="map"><b>Find my way</b><span>Map & directions</span></button>'
       + '<button type="button" data-myink="1"><b>Design a tattoo</b><span>With AI</span></button>'
       + '<button type="button" data-go="info"><b>Trip details</b><span>Dates, hotel, settings</span></button>'
-      + '<button type="button" data-installnow="1"><b>Add to home screen</b><span>Opens full screen</span></button></div>';
+      + '</div>';
     h += '<div class="sh"><h3>How everything works</h3></div><p class="small muted" style="margin:0 0 8px">Tap a topic to open it.</p>';
     h += HELP.filter(s=>s[0]!=="safe").map(([k,t,items])=>'<details class="help-acc" id="help-'+k+'"><summary>'+esc(t)+'</summary><dl>'+items.map(([q,a])=>'<dt>'+esc(q)+'</dt><dd>'+a+'</dd>').join("")+'</dl></details>').join("");
     h += '<details class="help-acc"><summary>Settings</summary><label class="doro-set"><input type="checkbox" data-dorotoggle="1"'+(dorothyOn()?' checked':'')+'> Dorothy nudges me after 33 seconds on one screen</label></details>';
@@ -4583,7 +4582,6 @@ var SAFE_CONTACTS = {"groups":[{"title":"Emergency","items":[{"name":"Police / F
   };
   document.addEventListener("click", e=>{
     if(e.target.closest("[data-askfab]")){ e.preventDefault(); const f = document.querySelector(".ask-fab"); if(f) f.click(); }
-    if(e.target.closest("[data-installnow]")){ e.preventDefault(); const b = document.querySelector(".nola-install"); if(b) b.click(); else if(typeof toast==="function") toast("Already installed, or open this in your phone's browser to install."); }
   });
   document.addEventListener("change", e=>{ if(e.target && e.target.dataset && e.target.dataset.dorotoggle) setDorothy(e.target.checked); });
 
@@ -5775,55 +5773,7 @@ html body nav.vswitch.vswitch{display:none!important}
     logo.addEventListener("keydown", function(e){ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); goHome(); } });
   }
 
-  /* 2. Add to home screen, same install prompt, label stays readable */
-  var btn = document.createElement("button");
-  btn.className = "nola-install"; btn.type = "button";
-  btn.setAttribute("aria-label", "Add to home screen"); btn.title = "Add to home screen";
-  btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>Add to home screen';
-  btn.addEventListener("click", function(){ if(deferred && web){ deferred.prompt(); deferred.userChoice.finally(function(){ deferred = null; }); } else showPop(true); });
-  var row = document.querySelector("header .top-row > .row");
-  if(row && !standalone) row.insertBefore(btn, row.firstChild);
-
-  /* 3. the install pop-up */
-  var pop = null;
-  function closePop(){ if(pop){ pop.remove(); pop = null; } ls(KEY, "1"); }
-  function showPop(fromButton){
-    if(pop || standalone) return;
-    var name = vn === 1 ? "V1 Classic" : vn === 2 ? "V2" : "V3";
-    var body, go = "";
-    if(!web){
-      body = "<p>Add it to your home screen from the public site. Open " + name + " there, then use its <b>Add to home screen</b> button.</p>";
-      go = '<a class="nola-go" href="' + PUBLIC + "v" + vn + '/" target="_blank" rel="noopener">Open ' + name + ' to install</a>';
-    } else if(deferred){
-      body = "<p>Put the trip hub on your home screen. It opens full screen and keeps working with bad signal on the river.</p>";
-      go = '<button class="nola-go" type="button" data-nola-go="1">Add to home screen</button>';
-    } else if(ios){
-      body = "<p>Put the trip hub on your home screen:</p><ol><li>Tap <b>Share</b> (the square with an arrow) in Safari.</li><li>Scroll and tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>.</li></ol><p style=\"font-size:.85rem\">On iPhone this works in Safari. In Chrome, use the Share button at the top right.</p>";
-    } else if(android){
-      body = "<p>Put the trip hub on your home screen:</p><ol><li>Tap the <b>⋮</b> menu in Chrome.</li><li>Tap <b>Add to Home screen</b>.</li></ol>";
-    } else {
-      body = "<p>Add it to your home screen: click the install icon at the right end of Chrome's address bar, or open the <b>⋮</b> menu and choose <b>Cast, save and share</b>, then add the page.</p><p style=\"font-size:.85rem\">Best on your phone: open this page there and tap <b>Add to home screen</b>.</p>";
-    }
-    if(!fromButton) ls(KEY, "1");
-    pop = document.createElement("div");
-    pop.className = "nola-pop"; pop.setAttribute("role", "dialog"); pop.setAttribute("aria-modal", "false"); pop.setAttribute("aria-labelledby", "nolaPopT");
-    pop.innerHTML = '<button class="nola-x" type="button" aria-label="Close">×</button><div class="nola-top"><span class="nola-ico" aria-hidden="true">GG</span><div><h2 id="nolaPopT">Get The NOLA Girls app</h2><span style="font-size:.82rem;color:#5A4A66">One app with V1, V2 and V3 · free · no app store</span></div></div>' + body +
-      '<div class="nola-acts">' + go + '<button class="nola-later" type="button">' + (go ? "Not now" : "Got it") + '</button></div>';
-    document.body.appendChild(pop);
-    pop.querySelector(".nola-x").addEventListener("click", closePop);
-    pop.querySelector(".nola-later").addEventListener("click", closePop);
-    var g = pop.querySelector("[data-nola-go]");
-    if(g) g.addEventListener("click", function(){ var d = deferred; closePop(); if(d){ d.prompt(); d.userChoice.finally(function(){ deferred = null; }); } });
-    if(fromButton) (pop.querySelector(".nola-go") || pop.querySelector(".nola-later")).focus();
-  }
-  addEventListener("keydown", function(e){ if(e.key === "Escape" && pop) closePop(); });
   addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); deferred = e; });
-  addEventListener("appinstalled", function(){ closePop(); btn.remove(); });
-
-  /* pop up once per version on each phone, a few seconds after opening */
-  /* the install pop-up is for first-time visitors only, and counts as seen as soon as it shows */
-  const firstVisit = !ls("nola-seen-once") && !ls(KEY); ls("nola-seen-once", "1");
-  if(web && !standalone && firstVisit) setTimeout(function(){ if(!document.querySelector(".sheet.open, .sheet[open], #tour")) showPop(false); }, 4000);
 })();
 
 </script>
