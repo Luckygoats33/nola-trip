@@ -900,26 +900,29 @@ body.cal-only{padding-top:0!important}
 .guide-trigger div{display:flex;flex-direction:column;gap:2px}
 .guide-trigger b{font-family:var(--display);font-size:1.05rem}
 .guide-trigger span{font-size:.85rem;color:var(--muted)}
-.gwalk-scrim{position:fixed;inset:0;z-index:9500;background:rgba(20,12,28,.7);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .2s}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.gwalk{background:#FFF8F0;color:#23172C;border-radius:20px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(20,12,28,.5);position:relative}
-.gwalk-top{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0;gap:12px}
-.gwalk-top .gw-step{font-family:var(--mono);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:#5A4A66}
+.gwalk-hi{position:relative;z-index:60;outline:3px solid #E0B65A!important;outline-offset:4px;border-radius:14px;box-shadow:0 0 0 9999px rgba(20,12,28,.45)!important;transition:outline-color .2s}
+.gwalk{position:fixed;left:12px;right:12px;bottom:calc(72px + env(safe-area-inset-bottom,0px));z-index:9500;max-width:460px;margin:0 auto;background:#FFF8F0;color:#23172C;border:2px solid #23172C;border-radius:20px;box-shadow:0 18px 50px rgba(20,12,28,.45);padding:0;font-size:.95rem;line-height:1.45;animation:nolaPop .25s ease-out;overflow-y:auto;max-height:65vh}
+.gwalk-top{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 0;gap:12px}
+.gwalk-top .gw-step{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:#5A4A66}
 .gwalk-x{all:unset;cursor:pointer;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;font-size:1.3rem;color:#23172C}
 .gwalk-x:hover{background:rgba(0,0,0,.06)}
-.gwalk-body{padding:12px 24px 24px}
-.gwalk-icon{width:56px;height:56px;border-radius:16px;background:var(--brass);color:#fff;display:grid;place-items:center;font-size:1.6rem;margin-bottom:12px}
-.gwalk-body h2{font-family:var(--display);font-size:1.3rem;margin:0 0 8px;color:#23172C}
-.gwalk-body p{font-size:.92rem;line-height:1.55;color:#3A2C44;margin:0 0 8px}
+.gwalk-body{padding:8px 18px 12px}
+.gwalk-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.gwalk-icon{width:40px;height:40px;border-radius:12px;background:var(--brass);color:#fff;display:grid;place-items:center;font-size:1.2rem;flex-shrink:0}
+.gwalk-body h2{font-family:var(--display);font-size:1.15rem;margin:0;color:#23172C}
+.gwalk-body p{font-size:.85rem;line-height:1.5;color:#3A2C44;margin:0 0 6px}
 .gwalk-body p b{color:#23172C}
-.gwalk-tips{background:rgba(224,182,90,.1);border-radius:10px;padding:12px 14px;margin:12px 0 0;font-size:.85rem;line-height:1.5;color:#3A2C44}
-.gwalk-tips b{color:#23172C;display:block;margin-bottom:2px}
-.gwalk-dots{display:flex;justify-content:center;gap:6px;padding:8px 24px 0}
-.gwalk-dots i{width:8px;height:8px;border-radius:50%;background:#D8CCE0;transition:all .2s}
-.gwalk-dots i.on{background:#23172C;width:24px;border-radius:4px}
-.gwalk-acts{display:flex;justify-content:space-between;gap:8px;padding:12px 24px 20px}
-.gwalk-acts .btn{min-width:80px}
-@media(max-width:500px){.gwalk{border-radius:16px 16px 0 0;max-height:90vh;align-self:flex-end}.gwalk-body h2{font-size:1.15rem}}
+.gwalk-dia{background:#23172C;border-radius:12px;padding:10px;margin:8px 0;display:flex;flex-direction:column;gap:5px}
+.gwalk-dia .gwd-row{display:flex;gap:5px;align-items:stretch}
+.gwalk-dia .gwd-box{border-radius:6px;padding:5px 6px;font-size:.6rem;font-weight:700;text-align:center;flex:1;line-height:1.3;letter-spacing:.02em}
+.gwalk-dia .gwd-box.hi{outline:2px solid #E0B65A;outline-offset:1px}
+.gwalk-dia .gwd-lbl{font-size:.55rem;color:#8B7A99;text-align:center;margin-top:2px;letter-spacing:.04em}
+.gwalk-dots{display:flex;justify-content:center;gap:5px;padding:4px 18px 0}
+.gwalk-dots i{width:7px;height:7px;border-radius:50%;background:#D8CCE0;transition:all .2s}
+.gwalk-dots i.on{background:#23172C;width:20px;border-radius:4px}
+.gwalk-acts{display:flex;justify-content:space-between;gap:8px;padding:8px 18px 14px}
+.gwalk-acts .btn{min-width:70px}
+@media(max-width:500px){.gwalk{left:8px;right:8px;bottom:calc(64px + env(safe-area-inset-bottom,0px));max-height:70vh}.gwalk-body h2{font-size:1.05rem}}
 
 /* ---- no sideways scrolling on phones: rows wrap ---- */
 .hscroll{flex-wrap:wrap!important;overflow:visible!important;padding-bottom:0}
@@ -3639,40 +3642,70 @@ else if(!tourSeen && location.hash==="") {}
 
 /* ---------- guide walkthrough popup ---------- */
 const GWALK = [
-  {icon:"🏠", title:"Home", body:"<p>Your starting point. See the <b>current time in New Orleans</b>, the <b>weather forecast</b>, and a <b>trip countdown</b>.</p><p>Quick tiles take you to the <b>Calendar</b>, <b>Near me</b>, <b>Hidden gems</b>, and <b>Tonight</b> in one tap.</p>", tip:"Tap a Golden Girl to see her curated picks. Dorothy loves history and jazz; Sophia knows the best food and bargains."},
-  {icon:"🗺️", title:"Map", body:"<p>Every place on a <b>real map</b> with your live location and the hotel marked. Tap any pin to see details, hours, and directions.</p><p>Filter by type (food, jazz, history) or collection. <b>Streetcar routes</b> are drawn on the map with clickable stops.</p>", tip:"Allow location access for accurate walking distances and \"Near me\" results."},
-  {icon:"🔍", title:"Explore", body:"<p><b>Search</b> for anything: a food, a neighborhood, a bit of history. Results show up as you type, open places first.</p><p>Browse <b>13 hand-picked collections</b>: Tonight, Jazz & Cocktails, Hidden Gems, Where the Locals Go, Cat Adventures, Romantic, Vegetarian, Photo Spots, and more.</p>", tip:"Tap \"Open now\" to jump straight to what you can walk into right this minute."},
-  {icon:"📋", title:"Calendar", body:"<p>Your <b>day-by-day trip plan</b>, Wed Nov 4 through Sun Nov 8. Each day shows events on an hourly timeline.</p><p><b>Click any empty time slot</b> to add a custom event. Use the <b>pencil icon</b> to edit start and end times. <b>Walking directions</b> show automatically between events.</p>", tip:"Places that need reservations get a gold \"BOOK\" badge and appear in the \"Reservations to book\" section at the top."},
-  {icon:"💾", title:"Save & collaborate", body:"<p>Tap <b>Save</b> on any place to add it to the <b>kitchen table</b>. Everyone on the trip sees the same list and can vote.</p><p>Tap <b>Add to trip</b> to drop a place onto the calendar. The <b>Saved</b> tab shows group picks and has an <b>Everyone's in</b> filter.</p>", tip:"Share the calendar with the share icon. It creates a standalone link that shows just the schedule, no sign-in needed."},
-  {icon:"⏰", title:"Open now & hours", body:"<p>The <b>Open now</b> view shows every place you can walk into right now. Filter by <b>type</b>, <b>walkable distance</b>, or <b>open past midnight</b>.</p><p>Pick a different time to look ahead: tonight, tomorrow, or any day and time during the trip.</p>", tip:"Hours come from each venue's site, last checked October 2026. Call ahead for anything you're counting on."},
-  {icon:"🚗", title:"Getting there", body:"<p>Every place detail card has <b>Directions</b> (Google Maps), <b>Uber</b>, <b>Lyft</b>, and nearby <b>streetcar stops</b> with walk time.</p><p>The calendar shows <b>walking directions and travel time</b> between consecutive events. Streetcar <b>time bars</b> run alongside events they serve.</p>", tip:"4 streetcar lines run through the city. The St. Charles line is 24/7. A Jazzy Pass is $3/day unlimited rides."},
-  {icon:"🎉", title:"You're ready!", body:"<p>That's everything you need. The app knows what's open at any hour, shows you how to get there, and keeps the whole group on the same page.</p><p>Jump to any section from the <b>bottom bar</b>. Tap the logo to come back Home anytime.</p>", tip:"For a guided walkthrough that highlights each part of the screen, tap \"Take the interactive tour\" below."}
+  {icon:"🏠", title:"Home", go:"home",
+   sel:".quick-tiles",
+   body:"<p>Your starting point with <b>live weather</b>, <b>trip countdown</b>, and quick-jump tiles.</p><p>Tap a <b>Golden Girl</b> to see her curated picks.</p>",
+   dia:'<div class="gwd-row"><div class="gwd-box" style="background:#5A4A66;color:#F6EBDD">☀️ Weather forecast</div><div class="gwd-box" style="background:#5A4A66;color:#F6EBDD">📅 Trip countdown</div></div><div class="gwd-row"><div class="gwd-box hi" style="background:#3A2C44;color:#E0B65A">Calendar</div><div class="gwd-box hi" style="background:#3A2C44;color:#E0B65A">Near me</div><div class="gwd-box hi" style="background:#3A2C44;color:#E0B65A">Gems</div><div class="gwd-box hi" style="background:#3A2C44;color:#E0B65A">Tonight</div></div><div class="gwd-lbl">tap any tile to jump straight there</div><div class="gwd-row"><div class="gwd-box" style="background:#8B3A62;color:#fff">Dorothy</div><div class="gwd-box" style="background:#8B3A62;color:#fff">Blanche</div><div class="gwd-box" style="background:#8B3A62;color:#fff">Rose</div><div class="gwd-box" style="background:#8B3A62;color:#fff">Sophia</div></div><div class="gwd-lbl">each girl has her own curated collection</div>'},
+  {icon:"🗺️", title:"Map", go:"map",
+   sel:"#map-wrap",
+   body:"<p>Every place on a <b>real map</b>. Tap any pin for details, hours, and directions.</p><p>Filter by type or collection. <b>Streetcar routes</b> are drawn with clickable stops.</p>",
+   dia:'<div class="gwd-row"><div class="gwd-box" style="background:#2E8B57;color:#fff;flex:2">🗺️ Interactive map with pins</div></div><div class="gwd-row"><div class="gwd-box hi" style="background:#3A2C44;color:#E0B65A;flex:1">🍽️ Food</div><div class="gwd-box hi" style="background:#3A2C44;color:#E0B65A;flex:1">🎵 Jazz</div><div class="gwd-box hi" style="background:#3A2C44;color:#E0B65A;flex:1">🏛️ History</div><div class="gwd-box hi" style="background:#3A2C44;color:#E0B65A;flex:1">All</div></div><div class="gwd-lbl">filter pins by type, collection, or what\'s open now</div><div class="gwd-row"><div class="gwd-box" style="background:#2E8B57;color:#fff">St. Charles</div><div class="gwd-box" style="background:#C62828;color:#fff">Canal</div><div class="gwd-box" style="background:#7B1FA2;color:#fff">River</div><div class="gwd-box" style="background:#00838F;color:#fff">Rampart</div></div><div class="gwd-lbl">4 streetcar lines with stops + walk times</div>'},
+  {icon:"🔍", title:"Explore", go:"explore",
+   sel:".search-wrap",
+   body:"<p><b>Search</b> anything and results appear as you type. Browse <b>13 curated collections</b>.</p><p>Tap <b>Open now</b> to see only what you can walk into right this minute.</p>",
+   dia:'<div class="gwd-row"><div class="gwd-box hi" style="background:#5A4A66;color:#F6EBDD;flex:1">🔍 Search: beignets, jazz, history...</div></div><div class="gwd-row"><div class="gwd-box" style="background:#3A2C44;color:#E0B65A">Tonight</div><div class="gwd-box" style="background:#3A2C44;color:#E0B65A">Jazz</div><div class="gwd-box" style="background:#3A2C44;color:#E0B65A">Hidden gems</div></div><div class="gwd-row"><div class="gwd-box" style="background:#3A2C44;color:#E0B65A">Locals only</div><div class="gwd-box" style="background:#3A2C44;color:#E0B65A">Romantic</div><div class="gwd-box" style="background:#3A2C44;color:#E0B65A">Cat adventures</div></div><div class="gwd-lbl">13 hand-picked collections to browse</div>'},
+  {icon:"📋", title:"Calendar", go:"cal",
+   sel:".daynav",
+   body:"<p>Your <b>day-by-day itinerary</b>, Nov 4-8. Events on an hourly timeline with <b>walking directions</b> between them.</p><p>Tap empty slots to add events. Gold <b>BOOK</b> badges flag reservations.</p>",
+   dia:'<div class="gwd-row"><div class="gwd-box hi" style="background:#5A4A66;color:#F6EBDD">Wed</div><div class="gwd-box" style="background:#3A2C44;color:#E0B65A">Thu</div><div class="gwd-box" style="background:#3A2C44;color:#E0B65A">Fri</div><div class="gwd-box" style="background:#3A2C44;color:#E0B65A">Sat</div><div class="gwd-box" style="background:#3A2C44;color:#E0B65A">Sun</div></div><div class="gwd-lbl">tap a day to see its schedule</div><div class="gwd-row"><div class="gwd-box" style="background:#5A4A66;color:#F6EBDD;flex:2;text-align:left">9am Cafe Du Monde <span style="background:#E0B65A;color:#fff;border-radius:3px;padding:0 3px;font-size:.5rem">BOOK</span></div></div><div class="gwd-row"><div class="gwd-box" style="background:#2E8B57;color:#fff;flex:2;font-size:.5rem">🚶 12 min walk (0.5 mi)</div></div><div class="gwd-row"><div class="gwd-box" style="background:#5A4A66;color:#F6EBDD;flex:2;text-align:left">11am French Quarter tour</div></div><div class="gwd-lbl">walking directions + travel time between events</div>'},
+  {icon:"💾", title:"Save & share", go:"saved",
+   sel:"#main .view",
+   body:"<p>Tap <b>Save</b> on any place to add it to the group list. Everyone sees the same picks and can <b>vote</b>.</p><p>Tap <b>Add to trip</b> to put a place on the calendar. Use the <b>share icon</b> to send anyone the schedule.</p>",
+   dia:'<div class="gwd-row"><div class="gwd-box hi" style="background:#5A4A66;color:#F6EBDD;flex:2">💾 Saved places (kitchen table)</div></div><div class="gwd-row"><div class="gwd-box" style="background:#3A2C44;color:#E0B65A">👍 Vote yes</div><div class="gwd-box" style="background:#3A2C44;color:#E0B65A">👎 Vote no</div><div class="gwd-box" style="background:#8B3A62;color:#fff">+ Add to trip</div></div><div class="gwd-lbl">everyone votes, then add winners to the calendar</div><div class="gwd-row"><div class="gwd-box" style="background:#2E8B57;color:#fff;flex:2">🔗 Share link (no sign-in needed)</div></div>'},
+  {icon:"⏰", title:"What's open now", go:"home",
+   sel:".quick-tiles",
+   body:"<p>See every place <b>open right now</b>. Filter by type, walkable distance, or open past midnight.</p><p>Pick a different time to <b>look ahead</b>: tonight, tomorrow, or any day during the trip.</p>",
+   dia:'<div class="gwd-row"><div class="gwd-box hi" style="background:#2E8B57;color:#fff;flex:2">⏰ Open now (tap from Home or Explore)</div></div><div class="gwd-row"><div class="gwd-box" style="background:#3A2C44;color:#E0B65A">🍽️ Food</div><div class="gwd-box" style="background:#3A2C44;color:#E0B65A">🎵 Music</div><div class="gwd-box" style="background:#3A2C44;color:#E0B65A">🥃 Bars</div><div class="gwd-box" style="background:#3A2C44;color:#E0B65A">🌙 Late</div></div><div class="gwd-lbl">filter by type + pick any future time</div><div class="gwd-row"><div class="gwd-box" style="background:#5A4A66;color:#F6EBDD;flex:2">Place card: hours, distance, details</div></div>'},
+  {icon:"🚗", title:"Getting there", go:"map",
+   sel:"#map-wrap",
+   body:"<p>Every place has <b>Uber</b>, <b>Lyft</b>, <b>Google Maps directions</b>, and nearby <b>streetcar stops</b> with walk time.</p><p>The calendar shows <b>walking time between events</b> automatically.</p>",
+   dia:'<div class="gwd-row"><div class="gwd-box" style="background:#5A4A66;color:#F6EBDD;flex:2">📍 Place detail card</div></div><div class="gwd-row"><div class="gwd-box hi" style="background:#000;color:#fff">Uber</div><div class="gwd-box hi" style="background:#FF00BF;color:#fff">Lyft</div><div class="gwd-box hi" style="background:#4285F4;color:#fff">Directions</div></div><div class="gwd-lbl">one tap to open any ride or route</div><div class="gwd-row"><div class="gwd-box" style="background:#2E8B57;color:#fff;flex:2">🚃 Nearest stop: Canal & Bourbon (4 min walk)</div></div>'},
+  {icon:"🎉", title:"You're all set!", go:"home",
+   sel:"#tabs",
+   body:"<p>Jump to any section from the <b>bottom bar</b>. Tap the logo to come back Home.</p><p>The app works <b>offline</b> too. Have an amazing trip!</p>",
+   dia:'<div class="gwd-row"><div class="gwd-box hi" style="background:#23172C;color:#E0B65A">Home</div><div class="gwd-box hi" style="background:#23172C;color:#E0B65A">Map</div><div class="gwd-box hi" style="background:#23172C;color:#E0B65A">Explore</div><div class="gwd-box hi" style="background:#23172C;color:#E0B65A">Calendar</div><div class="gwd-box hi" style="background:#23172C;color:#E0B65A">Saved</div></div><div class="gwd-lbl">bottom bar = your main navigation</div>'}
 ];
 let gwalkStep = -1;
+function gwalkClear(){ document.querySelectorAll(".gwalk-hi").forEach(function(e){ e.classList.remove("gwalk-hi"); }); var el = document.getElementById("gwalk-root"); if(el) el.remove(); }
 function gwalkOpen(step){
   gwalkStep = step || 0;
   gwalkRender();
 }
 function gwalkClose(){
-  gwalkStep = -1;
-  const el = document.getElementById("gwalk-root");
-  if(el) el.remove();
+  gwalkClear(); gwalkStep = -1;
+  try{ localStorage.setItem("nola-gwalk-seen","1"); }catch(e){}
 }
 function gwalkRender(){
-  const s = GWALK[gwalkStep]; if(!s) return gwalkClose();
-  let el = document.getElementById("gwalk-root");
-  if(!el){ el = document.createElement("div"); el.id = "gwalk-root"; document.body.appendChild(el); }
-  el.className = "gwalk-scrim";
-  el.innerHTML = '<div class="gwalk" role="dialog" aria-modal="true" aria-labelledby="gwalk-title">'
-    +'<div class="gwalk-top"><span class="gw-step">Step '+(gwalkStep+1)+' of '+GWALK.length+'</span><button class="gwalk-x" type="button" data-gwclose="1" aria-label="Close">×</button></div>'
-    +'<div class="gwalk-body"><div class="gwalk-icon" aria-hidden="true">'+s.icon+'</div><h2 id="gwalk-title">'+s.title+'</h2>'+s.body
-    +(s.tip?'<div class="gwalk-tips"><b>Tip</b>'+s.tip+'</div>':'')
-    +'</div>'
-    +'<div class="gwalk-dots" aria-hidden="true">'+GWALK.map(function(_,k){return '<i'+(k===gwalkStep?' class="on"':'')+'></i>';}).join("")+'</div>'
-    +'<div class="gwalk-acts">'
-    +(gwalkStep>0?'<button class="btn" type="button" data-gwback="1">Back</button>':'<button class="btn" type="button" data-gwclose="1">Skip</button>')
-    +(gwalkStep===GWALK.length-1?'<button class="btn" type="button" data-tour="1">Take the interactive tour</button><button class="btn primary" type="button" data-gwclose="1">Done</button>':'<button class="btn primary" type="button" data-gwnext="1">Next</button>')
-    +'</div></div>';
+  var s = GWALK[gwalkStep]; if(!s) return gwalkClose();
+  gwalkClear();
+  if(s.go && S.tab !== s.go){ S.tab = s.go; render(); window.scrollTo(0,0); }
+  setTimeout(function(){
+    if(gwalkStep < 0) return;
+    if(s.sel){ var target = document.querySelector(s.sel); if(target){ target.classList.add("gwalk-hi"); target.scrollIntoView({block:"center", behavior:"smooth"}); } }
+    var el = document.createElement("div"); el.id = "gwalk-root";
+    el.className = "gwalk"; el.setAttribute("role","dialog"); el.setAttribute("aria-modal","true"); el.setAttribute("aria-labelledby","gwalk-title");
+    el.innerHTML = '<div class="gwalk-top"><span class="gw-step">Step '+(gwalkStep+1)+' of '+GWALK.length+'</span><button class="gwalk-x" type="button" data-gwclose="1" aria-label="Close">×</button></div>'
+      +'<div class="gwalk-body"><div class="gwalk-head"><div class="gwalk-icon" aria-hidden="true">'+s.icon+'</div><h2 id="gwalk-title">'+s.title+'</h2></div>'+s.body
+      +(s.dia?'<div class="gwalk-dia">'+s.dia+'</div>':'')
+      +'</div>'
+      +'<div class="gwalk-dots" aria-hidden="true">'+GWALK.map(function(_,k){return '<i'+(k===gwalkStep?' class="on"':'')+'></i>';}).join("")+'</div>'
+      +'<div class="gwalk-acts">'
+      +(gwalkStep>0?'<button class="btn" type="button" data-gwback="1">Back</button>':'<button class="btn" type="button" data-gwclose="1">Skip</button>')
+      +(gwalkStep===GWALK.length-1?'<button class="btn primary" type="button" data-gwclose="1">Done</button>':'<button class="btn primary" type="button" data-gwnext="1">Next</button>')
+      +'</div>';
+    document.body.appendChild(el);
+    el.querySelector('[data-gwnext],[data-gwclose].primary,[data-gwclose]:last-child').focus({preventScroll:true});
+  }, 160);
 }
 document.addEventListener("click", function(e){
   var b = e.target.closest("[data-gwalk],[data-gwnext],[data-gwback],[data-gwclose]");
@@ -4367,6 +4400,13 @@ setInterval(()=>{ if(S.mode==="auto"){ const was = document.documentElement.getA
 loadWX(); setInterval(loadWX, 30*60*1000);
 applyRoute(location.hash);
 render();
+(function(){
+  var seen = false;
+  try{ seen = !!localStorage.getItem("nola-gwalk-seen"); }catch(e){ seen = true; }
+  if(!seen && S.tab === "home" && tourStep < 0){
+    setTimeout(function(){ if(gwalkStep < 0 && tourStep < 0 && S.tab === "home") gwalkOpen(0); }, 800);
+  }
+})();
 
 /* ---------- mobile UX helpers ---------- */
 function pressFake(attr, val){ const b = document.createElement("button"); b.setAttribute(attr, val); b.style.display = "none"; document.body.appendChild(b); b.click(); b.remove(); }
