@@ -857,6 +857,13 @@ button.dayev-name{all:unset;display:block;max-width:100%;font-family:var(--displ
 .cal-sc-nm{display:flex;align-items:center;gap:4px;font-weight:800;font-size:.62rem}
 .cal-sc-sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;border:1.5px solid rgba(255,255,255,.7)}
 .cal-sc-hrs{font-size:.58rem;opacity:.85;padding-left:12px}
+
+/* walking directions between calendar events */
+.daywalk{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:2px 12px 2px 70px;font-size:.75rem;color:var(--muted);min-height:0;line-height:1.3}
+.daywalk-icon{flex-shrink:0;font-size:.85rem}
+.daywalk-txt{font-weight:700;white-space:nowrap}
+.daywalk a{color:var(--brass);font-weight:800;text-decoration:none;white-space:nowrap}
+.daywalk a:hover{text-decoration:underline}
 .cal-sc-fare{border-top:1px solid rgba(255,255,255,.3);padding-top:5px;text-align:center;font-weight:800;font-size:.58rem;margin-top:auto;line-height:1.4}
 @media(max-width:599px){.cal-sc-bar{width:56px;padding:8px 4px}.cal-sc-nm{font-size:.56rem}.cal-sc-hrs{font-size:.5rem}.cal-sc-fare{font-size:.52rem}}
 
@@ -3768,6 +3775,19 @@ function vDayTimeline(){
     if(it.d) h += '<span class="dayev-note">'+esc(it.d)+'</span>';
     h += '</div>';
   });
+  for(let wi=0;wi<placed.length-1;wi++){
+    const a2=placed[wi], b2=placed[wi+1];
+    const aIds=(a2.it.p||[]), bIds=(b2.it.p||[]);
+    const aC=aIds.map(id=>COORD[id]).find(Boolean), bC=bIds.map(id=>COORD[id]).find(Boolean);
+    if(!aC||!bC) continue;
+    const m=meters(aC,bC), tr=travel(m);
+    const endRow=Math.round((a2.a-from)/ADD_STEP)+1+a2.slots;
+    const startRow2=Math.round((b2.a-from)/ADD_STEP)+1;
+    if(startRow2<=endRow) continue;
+    const aP=aIds.map(id=>BY[id]).find(Boolean), bP=bIds.map(id=>BY[id]).find(Boolean);
+    const dirHref=aP&&bP?"https://www.google.com/maps/dir/?api=1&origin="+encodeURIComponent(fullDest(aP))+"&destination="+encodeURIComponent(fullDest(bP))+"&travelmode="+(tr.mode==="walk"?"walking":"driving"):"";
+    h+='<div class="daywalk" style="grid-row:'+endRow+'"><span class="daywalk-icon">'+(tr.mode==="walk"?"🚶":"🚗")+'</span><span class="daywalk-txt">'+esc(tr.txt)+'</span>'+(dirHref?'<a href="'+esc(dirHref)+'" target="_blank" rel="noopener">Directions ›</a>':'')+'</div>';
+  }
   h += '</div>';
   if(window._calScWrap) h += '</div>';
   if(S.editingEv){
