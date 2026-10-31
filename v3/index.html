@@ -110,6 +110,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .tabs::-webkit-scrollbar{display:none}
 .tab{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-weight:700;font-size:.9rem;color:var(--muted);white-space:nowrap}
 .tab[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.tab[data-tab="admin"]{background:#D9A441;border-color:#B9852A;color:#23172C;font-weight:800}
+.tab[data-tab="admin"] svg{stroke:#23172C}
 .tab .n{font-family:var(--mono);font-size:.7rem;margin-left:5px;color:var(--coral)}
 .tab[aria-selected="true"] .n{color:var(--gold-soft)}
 main{padding-top:20px;display:grid;gap:20px}
@@ -949,8 +951,14 @@ button.nola-install::after,.nm::after,.plink::after,.rt-g::after,.rt a::after,.s
   #tabs .tab .n{background:#FFF4EA!important;color:#7B2446!important}
   #tabs .tab:focus-visible{outline:3px solid #FFF4EA;outline-offset:-3px}
   :root[data-mode="night"] #tabs.tabs{background:#2A1A33;border-top-color:var(--brass,#D9A441)}
-  #tabs .tab{min-width:0}
-  #tabs .tab span{font-size:.6rem!important;white-space:normal;text-align:center;line-height:1.05}
+  #tabs.tabs{overflow:hidden}
+  #tabs .tab{min-width:0;flex:1 1 0}
+  #tabs .tab span{font-size:.62rem!important;white-space:nowrap;text-align:center;line-height:1.05;max-width:100%}
+  /* Admin stays a full, readable button. The other labels can shrink; this one cannot scroll off. */
+  #tabs .tab[data-tab="admin"]{flex:0 0 auto;min-width:68px;padding-left:6px;padding-right:6px;background:#D9A441!important;color:#23172C!important;box-shadow:inset 0 0 0 2px #23172C}
+  #tabs .tab[data-tab="admin"] span,#tabs .tab[data-tab="admin"] svg{color:#23172C!important;stroke:#23172C;font-weight:800;font-size:.72rem!important;white-space:nowrap;overflow:visible}
+  #tabs .tab[data-tab="admin"][aria-selected="true"]{background:#23172C!important;color:#D9A441!important;box-shadow:none}
+  #tabs .tab[data-tab="admin"][aria-selected="true"] span,#tabs .tab[data-tab="admin"][aria-selected="true"] svg{color:#D9A441!important;stroke:#D9A441}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
@@ -3443,9 +3451,8 @@ const ICON = {
 TAB_ICON.home = ICON.home; TAB_ICON.trip = TAB_ICON.plan;
 TAB_ICON.cal = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
 TABS.splice(0, TABS.length, ["home","Home"],["map","Map"],["explore","Explore"],["cal","Calendar"],["saved","Saved"]);
-/* ---------- help: the ? tab with the full guide, and a 3-step walkthrough on first visit ---------- */
+/* Help stays a page (opened from Admin). It is not a main-nav tab. */
 TAB_ICON.help = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.8-2.5 2.3-2.5 4"/><path d="M12 17.2v.3"/></svg>';
-TABS.push(["help","Help"]);
 const HELP = [
  ["start","Start here",[
   ["What this is","Your New Orleans trip in one place: what's open right now, a real map, the day-by-day plan, places to vote on, and the Golden Girls cheering you on. Trip dates (Wed Nov 4 to Sun Nov 8) and the Olivier House Hotel are already built in."],
@@ -3464,7 +3471,7 @@ const HELP = [
   ["Explore","Search and thirteen hand-picked collections."],
   ["Calendar","The day-by-day trip, Wed Nov 4 through Sun Nov 8. Flight details start on the arrival day. Everything you add with <b>Add to trip</b> shows up here."],
   ["Saved","The kitchen table: everyone's saves and votes. The number badge counts saved places."],
-  ["? Help","This guide."]]],
+  ["Admin","Trip organizers see an <b>Admin</b> button in the menu. <b>Help & guide</b> on that page opens this guide. Everyone else does not see Help in the menu."]]],
  ["home","Home",[
   ["Greeting and countdown","Shows the time in New Orleans, days until you arrive (or which trip day it is), and the weather."],
   ["Golden Girls banners","Dorothy, Blanche, Rose or Sophia weigh in on every screen. Tap <b>Another one</b> for a new line."],
@@ -3525,12 +3532,12 @@ const TOURS = {
  quick: [
   {go:"home", sel:"#tabs", g:"Rose", t:"Get around with the bottom bar", b:"<b>Home</b> is your start, <b>Map</b> shows everything nearby, <b>Explore</b> has collections and search, <b>Calendar</b> is the day-by-day trip, and <b>Saved</b> is the kitchen table."},
   {go:"home", sel:"#nwho", g:"Blanche", t:"Who's signed in", b:"The top right shows your name and email when you're signed in, with <b>Sign out</b> beside them. Signed out, <b>Sign in</b> there opens the same form as the bar above. Search lives on <b>Explore</b> and <b>Open now</b>."},
-  {go:"home", sel:'#tabs [data-tab="help"]', g:"Dorothy", t:"Stuck? Tap Help", b:"<b>Help</b> on the bottom bar has the full guide and a longer tour of everything. Tap the logo any time to come back Home.", last:'<button class="btn" type="button" data-tourfull="1">Take the full tour</button>'}
+  {go:"home", sel:".logo2", g:"Dorothy", t:"Back to Home", b:"Tap <b>The NOLA Girls</b> any time to come back Home. The full guide lives under <b>Admin</b> → <b>Help & guide</b> for the trip organizers.", last:'<button class="btn" type="button" data-tourfull="1">Take the full tour</button>'}
  ],
  full: [
   {go:"home", sel:"#main .hero", g:"Sophia", t:"Welcome to The NOLA Girls", b:"Picture it: Wed Nov 4 to Sun Nov 8, home base at the Olivier House on Toulouse St. This card shows the New Orleans time, the countdown and the weather. The app knows what's open at any hour, so you never walk up to a locked door."},
   {go:"home", sel:"#nwho", g:"Blanche", t:"Who's signed in", b:"The top right is your account: the name you joined with, and your email when it isn't the same. <b>Sign out</b> is right there. To look up a place, open <b>Explore</b> and use the search box."},
-  {go:"home", sel:"#tabs", g:"Rose", t:"The bottom bar", b:"Six buttons get you everywhere: <b>Home</b>, <b>Map</b>, <b>Explore</b>, <b>Calendar</b>, <b>Saved</b>, and <b>Help</b>. The gold one is where you are. The logo at the top always brings you back Home."},
+  {go:"home", sel:"#tabs", g:"Rose", t:"The bottom bar", b:"<b>Home</b>, <b>Map</b>, <b>Explore</b>, <b>Calendar</b>, and <b>Saved</b> get you around. Trip organizers also see <b>Admin</b>. The gold one is where you are. The logo at the top always brings you back Home."},
   {go:"home", sel:"#main .talk", g:"Blanche", t:"The girls have opinions", b:"Dorothy, Blanche, Rose and Sophia chime in on every screen. Tap <b>Another one</b> for a new line. They're also a shortcut to good picks, as you'll see."},
   {go:"home", sel:"#main .tile", g:"Rose", t:"Quick tiles", b:"<b>Calendar</b> (it turns into <b>Today</b> once you're there), <b>Near me</b> (about a 15-minute walk), <b>Hidden gems</b>, and <b>Tonight</b>. One tap each."},
   {go:"home", sel:"#main .girls", g:"Dorothy", t:"Who's leading tonight?", b:"Can't decide? Let a Golden Girl choose. Dorothy brings history and jazz, Blanche romance and late nights, Rose beignets, cats and swamps, and Sophia food, Voodoo and bargains. Her page lists her picks, open ones first."},
@@ -3541,7 +3548,7 @@ const TOURS = {
   {go:"map", sel:"#main .mapwrap", g:"Dorothy", t:"The map", b:"Every place, the hotel and (if you allow it) you. On phones tap <b>Tap here to move the map</b> to pan and zoom. The green, yellow and red areas show night-walking comfort: after dark, take a car for anything yellow or red."},
   {go:"cal", sel:"#main .cal-week", g:"Sophia", t:"Calendar", b:"Day by day from Nov 4 to Nov 8. Arrival day starts with Emily's flight and the other days start empty. Tap a day to see its hours. Prev and Next at the top switch days, and Add a custom event is on that screen. Tap <b>Add to trip</b> on a place to drop it into a free time. <b>Route this day in Google Maps</b> walks the day's stops from the hotel."},
   {go:"saved", sel:"#main .view", g:"Sophia", t:"The kitchen table", b:"Everything anyone saved. Filter by person or tap <b>Everyone's in</b> to see what all three of you want."},
-  {go:"help", sel:'#tabs [data-tab="help"]', g:"Rose", t:"You're ready", b:"That's everything. <b>Help</b> has the full written guide and this tour any time. Tip: tap <b>Add to home screen</b> at the top to put it on your home screen. Now go have a beignet."}
+  {go:"help", sel:"#main .head", g:"Rose", t:"You're ready", b:"That's everything. Open this guide any time from <b>Admin</b> → <b>Help & guide</b>. Tip: tap <b>Add to home screen</b> at the top to put it on your home screen. Now go have a beignet."}
  ]
 };
 let tourList = "quick", tourStep = -1;
@@ -4636,7 +4643,7 @@ var SAFE_CONTACTS = {"groups":[{"title":"Emergency","items":[{"name":"Police / F
     const b = e.target.closest("[data-doro]"); if(!b) return; e.preventDefault();
     const d = document.getElementById("doro"); if(d) d.remove();
     if(b.dataset.doro==="pick"){ S.tab="now"; S.sheet=null; window.scrollTo(0,0); render(); }
-    if(b.dataset.doro==="mute"){ doroOff = true; try{ localStorage.setItem("nola-dorothy-off","1"); }catch(_){} if(typeof toast==="function") toast("Dorothy will keep her opinions to herself. Turn her back on in Help."); }
+    if(b.dataset.doro==="mute"){ doroOff = true; try{ localStorage.setItem("nola-dorothy-off","1"); }catch(_){} if(typeof toast==="function") toast("Dorothy will keep her opinions to herself. Turn her back on from Admin → Help & guide."); }
   });
   window.setDorothy = on => { doroOff = !on; try{ localStorage.setItem("nola-dorothy-off", on ? "0" : "1"); }catch(_){} doroKey = ""; doroArm(); };
   window.dorothyOn = () => !doroOff;
@@ -4649,7 +4656,8 @@ var SAFE_CONTACTS = {"groups":[{"title":"Emergency","items":[{"name":"Police / F
   /* ---- Help, reorganized ---- */
   const tel = n => String(n).replace(/[^0-9+]/g, "");
   vHelp = function(){
-    let h = '<div class="head"><span class="eyebrow">How it works</span><h2>Help & safety</h2><p class="small muted">Emergency numbers first, then quick answers to everything else.</p></div>';
+    let h = '<div class="head"><span class="eyebrow">How it works</span><h2>Help & safety</h2><p class="small muted">Emergency numbers first, then quick answers to everything else. Opened from Admin.</p></div>';
+    h += '<div class="row"><button class="btn" type="button" data-tab="admin">← Admin</button></div>';
     h += '<section class="sos"><h3>In an emergency, call <a href="tel:911">911</a></h3><p>Police, fire or ambulance. Tell them you\'re in the French Quarter and give the nearest cross street.</p><a class="sos-btn" href="tel:911">Call 911</a></section>';
     if(SAFE_CONTACTS && SAFE_CONTACTS.groups) h += SAFE_CONTACTS.groups.map(g=>({title:g.title, items:g.items.filter(it=>(it.tel||it.phone)!=="911")})).filter(g=>g.items.length).map(g=>'<details class="help-acc safety"'+(/emergency|medical|police/i.test(g.title)?' open':'')+'><summary>'+esc(g.title)+'</summary><ul class="callist">'+g.items.map(it=>'<li><div><b>'+esc(it.name)+'</b>'+(it.note?'<span>'+esc(it.note)+'</span>':'')+'</div>'+(it.phone?'<a class="callbtn" href="tel:'+tel(it.tel||it.phone)+'">'+esc(it.phone)+'</a>':it.url?'<a class="callbtn" href="'+esc(it.url)+'" target="_blank" rel="noopener">Open</a>':'')+'</li>').join("")+'</ul></details>').join("");
     h += '<div class="sh"><h3>I want to…</h3></div><div class="todo-grid">'
@@ -4952,7 +4960,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     [/voodoo/, () => "New Orleans Voodoo is a real religion that blends West African, Haitian and Catholic traditions, made famous by Marie Laveau in the 1800s. Visit respectfully: the New Orleans Historic Voodoo Museum and Voodoo shops are in the app, and Congo Square is where enslaved Africans gathered on Sundays."],
     [/cemetery|cemeteries|tomb|marie laveau/, () => "The above-ground tombs are because of the high water table. St. Louis Cemetery No. 1 (Marie Laveau's tomb) is open only with a licensed guided tour; book ahead. Lafayette Cemetery No. 1 in the Garden District is under restoration, so check before going. Go in daylight."],
     [/\blost\b|stolen|robbed|theft|steal|pickpocket(ed)?|wallet|purse|police report|report (a|the)? ?(crime|theft)|file a report/, () => { const g = (typeof SAFE_CONTACTS!=="undefined" && SAFE_CONTACTS) ? SAFE_CONTACTS.groups : []; const pick = g.flatMap(x => x.items).filter(i => /nopd|8th district|online|recovered|evidence/i.test(i.name)).slice(0, 5); return "So sorry, honey. If you're in danger call 911. Otherwise:\n" + pick.map(i => "• "+i.name+(i.phone?": "+i.phone:"")+(i.url?" — "+i.url:"")+(i.note?" — "+i.note:"")).join("\n") + "\nCancel cards right away, and tell the Olivier House front desk (504-525-8456) in case it's turned in."; }],
-    [/emergency|hospital|\ber\b|urgent care|doctor|sick|injur|hurt|pharmacy|medicine|ambulance/, () => { const g = (typeof SAFE_CONTACTS!=="undefined" && SAFE_CONTACTS) ? SAFE_CONTACTS.groups : []; const pick = g.flatMap(x => x.items).filter(i => /university medical|lcmc|urgent|ochsner|walgreens|poison/i.test(i.name)).sort((a, b) => { const r = x => /university medical/i.test(x.name) ? 0 : /lcmc/i.test(x.name) ? 1 : /urgent|ochsner/i.test(x.name) ? 2 : /walgreens/i.test(x.name) ? 3 : 4; return r(a) - r(b); }).slice(0, 6); return "In an emergency call 911.\n" + pick.map(i => "• "+i.name+(i.phone?": "+i.phone:"")+(i.note?" — "+i.note:"")).join("\n") + "\nThe Help tab has every number with tap-to-call."; }],
+    [/emergency|hospital|\ber\b|urgent care|doctor|sick|injur|hurt|pharmacy|medicine|ambulance/, () => { const g = (typeof SAFE_CONTACTS!=="undefined" && SAFE_CONTACTS) ? SAFE_CONTACTS.groups : []; const pick = g.flatMap(x => x.items).filter(i => /university medical|lcmc|urgent|ochsner|walgreens|poison/i.test(i.name)).sort((a, b) => { const r = x => /university medical/i.test(x.name) ? 0 : /lcmc/i.test(x.name) ? 1 : /urgent|ochsner/i.test(x.name) ? 2 : /walgreens/i.test(x.name) ? 3 : 4; return r(a) - r(b); }).slice(0, 6); return "In an emergency call 911.\n" + pick.map(i => "• "+i.name+(i.phone?": "+i.phone:"")+(i.note?" — "+i.note:"")).join("\n") + "\nThe full tap-to-call list is in the guide, opened from Admin → Help & guide."; }],
     [/cash|atm|credit card|money/, () => "Cards work almost everywhere, but carry some cash for band tip jars, street performers, covers at small clubs, and Café du Monde (cash only at some windows; check). ATMs are everywhere in the Quarter, but use ones inside banks or stores."],
     [/dress code|what to wear (out|to dinner)|fancy|jacket required/, () => "Most places are casual. A few old-line restaurants want 'smart casual' at dinner (Galatoire's and Arnaud's ask men to wear a jacket at night). Wear shoes you can walk and dance in; the Quarter's sidewalks are bumpy."],
     [/saints|football|pelicans|game|sports/, () => "Check the Saints' schedule on neworleanssaints.com for Nov 4–8 home games at the Caesars Superdome (it's in the app). Game days make the CBD and Quarter extra busy, and rideshares surge."],
@@ -4967,7 +4975,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     const words = q.replace(/[^a-z ]/g," ").split(/\s+/).filter(w => w.length > 3 && !STOP.test(w));
     let best = null, sc = 0;
     (HELP||[]).forEach(([k, t, items]) => items.forEach(([h, a]) => { const txt = lc(t+" "+h+" "+a.replace(/<[^>]+>/g,"")); let s = 0; words.forEach(w => { if(txt.includes(w)) s += lc(h).includes(w) ? 3 : 1; }); if(s > sc){ sc = s; best = [t, h, a]; } }));
-    return best && sc >= 2 ? {text:best[1]+": "+best[2].replace(/<[^>]+>/g,"")+"\n(More in the Help tab.)", ids:[]} : null;
+    return best && sc >= 2 ? {text:best[1]+": "+best[2].replace(/<[^>]+>/g,"")+"\n(More in the guide, opened from Admin → Help & guide.)", ids:[]} : null;
   }
 
   function planAnswer(q){

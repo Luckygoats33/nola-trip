@@ -95,6 +95,7 @@
   function vAdmin(){
     var h = '<div class="head"><span class="eyebrow">Only you can see this</span><h2>Admin</h2><p class="muted small">Who saved what, and where the group lines up.</p></div>';
     if (!amAdmin()) return '<div class="head"><span class="eyebrow">Admin</span><h2>Admin only</h2></div><div class="empty" id="adm-denied"><p><b>Sorry, this page is just for the trip organizer.</b></p><p class="small">Your saves are still yours. Head back to Home to keep planning.</p><button class="btn primary" data-tab="home">Back to Home</button></div>';
+    h += '<div class="row adm-help"><button class="btn primary" type="button" data-tab="help" id="adm-help">Help &amp; guide</button></div>';
     if (!A.data){ if (!A.loading && !A.err) setTimeout(load, 0); return h + (A.err ? '<div class="empty">Couldn\'t load: ' + e(A.err) + ' <button class="btn" data-admreload="1">Try again</button></div>' : '<div class="empty">Loading everyone…</div>'); }
     var sum = A.data.summary, people = sum.filter(function(s){ return A.person === "all" || s.id === A.person; });
     h += '<div class="seg adm-seg" role="tablist">' + [["align", "Where we align"], ["people", "People"]].map(function(x){ return '<button role="tab" data-admsec="' + x[0] + '" aria-selected="' + (A.sec === x[0]) + '" aria-pressed="' + (A.sec === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</div>';
@@ -140,7 +141,8 @@
     ".adm-filter{margin:6px 0}.adm-filter .chip{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.adm-filter .adm-av{width:22px;height:22px;font-size:.7rem;border:0}" +
     ".adm-person{margin:10px 0}.adm-ptop{all:unset;cursor:pointer;display:flex;gap:10px;align-items:center;min-height:44px}.adm-ptop .adm-av{width:40px;height:40px;font-size:1rem}.adm-pn{display:grid;flex:1;min-width:0}.adm-pn .small{overflow:hidden;text-overflow:ellipsis}.adm-caret{font-size:1.4rem;color:var(--muted)}" +
     ".adm-stats{display:flex;flex-wrap:wrap;gap:6px}.adm-group{display:grid;gap:6px;margin-top:6px}.adm-tags{display:flex;flex-wrap:wrap;gap:6px}" +
-    ".adm-h{margin:14px 0 6px}.adm-row{margin:8px 0}.adm-everyone{border-color:var(--leaf);box-shadow:inset 4px 0 0 var(--leaf)}.adm-most{box-shadow:inset 4px 0 0 var(--gold)}.adm-n{font-weight:800}.adm-sum{margin:10px 0}.adm-solo{margin-top:14px}.adm-top{margin:10px 0}.adm-row .right{display:grid;justify-items:end}";
+    ".adm-h{margin:14px 0 6px}.adm-row{margin:8px 0}.adm-everyone{border-color:var(--leaf);box-shadow:inset 4px 0 0 var(--leaf)}.adm-most{box-shadow:inset 4px 0 0 var(--gold)}.adm-n{font-weight:800}.adm-sum{margin:10px 0}.adm-solo{margin-top:14px}.adm-top{margin:10px 0}.adm-row .right{display:grid;justify-items:end}" +
+    ".adm-help{margin:8px 0 4px}.adm-help .btn{min-height:48px;font-weight:800}";
   var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
 
   /* ---------- wire into the app ---------- */
