@@ -39,10 +39,15 @@ create table if not exists public.likes (
   primary key (user_id, item_ref, kind)
 );
 
--- admin check: email claim in the verified JWT
+-- admin check: email claim in the verified JWT.
+-- Allowlist stays in sync with v3/config.js admins. Running this function does not
+-- create a user or send mail; invite purplepanic12@gmail.com from the Supabase dashboard.
 create or replace function public.is_admin() returns boolean
 language sql stable set search_path = '' as $$
-  select coalesce((select auth.jwt() ->> 'email'), '') = 'will.wiedenmann@gmail.com'
+  select lower(coalesce((select auth.jwt() ->> 'email'), '')) in (
+    'will.wiedenmann@gmail.com',
+    'purplepanic12@gmail.com'
+  )
 $$;
 
 -- profile on signup (name from magic-link metadata)

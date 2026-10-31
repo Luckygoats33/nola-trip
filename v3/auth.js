@@ -1,9 +1,19 @@
 /* NOLA accounts: sign-up bar, magic link / email code, and cloud sync of this device's saves.
-   Design: the app keeps using localStorage exactly as before (works offline and signed out).
+   Signed-out visitors can browse. Saves, votes, visits, plans, and custom places require an account:
+   those taps open Join, and the synced keys are not written until someone is signed in.
    This file mirrors the synced keys to Supabase when signed in, and pulls them back on sign-in. */
 (function(){
   "use strict";
   var CFG = window.NOLA_SUPABASE || {};
+  function isAdminEmail(email){
+    if (typeof window.NolaIsAdminEmail === "function") return window.NolaIsAdminEmail(email);
+    var raw = CFG.admins || CFG.admin || [];
+    if (typeof raw === "string") raw = [raw];
+    var e = String(email || "").trim().toLowerCase();
+    if (!e) return false;
+    for (var i = 0; i < raw.length; i++){ if (String(raw[i] || "").trim().toLowerCase() === e) return true; }
+    return false;
+  }
   // The claude.ai artifact build has its own shared/read-only group plan; leave that mode alone.
   var ARTIFACT = !!(window.claude && window.claude.use);
   if (ARTIFACT || !window.supabase || !CFG.url || !CFG.key) return;
@@ -18,9 +28,15 @@
 
   function j(s, d){ try { var v = JSON.parse(s); return v == null ? d : v; } catch(e){ return d; } }
   function uid(){ return session && session.user && session.user.id; }
+  function signedNow(){
+    if (session && session.user) return true;
+    try { if (window.nolaSessionUid && window.nolaSessionUid()) return true; } catch(e){}
+    return false;
+  }
 
   /* ---------- push: mirror local writes to the account ---------- */
   LS.setItem = function(k, v){
+    if (SYNC[k] && !signedNow() && !window.nolaSeedWrite) return;
     rawSet(k, v);
     if (SYNC[k] && uid() && !pulling && LS.getItem("nola-owner") === uid()) { rawSet("nola-dirty-" + uid(), "1"); clearTimeout(timers[k]); timers[k] = setTimeout(function(){ push(k).then(clean, warn); }, 800); }
   };
@@ -121,6 +137,7 @@
   function searches(){ return j(LS.getItem("nola-searches"), []); }
   window.NolaAccount.saveSearch = function(q){
     q = (q || "").trim(); if (!q) return;
+    if (window.nolaRequireAccount && !window.nolaRequireAccount("You need an account to save a search. Join the trip or sign in.")) return;
     var s = searches().filter(function(x){ return x.q !== q; }); s.unshift({ q: q, at: new Date().toISOString() });
     LS.setItem("nola-searches", JSON.stringify(s.slice(0, 30))); toast("Saved search: " + q);
   };
@@ -151,7 +168,7 @@
     ".nform h2{margin:0 0 6px;font-size:1.2rem}.nform label{display:block;margin:10px 0 4px;font-weight:600;font-size:.9rem}"+
     ".nform input{width:100%;box-sizing:border-box;padding:10px;border:1px solid #c9b8bf;border-radius:10px;font:inherit}"+
     ".nform .row{display:flex;gap:8px;margin-top:14px}.nform .row button{flex:1;padding:10px;border-radius:10px;border:0;font:600 15px system-ui;cursor:pointer}"+
-    ".nform .go{background:#FF6B5B;color:#fff}.nform .x{background:#e9dde0;color:#23172C}.nform .msg{margin-top:10px;font-size:.9rem;min-height:1.2em}"+
+    ".nform .go{background:#FF6B5B;color:#fff}.nform .x{background:#e9dde0;color:#23172C}.nform .msg{margin-top:10px;font-size:.9rem;min-height:1.2em}.nform .msg.nf-need{font-weight:700;background:#F7EAD0;color:#23172C;border-radius:10px;padding:8px 10px}"+
     ".nsave{margin:6px 6px 0 0;padding:6px 10px;border-radius:999px;border:1px solid #c9b8bf;background:transparent;font:600 13px system-ui;cursor:pointer}"+
     ".nsaved{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.nsaved button{padding:4px 10px;border-radius:999px;border:0;background:#e9dde0;font:13px system-ui;cursor:pointer}"+
     "#nbar-toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:2147483001;background:#23172C;color:#fff;padding:8px 14px;border-radius:999px;font:14px system-ui}"+
@@ -162,7 +179,14 @@
   function el(h){ var d = document.createElement("div"); d.innerHTML = h.trim(); return d.firstChild; }
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 
-  var bar, modal;
+  var bar, modal, saveNote = "";
+  function paintNote(){
+    if (!modal) return;
+    var msg = modal.querySelector("#nf-msg");
+    if (!msg) return;
+    msg.textContent = saveNote || "";
+    msg.classList.toggle("nf-need", !!saveNote);
+  }
   function mountBar(){
     if (bar) return;
     bar = el('<div class="nbar" id="nbar" role="region" aria-label="Sign up"><span>Save your picks to your own account</span><button class="nbar-cta" type="button" id="nbar-btn">sign up bitches</button><button class="nbar-in" type="button" id="nbar-signin">Already a user? Sign in</button></div>');
@@ -174,23 +198,25 @@
   }
   function hideBar(){ if (bar) { bar.remove(); bar = null; } document.body.classList.remove("has-nbar"); }
 
-  function openForm(mode){
-    if (modal) return;
+  function openForm(mode, note){
+    if (typeof note === "string") saveNote = note;
+    if (modal) { paintNote(); return; }
     mode = mode === "signin" ? "signin" : "join";
     modal = el('<div class="nmodal" id="nmodal" role="dialog" aria-modal="true" aria-labelledby="nform-h"><form class="nform" id="nform" novalidate>'+
       '<div class="nf-tabs" role="tablist" aria-label="Sign in or join"><button type="button" role="tab" id="nf-tab-signin" data-m="signin">Sign in</button><button type="button" role="tab" id="nf-tab-join" data-m="join">Join the trip</button></div>'+
-      '<h2 id="nform-h" class="nf-vh"></h2><div class="small">We\'ll email you a sign-in link. No password.</div>'+
+      '<h2 id="nform-h"></h2><div class="small" id="nf-blurb"></div>'+
       '<div id="nf-namewrap"><label for="nf-name">Name</label><input id="nf-name" name="name" autocomplete="name"></div>'+
       '<label for="nf-email">Email</label><input id="nf-email" name="email" type="email" autocomplete="email" inputmode="email" required>'+
-      '<div id="nf-codewrap" hidden><label for="nf-code">Or type the code from your email (optional)</label><input id="nf-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" pattern="[0-9]{6,10}"></div>'+
+      '<div id="nf-codewrap" hidden><label for="nf-code">Type the code from your email</label><input id="nf-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" pattern="[0-9]{6,10}"></div>'+
       '<div class="row"><button type="button" class="x" id="nf-cancel">Cancel</button><button type="submit" class="go" id="nf-go">Send my link</button></div>'+
       '<div class="msg" id="nf-msg" aria-live="polite"></div></form></div>');
     document.body.appendChild(modal);
     var f = modal.querySelector("form"), msg = modal.querySelector("#nf-msg"), go = modal.querySelector("#nf-go"), stage = "send";
     function setMode(m){
-      mode = m; stage = "send"; go.textContent = "Send my link"; msg.textContent = "";
+      mode = m; stage = "send"; go.textContent = "Send my link"; paintNote();
       modal.querySelector("#nf-codewrap").hidden = true;
       modal.querySelector("#nform-h").textContent = m === "join" ? "Join the trip" : "Sign in";
+      modal.querySelector("#nf-blurb").textContent = m === "join" ? "We'll email you a code to join. No password." : "We'll email you a code to sign in. No password.";
       modal.querySelector("#nf-namewrap").hidden = m !== "join";
       ["signin", "join"].forEach(function(k){ var t = modal.querySelector("#nf-tab-" + k); t.setAttribute("aria-selected", String(k === m)); t.tabIndex = k === m ? 0 : -1; });
       f.dataset.mode = m;
@@ -220,7 +246,7 @@
         }
         stage = "code"; go.textContent = "Verify code";
         modal.querySelector("#nf-codewrap").hidden = false; modal.querySelector("#nf-code").focus();
-        msg.textContent = "Check " + email + " and tap the link in it. Or type the code from your email here.";
+        msg.textContent = "Check " + email + ". Type the code from that email here. The link in the email signs you in too.";
       } else {
         var code = f.querySelector("#nf-code").value.replace(/\s+/g, "");
         if (!/^\d{6,10}$/.test(code)) { msg.textContent = "Enter the code from your email (numbers only)."; return; }
@@ -239,12 +265,45 @@
     return v;
   }
   window.NolaAccount.verifyCode = verifyCode;
-  function closeForm(){ if (modal) { modal.remove(); modal = null; } }
+  function signupHash(){
+    var h = (location.hash || "").replace(/^#/, "").split("~")[0].split(".")[0].toLowerCase();
+    if (h === "signup" || h === "join") return true;
+    try {
+      var q = new URLSearchParams(location.search);
+      var s = (q.get("signup") || "").toLowerCase(), jn = (q.get("join") || "").toLowerCase();
+      if (s === "1" || s === "true" || jn === "1" || jn === "true") return true;
+    } catch (e) {}
+    return false;
+  }
+  function closeForm(){
+    saveNote = "";
+    var fromSignup = sessionStorage.getItem("nola-open-signup") === "1";
+    if (modal) { modal.remove(); modal = null; }
+    if (!fromSignup) return;
+    sessionStorage.removeItem("nola-open-signup");
+    if (typeof render === "function") { try { render(); } catch (e) {} }
+  }
+  function openSignup(why){
+    if (session && session.user) {
+      sessionStorage.removeItem("nola-open-signup");
+      if (typeof render === "function") { try { render(); } catch (e) {} }
+      return;
+    }
+    sessionStorage.setItem("nola-open-signup", "1");
+    openForm("join", typeof why === "string" ? why : (saveNote || ""));
+    if (typeof render === "function") { try { render(); } catch (e) {} }
+  }
+  window.NolaAccount.openSignup = openSignup;
+  window.nolaRequireAccount = function(why){
+    if (signedNow()) return true;
+    openSignup(why || "You need an account to save. Join the trip or sign in.");
+    return false;
+  };
 
   function helpSignOut(){
     var main = document.getElementById("main"); if (!main || typeof S === "undefined" || S.tab !== "help") return;
     var old = main.querySelector(".nhelp"); if (!session) { if (old) old.remove(); return; } if (old) return;
-    var u = session.user, b = el('<div class="nhelp"><div class="nw-kick">Your account</div><p>Signed in as <b>'+esc(nameOf(u))+'</b> ('+esc(u.email)+'). Your likes, plan, lists and saved searches sync to this account.</p><button type="button" class="nbar-cta" id="nhelp-out">Sign out</button>'+(u.email === CFG.admin ? ' <a href="#admin" data-tab="admin">Admin</a>' : '')+'</div>');
+    var u = session.user, b = el('<div class="nhelp"><div class="nw-kick">Your account</div><p>Signed in as <b>'+esc(nameOf(u))+'</b> ('+esc(u.email)+'). Your likes, plan, lists and saved searches sync to this account.</p><button type="button" class="nbar-cta" id="nhelp-out">Sign out</button>'+(isAdminEmail(u.email) ? ' <a href="#admin" data-tab="admin">Admin</a>' : '')+'</div>');
     var sec = main.querySelector(".view") || main; sec.insertBefore(b, sec.firstChild);
     b.querySelector("#nhelp-out").addEventListener("click", function(){ window.NolaAccount.signOut(); });
   }
@@ -268,10 +327,11 @@
 
   async function onSession(s, evt){
     var had = uid(); session = s;
-    window.NolaAccount.email = s && s.user && s.user.email ? String(s.user.email).toLowerCase() : null; window.NolaAccount.isAdmin = !!window.NolaAccount.email && window.NolaAccount.email === String(CFG.admin || "").toLowerCase();
+    window.NolaAccount.email = s && s.user && s.user.email ? String(s.user.email).toLowerCase() : null; window.NolaAccount.isAdmin = isAdminEmail(window.NolaAccount.email);
+    if (s) sessionStorage.removeItem("nola-open-signup");
     if (typeof window.nolaAuthChanged === "function") { try { window.nolaAuthChanged(); } catch(e){ warn(e); } }
     if (s) { hideBar(); closeForm(); }
-    else mountBar();
+    else { mountBar(); if (sessionStorage.getItem("nola-open-signup") === "1" || signupHash()) openSignup(); }
     helpSignOut();
     paintWho();
     if (s && s.user.id !== had) {
@@ -341,6 +401,7 @@
       if (t.id === "nwho-out") window.NolaAccount.signOut();
       else openForm("signin");
     });
+    window.addEventListener("hashchange", function(){ if (signupHash()) openSignup(); });
     consumeReturn().then(function(fresh){
       return sb.auth.getSession().then(function(r){ var s = r.data.session || fresh; return onSession(s, "INITIAL").then(function(rv){ if (rv === "reload") return;
         if (s && (fresh || !sessionStorage.getItem("nola-greeted"))) { sessionStorage.setItem("nola-greeted", "1"); greet(s).catch(warn); } }); });

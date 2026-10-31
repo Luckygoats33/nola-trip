@@ -33,7 +33,7 @@ def handler(route):
     if "/auth/v1/logout" in path: return route.fulfill(status=204,body="")
     if "/auth/v1/" in path: return route.fulfill(status=200,body="{}",content_type="application/json")
     if "/rest/v1/" not in path: return route.fulfill(status=404,body="")
-    t=path.split("/rest/v1/")[1]; sub,email=who(req); admin=email=="will.wiedenmann@gmail.com"
+    t=path.split("/rest/v1/")[1]; sub,email=who(req); admin=email in ("will.wiedenmann@gmail.com","purplepanic12@gmail.com")
     q=urllib.parse.parse_qs(u.query); filt={k:v[0][3:] for k,v in q.items() if v[0].startswith("eq.")}
     own="id" if t=="profiles" else "user_id"
     vis=lambda r: r.get(own)==sub or (admin and req.method=="GET")
@@ -84,8 +84,10 @@ with sync_playwright() as p:
     def save(i): pg.evaluate("id=>{ if(![...myPicks()].includes(id)) togglePick(id) }", i); WAIT(1800)
     A,Bu,W=USERS["A"][0],USERS["B"][0],USERS["W"][0]
     pg.goto(B); ready()
-    save("cdm"); ck("guest saves G (cdm) locally", picks()==["cdm"])
-    signin("A"); ck("A (empty account) claims guest G once", picks()==["cdm"] and likes(A)==["cdm"] and pg.evaluate("localStorage.getItem('nola-guest-claimed-by')")==A and pg.evaluate("localStorage.getItem('nola-guest-nola-picks')") is None)
+    save("cdm"); ck("signed-out save opens join and does not stick", picks()==[] and pg.evaluate("localStorage.getItem('nola-picks')") in (None, "[]") and pg.locator("#nmodal").count()==1 and "account" in pg.inner_text("#nf-msg").lower() and pg.locator("#nf-tab-join[aria-selected=true]").count()==1)
+    pg.locator("#nf-cancel").click(); WAIT(400)
+    signin("A"); ck("A starts empty when nothing was saved signed-out", picks()==[] and likes(A)==[])
+    save("cdm"); ck("A saves G (cdm) -> server", lambda: likes(A)==["cdm"])
     save("preshall"); ck("A saves X (preshall) -> server", lambda: likes(A)==["cdm","preshall"])
     signout(); ck("sign out -> local state empty", picks()==[] and pg.evaluate("localStorage.getItem('nola-picks')") is None and pg.locator("#nbar").count()==1)
     signin("B")
@@ -94,8 +96,10 @@ with sync_playwright() as p:
     save("dba"); ck("B saves Y (dba)", lambda: likes(Bu)==["dba"])
     signout(); signin("A"); ck("A back: sees X + G only, no Y", picks()==["cdm","preshall"])
     ck("server: A=[cdm,preshall], B=[dba], no cross-copy", lambda: likes(A)==["cdm","preshall"] and likes(Bu)==["dba"])
-    signout(); save("jewel"); signin("B"); ck("guest data NOT claimed by non-empty account B", picks()==["dba"] and likes(Bu)==["dba"])
-    signout(); ck("unclaimed guest data comes back as guest", picks()==["jewel"])
+    signout(); save("jewel"); ck("signed-out save still blocked", picks()==[] and pg.locator("#nmodal").count()==1 and pg.evaluate("localStorage.getItem('nola-picks')") in (None, "[]"))
+    pg.locator("#nf-cancel").click(); WAIT(300)
+    signin("B"); ck("non-empty account B is unchanged by a signed-out tap", picks()==["dba"] and likes(Bu)==["dba"])
+    signout(); ck("signed-out local picks stay empty", picks()==[])
     # switch user directly A -> B without sign-out
     signin("A"); signin("B"); ck("direct switch A->B shows only B", picks()==["dba"])
     # map save
@@ -111,7 +115,7 @@ with sync_playwright() as p:
     ck("map tap offers nearest place + 'Save this spot'", "Test Corner Bar" in pg.inner_text(".mpop") and pg.locator("[data-which=s]").count()==1)
     pg.click("[data-xtap][data-which=r][data-act=heart]"); WAIT(2000)
     ck("tap-saved place in likes + map places list on server", lambda: "osm-n123456" in picks() and "osm-n123456" in likes(Bu) and any(l["kind"]=="custom" and "osm-n123456" in json.dumps(l["data"]) for l in DB["lists"] if l["user_id"]==Bu))
-    pg.evaluate("LMAP.fire('click',{latlng:L.latLng(29.9601,-90.0602), originalEvent:{target:document.body}})"); pg.wait_for_selector("[data-which=s]", timeout=10000); pg.click("[data-which=s]"); WAIT(2000)
+    pg.evaluate("LMAP.fire('click',{latlng:L.latLng(29.9601,-90.0602), originalEvent:{target:document.body}})"); pg.wait_for_selector("[data-which=s]", timeout=10000); pg.evaluate("document.querySelector('[data-which=s]').click()"); WAIT(2000)
     ck("'Save this spot' saves a pin", any(x.startswith("osm-s") for x in picks()))
     # admin
     ap=ctx.new_page(); ap.route("**/*.supabase.co/**",handler)

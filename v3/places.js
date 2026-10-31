@@ -98,6 +98,7 @@
   function ext(){ try { return JSON.parse(localStorage.getItem(STORE) || "{}") || {}; } catch(e){ return {}; } }
   function install(p){ if (!BY[p.id]) { P.push(p); BY[p.id] = p; } else Object.assign(BY[p.id], p); if (typeof COORD !== "undefined" && p.lat) COORD[p.id] = [p.lat, p.lon]; }
   function register(r){
+    if (window.nolaRequireAccount && !window.nolaRequireAccount("You need an account to save a place. Join the trip or sign in.")) return null;
     var id = "osm-" + r.osm.toLowerCase();
     var p = { id: id, n: r.name, c: CATOF(r), a: "From the map", d: r.m < 2500 ? 0 : 1, ad: r.addr || "", lat: r.lat, lon: r.lon, ext: true,
       note: kindOf(r) + (r.addr ? " at " + r.addr : "") + ". Found in OpenStreetMap; hours and details aren't verified by us." };
@@ -149,7 +150,7 @@
     var b = e.target.closest("[data-xreg]"); if (!b) return;
     e.preventDefault(); e.stopPropagation();
     var box = b.closest(".xbox"), r = (box && box._res || []).find(function(x){ return x.osm === b.dataset.xreg; }); if (!r) return;
-    var id = register(r), act = b.dataset.xact;
+    var id = register(r); if (!id) return; var act = b.dataset.xact;
     if (act === "heart") { togglePick(id); return; }
     var fake = document.createElement("button");
     if (act === "addto") fake.dataset.addto = id; else if (act === "addp") fake.dataset.addp = id; else if (act === "swap") fake.dataset.swap = id;
@@ -221,8 +222,8 @@
     var b = e.target.closest && e.target.closest("[data-xtap]"); if (!b) return;
     e.preventDefault(); e.stopPropagation();
     var t = tapRes[b.dataset.xtap]; if (!t) return; var r = b.dataset.which === "r" ? t.r : t.spot; if (!r) return;
-    var id = register(r);
-    if (b.dataset.act === "heart") { if (!new Set(myPicks()).has(id)) togglePick(id); b.textContent = "♥ Saved"; b.setAttribute("aria-pressed", "true"); try { LMAP.closePopup(); } catch(_){} return; }
+    var id = register(r); if (!id) return;
+    if (b.dataset.act === "heart") { if (!new Set(myPicks()).has(id)) togglePick(id); if (new Set(myPicks()).has(id)) { b.textContent = "♥ Saved"; b.setAttribute("aria-pressed", "true"); } try { LMAP.closePopup(); } catch(_){} return; }
     var fake = document.createElement("button"); fake.dataset.addto = id; try { LMAP.closePopup(); } catch(_){} planClick(fake);
   }, true);
   // keep popup heart labels fresh after a save

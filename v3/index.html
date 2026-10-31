@@ -7,7 +7,18 @@
   ["code","token_hash","type","error","error_code","error_description"].forEach(function(k){ if(qp.get(k) && !o[k]) o[k]=qp.get(k); });
   if(o.access_token||o.code||o.token_hash||o.error){ sessionStorage.setItem("nola-auth-return", JSON.stringify(o));
     ["code","token_hash","type","error","error_code","error_description"].forEach(function(k){ qp.delete(k); });
-    var qs=qp.toString(); history.replaceState(null,"",location.pathname+(qs?"?"+qs:"")); } }catch(e){} })();</script>
+    var qs=qp.toString(); history.replaceState(null,"",location.pathname+(qs?"?"+qs:"")); }
+  /* Invite links: #signup, #join, or ?signup=1 open the join form. Capture this before the router rewrites the hash. */
+  var route = (h.split("~")[0].split(".")[0] || "").toLowerCase();
+  var qSignup = (qp.get("signup") || "").toLowerCase(), qJoin = (qp.get("join") || "").toLowerCase();
+  if(route==="signup" || route==="join" || qSignup==="1" || qSignup==="true" || qJoin==="1" || qJoin==="true"){
+    sessionStorage.setItem("nola-open-signup","1");
+    qp.delete("signup"); qp.delete("join");
+    var qs2=qp.toString();
+    /* #signup is not a tab. Drop it before the router can treat a saved Admin tab as the page. */
+    history.replaceState(null,"",location.pathname+(qs2?"?"+qs2:"")+"#home");
+  }
+  }catch(e){} })();</script>
 <script>/* per-account local cache: the app's save keys always hold ONLY the current owner's data
    (a signed-in user id, or "guest"). Runs before the app reads localStorage. */
 (function(){ try{
@@ -579,6 +590,8 @@ h3{font-family:var(--display);font-style:normal;font-weight:600}
 .ai-card .m b{font-size:.92rem}
 .ai-big img{display:block;width:100%;max-width:520px;margin:0 auto;border-radius:12px;background:#F7F3EC}
 .badge-every{font-family:var(--mono);font-size:.7rem;padding:2px 9px;border-radius:999px;background:var(--accent);color:var(--accent-ink)}
+.who-picked{grid-column:1 / -1;margin:0;font-size:.9rem;line-height:1.35;color:var(--ink)}
+.who-picked b{font-weight:800}
 .who-chip{display:inline-flex;align-items:center;gap:6px}
 .who-chip img{width:20px;height:20px;border-radius:50%}
 @media (min-width:1024px){ .wrap{max-width:1180px} }
@@ -864,11 +877,12 @@ button.nola-install::after,.nm::after,.plink::after,.rt-g::after,.rt a::after,.s
 .ask-panel .ask-sugg{flex-direction:row;justify-content:center;align-items:stretch;gap:6px;padding:0 10px 10px}
 .ask-panel .ask-sugg .ask-chip{flex:1 1 0;width:auto;min-width:0;max-width:240px;white-space:nowrap;padding:8px 6px!important;font-size:clamp(.74rem,3.75vw,1rem)!important;letter-spacing:-.01em}
 
-/* Ask Dorothy button: a bit smaller, and slides away while scrolling */
-.ask-fab{width:52px!important;height:52px!important;transition:transform .25s ease, opacity .25s ease}
-.ask-fab svg{width:22px!important;height:22px!important}
-.ask-fab.fab-away{transform:translateY(24px) scale(.6);opacity:0;pointer-events:none}
-@media (prefers-reduced-motion: reduce){ .ask-fab{transition:none} }
+/* Ask Dorothy: 25% larger than the 52px button, fixed on every page, never hidden by scroll */
+.ask-fab{position:fixed!important;box-sizing:border-box!important;right:max(14px,env(safe-area-inset-right,0px))!important;bottom:calc(96px + env(safe-area-inset-bottom,0px))!important;z-index:8500!important;width:65px!important;height:65px!important;opacity:1!important;visibility:visible!important;transform:none!important;pointer-events:auto!important}
+.ask-fab svg{width:28px!important;height:28px!important}
+.ask-fab .lbl{font:800 .78rem system-ui,sans-serif!important}
+.ask-fab.fab-away{transform:none!important;opacity:1!important;visibility:visible!important;pointer-events:auto!important}
+@media (min-width:900px){ .ask-fab{bottom:calc(24px + env(safe-area-inset-bottom,0px))!important;right:max(24px,env(safe-area-inset-right,0px))!important} }
 /* ---- auto check-in ---- */
 .ci-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:grid;gap:12px;margin-bottom:14px}
 .ci-row{display:flex;gap:14px;align-items:center;justify-content:space-between}
@@ -2275,17 +2289,45 @@ try{ visited["_me"] = JSON.parse(localStorage.getItem("nola-visited")||"{}")||{}
 try{ votes[LOCAL] = JSON.parse(localStorage.getItem("nola-votes")||"{}")||{}; }catch(e){ votes[LOCAL] = {}; }
 const myVotes = () => votes[me()] || {};
 const votersOf = (id, v) => Object.keys(votes).filter(k=>votes[k] && votes[k][id]===v);
+function needAccount(msg){
+  if(typeof window.nolaRequireAccount==="function") return window.nolaRequireAccount(msg || "You need an account to save. Join the trip or sign in.");
+  return true;
+}
+function canWrite(){
+  if(typeof window.nolaRequireAccount!=="function") return true;
+  if(window.NolaAccount && window.NolaAccount.email) return true;
+  try{ if(window.nolaSessionUid && window.nolaSessionUid()) return true; }catch(e){}
+  return false;
+}
 function persistPicks(){
   const set = myPicks(), mv = myVotes();
   if(shared){ const body = {places:Object.fromEntries([...set].map(x=>[x,true])), votes:Object.assign({}, mv)}; enqueue(()=>db.doc("picks/"+uid).set(body)); }
-  else { try{ localStorage.setItem("nola-picks", JSON.stringify([...set])); localStorage.setItem("nola-votes", JSON.stringify(mv)); }catch(e){} }
+  else if(canWrite()){ try{ localStorage.setItem("nola-picks", JSON.stringify([...set])); localStorage.setItem("nola-votes", JSON.stringify(mv)); }catch(e){} }
 }
 function setVote(id, v){
+  if(!needAccount("You need an account to vote. Join the trip or sign in.")) return;
   if(readOnly){ toast("Only Contributors and Editors can vote."); return; }
   const mv = Object.assign({}, myVotes()); if(mv[id]===v) delete mv[id]; else mv[id]=v; votes[me()] = mv;
   const set = new Set(myPicks()); if(mv[id]==="must"||mv[id]==="maybe") set.add(id); picks[me()] = set;
   render(); persistPicks();
   if(mv[id]) toast({must:"Must do. Blanche is already dressed.", maybe:"Marked interested.", skip:"Skipped. Sophia agrees."}[v]);
+}
+function whoPickedLine(saved){
+  if(!saved || !saved.length) return "";
+  const keys = new Set();
+  Object.keys(picks).forEach(k=>{ if(picks[k] && picks[k].size) keys.add(k); });
+  Object.keys(votes).forEach(k=>{ if(votes[k] && Object.keys(votes[k]).length) keys.add(k); });
+  if(keys.size < 2 && !shared) return "";
+  const total = Math.max(keys.size, 1);
+  const pct = Math.round(saved.length / total * 100);
+  const names = saved.map(id=>{
+    if(id===LOCAL) return "You";
+    const pr = profiles[id];
+    if(pr && pr.name) return pr.name;
+    if(id===uid) return "You";
+    return "Someone";
+  });
+  return '<p class="who-picked">Picked by <b>'+esc(names.join(", "))+'</b> · <b>'+pct+'%</b> <span class="muted">'+saved.length+' of '+total+' agree</span></p>';
 }
 function vSaved(opts){
   opts = opts || {};
@@ -2309,6 +2351,7 @@ function vSaved(opts){
     const p=r.p, mv=myVotes()[p.id], ip=inPlan(p.id), mine=myPicks().has(p.id);
     return '<div class="res"><button class="nm" data-open="'+p.id+'">'+esc(p.n)+'</button><div class="right">'+pill(statusAt(p,N))+cakeBtn(p)+'</div>'
       + (WHY[p.id]?'<p class="why" style="grid-column:1 / -1">'+esc(WHY[p.id])+'</p>':'')
+      + (mineOnly?'':whoPickedLine(r.saved))
       + (mineOnly?'':('<div class="votes" role="group" aria-label="Your vote on '+esc(p.n)+'">'+[["must","Must do"],["maybe","Interested"],["skip","Skip"]].map(([k,l])=>'<button class="vote v-'+k+'" data-vote="'+p.id+'|'+k+'" aria-pressed="'+(mv===k)+'">'+l+' <span class="cn">'+r[k].length+'</span>'+(shared?faces(r[k]):'')+'</button>').join("")+'</div>'))
       + '<div class="sub2"><span>'+esc(p.a)+' · '+esc(shortDist(p))+'</span>'
       + '<button class="btn '+(mine?'primary':'')+'" data-heart="'+p.id+'" aria-pressed="'+mine+'">'+(mine?'✓ Saved · Remove':'Save')+'</button>'
@@ -2670,6 +2713,7 @@ function enqueue(fn){
   });
 }
 function togglePick(id){
+  if(!needAccount("You need an account to save. Join the trip or sign in.")) return;
   if(readOnly){ toast("You can see the kitchen table but can't change it."); return; }
   const set = new Set(myPicks()), had = set.has(id); had ? set.delete(id) : set.add(id);
   picks[me()] = set; render();
@@ -2678,6 +2722,7 @@ function togglePick(id){
   persistPicks();
 }
 function toggleCheck(id){
+  if(!needAccount("You need an account to save. Join the trip or sign in.")) return;
   if(readOnly) return;
   const cur = !!(checks[id] && checks[id].done);
   checks[id] = {done:!cur, by:shared?uid:null}; render();
@@ -2696,6 +2741,7 @@ function geocodeHotel(){
   }catch(e){}
 }
 function saveTrip(){
+  if(!needAccount("You need an account to save trip details. Join the trip or sign in.")) return;
   const dr = S.draft || {};
   if(dr.arrive && dr.depart && parseD(dr.depart) < parseD(dr.arrive)){ toast("The leave date is before the arrive date."); return; }
   trip = {arrive:dr.arrive||"", depart:dr.depart||"", hotel:(dr.hotel||"").trim(), addr:(dr.addr||"").trim()}; if(trip.hotel===TRIP_DEFAULT.hotel && trip.addr===TRIP_DEFAULT.addr){ trip.lat=TRIP_DEFAULT.lat; trip.lon=TRIP_DEFAULT.lon; }
@@ -2761,7 +2807,7 @@ document.addEventListener("click", e=>{
   if(el.dataset.calday){ openDayView(+el.dataset.calday); return; }
   if(el.dataset.dayback){ S.dayOpen=false; S.editingEv=null; render(); window.scrollTo(0,0); return; }
   if(el.dataset.daynav){ const dir = el.dataset.daynav==="1" ? 1 : el.dataset.daynav==="-1" ? -1 : 0; if(dir) shiftDayView(dir); return; }
-  if(el.dataset.dayadd){ openCustomDay(S.day); return; }
+  if(el.dataset.dayadd){ if(!needAccount("You need an account to add a calendar event. Join the trip or sign in.")) return; openCustomDay(S.day); return; }
   if(el.dataset.evedit){ S.editingEv = S.editingEv===el.dataset.evedit ? null : el.dataset.evedit; render(); const f=document.getElementById("ev-ed-start"); if(f) f.focus(); return; }
   if(el.dataset.evsave){
     const {it}=findItem(el.dataset.evsave);
@@ -2821,7 +2867,7 @@ function savePlan(msg){
 const findItem = k => { for(const d of plan.days){ const it=d.items.find(i=>i.k===k); if(it) return {d,it}; } return {}; };
 function planClick(el){
   const ds = el.dataset;
-  const guard = () => { if(readOnly){ toast("Only Contributors and Editors can change the plan."); return true; } return false; };
+  const guard = () => { if(!needAccount("You need an account to change the plan. Join the trip or sign in.")) return true; if(readOnly){ toast("Only Contributors and Editors can change the plan."); return true; } return false; };
   if(ds.fixed){ if(guard()) return true; const {it}=findItem(ds.fixed); if(it){ it.fixed = !(it.fixed!==undefined?it.fixed:!!it.key); savePlan(); } return true; }
   if(ds.vote){ const [id,v]=ds.vote.split("|"); setVote(id,v); return true; }
   if(ds.locate){ locate(()=>{ if(LMAP && LOC) S.mapGo=[[LOC.lat,LOC.lon],16]; }); return true; }
@@ -2912,6 +2958,7 @@ function onCustomLoc(val){
   render();
 }
 function addCustomEvent(){
+  if(!needAccount("You need an account to add a calendar event. Join the trip or sign in.")) return true;
   if(readOnly){ toast("Only Contributors and Editors can change the plan."); return true; }
   const sh = S.sheet; if(!sh || sh.mode!=="custom") return true;
   const titleEl = document.getElementById("ce-title"), timeEl = document.getElementById("ce-time");
@@ -2937,6 +2984,7 @@ function planChange(e){
   if(id==="ce-time" && S.sheet && S.sheet.mode==="custom"){ if(e.target.value) S.sheet.t=e.target.value; render(); return true; }
   if(id==="ce-end" && S.sheet && S.sheet.mode==="custom"){ if(e.target.value) S.sheet.end=e.target.value; return true; }
   if(readOnly) return false;
+  if((id.startsWith("t-") || id.startsWith("h-") || id.startsWith("dh-")) && !needAccount("You need an account to edit the plan. Join the trip or sign in.")) return true;
   if(id.startsWith("t-")){ const {it}=findItem(id.slice(2)); if(it && e.target.value){ const old=toM(it.t), neu=toM(e.target.value); if(it.end && toM(it.end)>old){ it.end=hm(neu+(toM(it.end)-old)); } it.t=e.target.value; savePlan(); } return true; }
   if(id.startsWith("h-")){ const {it}=findItem(id.slice(2)); if(it){ it.h=e.target.value.trim()||"Stop"; savePlan(); } return true; }
   if(id.startsWith("dh-")){ const d=plan.days.find(x=>x.n===+id.slice(3)); if(d){ d.h=e.target.value.trim()||("Day "+d.n); savePlan(); } return true; }
@@ -3118,7 +3166,7 @@ const myVisited = () => visited[me()] || {};
 persistPicks = function(){
   const set = myPicks(), mv = myVotes(), vis = myVisited();
   if(shared){ const body = {places:Object.fromEntries([...set].map(x=>[x,true])), votes:Object.assign({}, mv), visited:JSON.parse(JSON.stringify(vis))}; enqueue(()=>db.doc("picks/"+uid).set(body)); }
-  else { try{ localStorage.setItem("nola-picks", JSON.stringify([...set])); localStorage.setItem("nola-votes", JSON.stringify(mv)); localStorage.setItem("nola-visited", JSON.stringify(vis)); }catch(e){} }
+  else if(canWrite()){ try{ localStorage.setItem("nola-picks", JSON.stringify([...set])); localStorage.setItem("nola-votes", JSON.stringify(mv)); localStorage.setItem("nola-visited", JSON.stringify(vis)); }catch(e){} }
 };
 const STAMPS = [
  {k:"beignet", t:"Beignet Run", g:"☕", f:p=>["cdm","cafebeignet","cdmpark","mfth"].includes(p.id)},
@@ -3135,6 +3183,7 @@ const STAMPS = [
 ];
 const stampsFor = vis => STAMPS.filter(s=>Object.keys(vis).some(id=>BY[id] && s.f(BY[id])));
 function toggleVisit(id){
+  if(!needAccount("You need an account to save a visit. Join the trip or sign in.")) return;
   if(readOnly){ toast("Only Contributors and Editors can update the journal."); return; }
   const before = stampsFor(myVisited()).map(s=>s.k);
   const v = Object.assign({}, myVisited()); if(v[id]) delete v[id]; else v[id] = {t:Date.now(), r:0, n:""};
@@ -3439,7 +3488,7 @@ document.addEventListener("click", e=>{
 document.addEventListener("keydown", e=>{ if(e.key==="Escape" && tourStep>=0) tourEnd(); });
 /* the walkthrough is for first-time visitors only: anyone who has used the app before never sees it again */
 let tourSeen = false; try{ tourSeen = !!(localStorage.getItem("nola3-tour-done") || localStorage.getItem("nola-visited") || localStorage.getItem("nola2-tab") || localStorage.getItem("nola-tab")); localStorage.setItem("nola-visited", "1"); if(!tourSeen) localStorage.setItem("nola3-tour-done", "1"); }catch(e){ tourSeen = true; }
-if(!tourSeen) setTimeout(()=>{ if(!S.sheet && tourStep<0 && S.tab==="home" && location.hash!=="#tour") tourShow(0, "quick"); }, 900);
+if(!tourSeen && sessionStorage.getItem("nola-open-signup")!=="1") setTimeout(()=>{ if(!S.sheet && tourStep<0 && S.tab==="home" && location.hash!=="#tour" && sessionStorage.getItem("nola-open-signup")!=="1") tourShow(0, "quick"); }, 900);
 if(location.hash==="#tour") setTimeout(()=>tourShow(0, "full"), 700);
 else if(!tourSeen && location.hash==="") {}
 
@@ -3448,6 +3497,11 @@ const NAV_OF = {girl:"home", col:"explore", river:"explore", all:"explore", now:
 try{ const t2 = localStorage.getItem("nola2-tab"); S.tab = VIEWKEYS.includes(t2) && !["col","girl","all"].includes(t2) ? t2 : "home"; }catch(e){ S.tab = "home"; }
 if(S.tab==="ink" || S.tab==="time" || S.tab==="birthday") S.tab = "home";
 if(location.hash && VIEWKEYS.includes(location.hash.slice(1))) S.tab = location.hash.slice(1);
+/* Invite links are not a tab. A saved Admin tab must not win over #signup / #join / ?signup=1. */
+try{
+  const h0 = (location.hash||"").replace(/^#/,"").split("~")[0].split(".")[0].toLowerCase();
+  if(sessionStorage.getItem("nola-open-signup")==="1" || h0==="signup" || h0==="join") S.tab = "home";
+}catch(e){ S.tab = "home"; }
 if(S.tab==="plan" || S.tab==="trip") S.tab = "cal";
 
 function tripStatus(){
@@ -3828,7 +3882,7 @@ function routeFromState(){
 function applyRoute(hash){
   const h = (hash||"").replace(/^#/,""); if(!h) return false;
   const [base, sh] = h.split("~"), [v, arg] = base.split("."), view = (v==="plan" || v==="trip") ? "cal" : v;
-  if(view==="ink" || view==="time" || view==="birthday"){ S.tab = "home"; S.sheet = null; return true; }
+  if(view==="ink" || view==="time" || view==="birthday" || view==="signup" || view==="join"){ S.tab = "home"; S.sheet = null; S.dayOpen = false; if(view==="signup" || view==="join"){ try{ sessionStorage.setItem("nola-open-signup","1"); }catch(e){} } return true; }
   if(!VIEWKEYS.includes(view)) return false;
   S.tab = view;
   if(view==="col" && arg && COL[arg]) S.col = arg;
@@ -3938,12 +3992,12 @@ document.addEventListener("click", e=>{
   if(d.go){ let [v,arg] = d.go.split(":"); if(v==="trip"||v==="plan") v="cal"; if(v==="ink"||v==="time"||v==="birthday") v="home"; S.dayOpen=false; S.tab = v; if(v==="col") S.col = arg; if(v==="cal" && arg) S.day = +arg; S.sheet = null; window.scrollTo(0,0); render(); if(d.surp) document.getElementById("surprise")?.scrollIntoView({block:"start"}); return; }
   if(d.col){ S.tab = "col"; S.col = d.col; S.sheet = null; window.scrollTo(0,0); render(); return; }
   if(d.surprun){ if(d.surprun==="again") S.surp.seed++; S.surpRes = surpriseNow(); render(); setTimeout(()=>document.getElementById("adv")?.scrollIntoView({block:"nearest", behavior:"smooth"}),30); return; }
-  if(d.surpadd){ const R = S.surpRes; if(!R||!R.stops.length) return; const ts = tripStatus(), dn = (ts&&ts.day) || S.day || 1, day = plan.days.find(x=>x.n===dn) || plan.days[0];
+  if(d.surpadd){ if(!needAccount("You need an account to add stops. Join the trip or sign in.")) return; const R = S.surpRes; if(!R||!R.stops.length) return; const ts = tripStatus(), dn = (ts&&ts.day) || S.day || 1, day = plan.days.find(x=>x.n===dn) || plan.days[0];
     R.stops.forEach(st=>{ const m = st.at%1440; day.items.push({k:uidk(), t:String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0"), h:st.p.n, d:"From Surprise Me", p:[st.p.id]}); });
     S.tab = "cal"; S.day = day.n; savePlan("Added "+R.stops.length+" stops to the calendar · Day "+day.n+"."); return; }
   if(d.tm){ return; }
-  if(d.visit || d.rate){ return; }
-  if(d.rate){ const [id,n] = d.rate.split("|"); const v = Object.assign({}, myVisited()); if(!v[id]) return; v[id] = Object.assign({}, v[id], {r: v[id].r===+n ? 0 : +n}); visited[me()] = v; render(); persistPicks(); return; }
+  if(d.visit){ toggleVisit(d.visit); return; }
+  if(d.rate){ if(!needAccount("You need an account to save a rating. Join the trip or sign in.")) return; const [id,n] = d.rate.split("|"); const v = Object.assign({}, myVisited()); if(!v[id]) return; v[id] = Object.assign({}, v[id], {r: v[id].r===+n ? 0 : +n}); visited[me()] = v; render(); persistPicks(); return; }
   if(d.person){ S.person = d.person; render(); return; }
   if(d.modebtn){ S.mode = {auto:"day", day:"night", night:"auto"}[S.mode]; try{ localStorage.setItem("nola2-mode", S.mode); }catch(_){} render(); toast(S.mode==="auto"?"Auto: After Dark switches on at sunset.":S.mode==="night"?"After Dark mode.":"Day mode."); return; }
   if(d.setmode){ S.mode = d.setmode; try{ localStorage.setItem("nola2-mode", S.mode); }catch(_){} render(); return; }
@@ -4083,11 +4137,11 @@ document.addEventListener("change", e=>{
   /* ---- the panel ---- */
   const css = document.createElement("style");
   css.textContent = `
-  .ask-fab{all:unset;position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:8500;width:56px;height:56px;border-radius:50%;background:#23172C;color:#E0B65A;display:grid;place-items:center;box-shadow:0 8px 24px rgba(20,12,28,.4);cursor:pointer;border:2px solid #E0B65A}
-  .ask-fab svg{width:26px;height:26px}
+  .ask-fab{all:unset;box-sizing:border-box;position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:8500;width:65px;height:65px;border-radius:50%;background:#23172C;color:#E0B65A;display:grid;place-items:center;box-shadow:0 8px 24px rgba(20,12,28,.4);cursor:pointer;border:2px solid #E0B65A}
+  .ask-fab svg{width:28px;height:28px}
   .ask-fab:focus-visible{outline:3px solid #E0B65A;outline-offset:3px}
-  .ask-fab .lbl{position:absolute;bottom:-6px;font:800 .62rem system-ui;background:#E0B65A;color:#23172C;padding:1px 6px;border-radius:999px}
-  @media (min-width:900px){ .ask-fab{bottom:24px} }
+  .ask-fab .lbl{position:absolute;bottom:-6px;font:800 .78rem system-ui;background:#E0B65A;color:#23172C;padding:1px 7px;border-radius:999px}
+  @media (min-width:900px){ .ask-fab{bottom:calc(24px + env(safe-area-inset-bottom,0px));right:max(24px,env(safe-area-inset-right,0px))} }
   .ask-panel{position:fixed;right:12px;left:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:8600;max-width:420px;margin-left:auto;max-height:min(72vh,620px);display:flex;flex-direction:column;background:#FFF8F0;color:#23172C;border:2px solid #23172C;border-radius:20px;box-shadow:0 18px 50px rgba(20,12,28,.45);font:400 .95rem/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
   @media (min-width:900px){ .ask-panel{bottom:24px;right:24px;left:auto;width:400px} }
   @media (max-width:899px){
@@ -4447,7 +4501,7 @@ document.addEventListener("change", e=>{
       busy(false);
       const sv = e.target.closest("[data-inksave]");
     });
-    m.addEventListener("click", e=>{ const sv = e.target.closest("[data-inksave]"); if(!sv || !out._last) return; mine.push(Object.assign({ts:Date.now()}, out._last)); saveMine(); sv.textContent = "Saved ✓"; sv.disabled = true; if(S.tab==="ink") render(); });
+    m.addEventListener("click", e=>{ const sv = e.target.closest("[data-inksave]"); if(!sv || !out._last) return; if(!needAccount("You need an account to save a design. Join the trip or sign in.")) return; mine.push(Object.assign({ts:Date.now()}, out._last)); saveMine(); sv.textContent = "Saved ✓"; sv.disabled = true; if(S.tab==="ink") render(); });
   }
   document.addEventListener("click", e=>{ if(e.target.closest("[data-myink]")){ e.preventDefault(); inkModal(); } });
   render();
@@ -5301,18 +5355,13 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
 
 
 
-/* Ask Dorothy button stays out of the way: hidden while scrolling down, back when scrolling up or after a pause */
+/* Ask Dorothy stays on screen on every page. Scrolling does not hide it. */
 (function(){
-  let lastY = window.scrollY, idle = null;
-  const fab = () => document.querySelector(".ask-fab");
-  const show = () => { const f = fab(); if(f) f.classList.remove("fab-away"); };
-  window.addEventListener("scroll", () => {
-    const f = fab(); if(!f) return;
-    const y = window.scrollY, dy = y - lastY; lastY = y;
-    if(dy > 6 && y > 120) f.classList.add("fab-away"); else if(dy < -6) show();
-    clearTimeout(idle); idle = setTimeout(show, 900);
-  }, {passive:true});
-  window.addEventListener("hashchange", show);
+  const pin = () => { const f = document.querySelector(".ask-fab"); if(f) f.classList.remove("fab-away"); };
+  pin();
+  window.addEventListener("scroll", pin, {passive:true, capture:true});
+  document.addEventListener("scroll", pin, {passive:true, capture:true});
+  window.addEventListener("hashchange", pin);
 })();
 
 /* Send my location stays on Help. The journal and auto check-in are gone, so this no longer watches GPS or writes visits. */
@@ -5608,7 +5657,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
       const d1 = plan.days.find(d => d.n === 1); if(!d1) return;
       if(!(d1.items || []).some(i => i.k === "emily-lands")){
         d1.items.push({k:"emily-lands", t:"14:25", h:"Emily lands at MSY", d:"Southwest WN 1715 from Denver (left Portland 6:20 am). About 25–35 min by car to the hotel; Uber and Lyft pick up outside baggage claim.", p:[], key:true, sun:false});
-        savePlan();
+        window.nolaSeedWrite = true; try{ savePlan(); } finally { window.nolaSeedWrite = false; }
       }
       localStorage.setItem("nola-flight-added", "1");
     }catch(e){}
