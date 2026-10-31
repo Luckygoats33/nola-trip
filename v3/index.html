@@ -893,6 +893,20 @@ body.cal-only{padding-top:0!important}
 .book-ahead .ba-link{font-size:.8rem}
 .dayev .res-tag{display:inline-block;font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:var(--brass);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px;vertical-align:middle}
 
+/* step-by-step guide */
+.guide{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;margin:16px 0}
+.guide summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;font-family:var(--display);font-size:1.1rem;font-weight:700;color:var(--fg)}
+.guide summary::-webkit-details-marker{display:none}
+.guide summary::after{content:"▾";margin-left:auto;font-size:.8rem;color:var(--muted);transition:transform .2s}
+.guide:not([open]) summary::after{transform:rotate(-90deg)}
+.guide-steps{list-style:none;padding:0;margin:16px 0 0;counter-reset:gstep}
+.guide-steps li{counter-increment:gstep;display:flex;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.guide-steps li::before{content:counter(gstep);flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--brass);color:#fff;font-weight:800;font-size:.9rem;display:grid;place-items:center}
+.guide-steps div>b{display:block;font-size:.95rem;margin-bottom:2px}
+.guide-steps span{font-size:.85rem;color:var(--muted);line-height:1.4}
+.guide-steps span b{font-size:inherit;color:var(--fg)}
+.guide-foot{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+
 /* ---- no sideways scrolling on phones: rows wrap ---- */
 .hscroll{flex-wrap:wrap!important;overflow:visible!important;padding-bottom:0}
 .hscroll>*{flex-shrink:1!important}
@@ -3634,6 +3648,18 @@ function vHome(){
   let h = '<section class="hero"><span class="kick">New Orleans · Our adventure</span><h2>'+greet+', <em>NOLA Girls.</em></h2><p>A little history. A little trouble. A whole lot of New Orleans.</p>'
     + '<div class="chips"><span class="hchip">'+esc(DOWL[N.dow])+' <b>'+fmtM(N.mins)+'</b></span>'+(ts?'<span class="hchip"><b>'+esc(ts.txt)+'</b></span>':'<button class="hchip" data-go="info" style="background:none;cursor:pointer">Add your dates</button>')+(WX?'<span class="hchip">'+WX.temp+'° '+esc(WXL(WX.code))+'</span>':'')+'<button class="hchip" type="button" data-go="now">Open now</button></div></section>';
   h += talk("home") + wxBox() + wxForecast();
+  const guideSeen = S.secs.guide===false;
+  h += '<details class="guide"'+(guideSeen?'':' open')+'><summary data-sec="guide">How to use this app</summary>'
+    +'<ol class="guide-steps">'
+    +'<li><div><b>Explore</b><span>Browse 200+ places across 13 collections, or search for anything: food, jazz, history, a neighborhood.</span></div></li>'
+    +'<li><div><b>Save places</b><span>Tap <b>Save</b> on any place to add it to the kitchen table. Everyone on the trip sees the same list.</span></div></li>'
+    +'<li><div><b>Plan your days</b><span>Tap <b>Add to trip</b> to drop a place onto the calendar. Drag times with the pencil icon. Click empty slots to add custom events.</span></div></li>'
+    +'<li><div><b>Check what\'s open</b><span>Tap <b>Open now</b> to see what you can walk into right now. Filter by type, walkable distance, or late night.</span></div></li>'
+    +'<li><div><b>Get there</b><span>Every place has directions, Uber, Lyft, and nearby streetcar stops. Walking directions show between calendar events.</span></div></li>'
+    +'<li><div><b>Share the plan</b><span>Tap the share icon on the calendar to send a standalone link. Anyone with the link sees the schedule, no sign-in needed.</span></div></li>'
+    +'</ol>'
+    +'<div class="guide-foot"><button class="btn primary" data-tour="1">Take the interactive tour ('+TOURS.full.length+' steps)</button><button class="btn" data-go="help">Full guide</button></div>'
+    +'</details>';
   const tiles = [["cal"+(ts&&ts.day?":"+ts.day:""),ICON.plan,ts&&ts.day?"Today":"Calendar",ts&&ts.day?"Day "+ts.day+" on the calendar":(tripInfo()&&todayUTC()<tripInfo().A?"Starts "+new Date(tripInfo().A).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",timeZone:"UTC"}):"Day by day")],["nearme",ICON.near,"Near me","Within a 15-min walk"],["col:hidden",ICON.gem,"Hidden gems","Local discoveries"],["col:tonight",ICON.moon,"Tonight","Jazz, bars & more"]];
   h += '<div class="tiles">'+tiles.map(([go,ic,t,s])=>'<button class="tile" '+(go==="nearme"?'data-nearme="1"':'data-go="'+go+'"')+'><span class="ti">'+ic+'</span><b>'+esc(t)+'</b><span>'+esc(s)+'</span></button>').join("")+'</div>';
   h += girlsPicker();
