@@ -851,7 +851,8 @@ button.dayev-name{all:unset;display:block;max-width:100%;font-family:var(--displ
 .cal-sc-bar{width:72px;flex-shrink:0;background:#2E8B57;color:#fff;border-radius:12px 0 0 12px;padding:10px 6px;display:flex;flex-direction:column;gap:5px;font-size:.68rem;line-height:1.25}
 .cal-sc-wrap .dayboard{border-radius:0 12px 12px 0;flex:1;min-width:0}
 .cal-sc-hd{text-align:center;font-weight:800;font-size:.75rem;border-bottom:1px solid rgba(255,255,255,.3);padding-bottom:5px;margin-bottom:2px}
-.cal-sc-line{display:flex;flex-direction:column;gap:1px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.15)}
+.cal-sc-line{all:unset;display:flex;flex-direction:column;gap:1px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.15);cursor:pointer;color:#fff;width:100%;box-sizing:border-box;text-align:left;border-radius:4px}
+.cal-sc-line:hover,.cal-sc-line:focus-visible{background:rgba(255,255,255,.15)}
 .cal-sc-line:last-of-type{border-bottom:0}
 .cal-sc-nm{display:flex;align-items:center;gap:4px;font-weight:800;font-size:.62rem}
 .cal-sc-sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;border:1.5px solid rgba(255,255,255,.7)}
@@ -3742,7 +3743,7 @@ function vDayTimeline(){
       h += '<aside class="cal-sc-bar"><div class="cal-sc-hd">🚃 Nearby</div>';
       nearLines.forEach(function(line){
         var hrs = line.hours.replace(/ daily/i,'').replace(/\s*\([^)]*\)/g,'').trim();
-        h += '<div class="cal-sc-line"><div class="cal-sc-nm"><span class="cal-sc-sdot" style="background:'+line.color+'"></span>'+esc(line.name)+'</div><div class="cal-sc-hrs">'+esc(hrs)+'</div></div>';
+        h += '<button class="cal-sc-line" data-scline="'+line.id+'"><div class="cal-sc-nm"><span class="cal-sc-sdot" style="background:'+line.color+'"></span>'+esc(line.name)+'</div><div class="cal-sc-hrs">'+esc(hrs)+'</div></button>';
       });
       h += '<div class="cal-sc-fare">'+esc(STREETCAR_FARE.single)+'/ride<br>'+esc(STREETCAR_FARE.day)+'</div>';
       h += '</aside>';
