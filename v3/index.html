@@ -840,9 +840,24 @@ button.dayev-name{all:unset;display:block;max-width:100%;font-family:var(--displ
 .sc-chip[aria-pressed="true"]{background:#00838F;color:#fff;border-color:#00838F}
 .sc-section summary .t2{display:inline-flex;align-items:center;gap:6px}
 .sc-lines{display:grid;gap:10px;margin:10px 0}
-.sc-line-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.sc-line-card{all:unset;display:block;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;width:100%;box-sizing:border-box}
+.sc-line-card:hover,.sc-line-card:focus-visible{border-color:var(--brass);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.sc-line-go{display:block;margin-top:6px;color:var(--brass);font-weight:700}
 .sc-line-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
 .sc-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+
+/* streetcar calendar sidebar */
+.cal-sc-wrap{display:flex;gap:0;align-items:stretch;margin:10px 0}
+.cal-sc-bar{width:72px;flex-shrink:0;background:#2E8B57;color:#fff;border-radius:12px 0 0 12px;padding:10px 6px;display:flex;flex-direction:column;gap:5px;font-size:.68rem;line-height:1.25}
+.cal-sc-wrap .dayboard{border-radius:0 12px 12px 0;flex:1;min-width:0}
+.cal-sc-hd{text-align:center;font-weight:800;font-size:.75rem;border-bottom:1px solid rgba(255,255,255,.3);padding-bottom:5px;margin-bottom:2px}
+.cal-sc-line{display:flex;flex-direction:column;gap:1px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.15)}
+.cal-sc-line:last-of-type{border-bottom:0}
+.cal-sc-nm{display:flex;align-items:center;gap:4px;font-weight:800;font-size:.62rem}
+.cal-sc-sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;border:1.5px solid rgba(255,255,255,.7)}
+.cal-sc-hrs{font-size:.58rem;opacity:.85;padding-left:12px}
+.cal-sc-fare{border-top:1px solid rgba(255,255,255,.3);padding-top:5px;text-align:center;font-weight:800;font-size:.58rem;margin-top:auto;line-height:1.4}
+@media(max-width:599px){.cal-sc-bar{width:56px;padding:8px 4px}.cal-sc-nm{font-size:.56rem}.cal-sc-hrs{font-size:.5rem}.cal-sc-fare{font-size:.52rem}}
 
 /* ---- no sideways scrolling on phones: rows wrap ---- */
 .hscroll{flex-wrap:wrap!important;overflow:visible!important;padding-bottom:0}
@@ -903,16 +918,12 @@ button.nola-install::after,.nm::after,.plink::after,.rt-g::after,.rt a::after,.s
 .ask-sugg{gap:6px;padding:0 14px 10px;flex-wrap:nowrap}
 .ask-panel .ask-chip{position:relative;box-sizing:border-box;min-height:32px!important;padding:4px 12px!important;font-size:.78rem!important;line-height:1.2;white-space:nowrap}
 .ask-panel .ask-chip::after{content:"";position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
-/* Ask Dorothy: the two quick buttons are gold, centered, bigger, and always fit side by side */
-.ask-panel .ask-sugg{display:flex;justify-content:center;gap:8px;padding:0 12px 10px}
-.ask-panel .ask-sugg .ask-chip{flex:1 1 0;max-width:220px;justify-content:center;text-align:center;min-height:44px!important;padding:8px 10px!important;font-size:.95rem!important;font-weight:800;white-space:normal;background:#D9A441;border:1px solid #B9852A;color:#23172C;border-radius:999px;box-shadow:0 2px 6px rgba(35,23,44,.18)}
+/* Ask Dorothy: gold suggestion buttons that always fit their text */
+.ask-panel .ask-sugg{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;padding:0 10px 10px}
+.ask-panel .ask-sugg .ask-chip{flex:1 1 0;min-width:0;max-width:240px;box-sizing:border-box;justify-content:center;text-align:center;min-height:44px!important;padding:8px 10px!important;font-size:clamp(.65rem,2.8vw,.88rem)!important;font-weight:800;line-height:1.3;white-space:normal;word-break:break-word;overflow-wrap:break-word;background:#D9A441;border:1px solid #B9852A;color:#23172C;border-radius:999px;box-shadow:0 2px 6px rgba(35,23,44,.18)}
 .ask-panel .ask-sugg .ask-chip:hover,.ask-panel .ask-sugg .ask-chip:focus-visible{background:#E8BE6A;border-color:#D9A441}
 .ask-panel .ask-sugg .ask-chip:active{transform:translateY(1px)}
-.ask-panel .ask-sugg{flex-direction:column;align-items:center;gap:8px}
-.ask-panel .ask-sugg .ask-chip{flex:0 0 auto;width:100%;max-width:300px;font-size:1rem!important;white-space:nowrap;min-height:46px!important}
-/* both gold buttons on one row, each label on one line; text scales with the phone width */
-.ask-panel .ask-sugg{flex-direction:row;justify-content:center;align-items:stretch;gap:6px;padding:0 10px 10px}
-.ask-panel .ask-sugg .ask-chip{flex:1 1 0;width:auto;min-width:0;max-width:240px;white-space:nowrap;padding:8px 6px!important;font-size:clamp(.74rem,3.75vw,1rem)!important;letter-spacing:-.01em}
+@media(max-width:374px){.ask-panel .ask-sugg .ask-chip{flex:1 1 100%;max-width:100%}}
 
 /* Ask Dorothy: 25% larger than the 52px button, fixed on every page, never hidden by scroll */
 .ask-fab{position:fixed!important;box-sizing:border-box!important;right:max(14px,env(safe-area-inset-right,0px))!important;bottom:calc(96px + env(safe-area-inset-bottom,0px))!important;z-index:8500!important;width:65px!important;height:65px!important;opacity:1!important;visibility:visible!important;transform:none!important;pointer-events:auto!important}
@@ -2525,7 +2536,7 @@ function updateMapList(){
   const cnt = document.getElementById("maplistcount"); if(cnt) cnt.textContent = vis.length;
   box.innerHTML = vis.length ? vis.slice(0,40).map(p=>resRow(p,statusAt(p,N))).join("") + (vis.length>40?'<p class="small muted">Zoom in to see the rest.</p>':'') : '<div class="empty">No places in this part of the map. Zoom out or change the filters.</div>';
 }
-const LVIEWS = {all:["Everything","all"], fq:["French Quarter",[[29.9584,-90.0645],16]], fren:["Frenchmen St",[[29.9645,-90.0578],17]], by:["Bywater",[[29.9660,-90.0420],15]], gd:["Garden District",[[29.9290,-90.0840],15]], up:["Uptown",[[29.9330,-90.1150],14]]};
+const LVIEWS = {all:["Everything","all"], fq:["French Quarter",[[29.9584,-90.0645],16]], fren:["Frenchmen St",[[29.9645,-90.0578],17]], by:["Bywater",[[29.9660,-90.0420],15]], gd:["Garden District",[[29.9290,-90.0840],15]], up:["Uptown",[[29.9330,-90.1150],14]], sc_stcharles:["🚃 St. Charles Line",[[29.938,-90.100],13],"stcharles"], sc_canal:["🚃 Canal Street Line",[[29.965,-90.080],14],"canal"], sc_riverfront:["🚃 Riverfront Line",[[29.955,-90.061],15],"riverfront"], sc_rampart:["🚃 Rampart Line",[[29.957,-90.067],14],"rampart"]};
 function vMap(){
   if(!mapAvailable()) return vSketch();
   const cat = S.mapCat||"all";
@@ -2923,8 +2934,8 @@ function planClick(el){
   if(ds.vote){ const [id,v]=ds.vote.split("|"); setVote(id,v); return true; }
   if(ds.locate){ locate(()=>{ if(LMAP && LOC) S.mapGo=[[LOC.lat,LOC.lon],16]; }); return true; }
   if(ds.next2!==undefined){ S.next2 = ds.next2==="1"; render(); return true; }
-  if(ds.lview && !mapShown()){ S.mapShown = true; S.mapGo = LVIEWS[ds.lview][1]; render(); setTimeout(()=>{ const m=document.getElementById("mapanchor"); if(m) m.scrollIntoView({block:"start"}); }, 60); return true; }
-  if(ds.lview){ const v=LVIEWS[ds.lview]; if(LMAP){ if(v[1]==="all") fitAll(); else LMAP.setView(v[1][0],v[1][1]); } return true; }
+  if(ds.lview && !mapShown()){ S.mapShown = true; S.mapGo = LVIEWS[ds.lview][1]; if(LVIEWS[ds.lview][2]) S.mapStreetcar = true; render(); setTimeout(()=>{ const m=document.getElementById("mapanchor"); if(m) m.scrollIntoView({block:"start"}); }, 60); return true; }
+  if(ds.lview){ const v=LVIEWS[ds.lview]; if(v[2]) S.mapStreetcar = true; if(LMAP){ if(v[1]==="all") fitAll(); else LMAP.setView(v[1][0],v[1][1]); } render(); return true; }
   if(ds.ink){ const [n,k]=ds.ink.split("|"); S.sheet={mode:"ink", n:+n, k}; render(); const c=document.querySelector(".close"); if(c) c.focus(); return true; }
   if(ds.inkfav!==undefined){ S.inkFav = ds.inkfav==="1"; render(); return true; }
   if(ds.editplan){ S.planEdit=!S.planEdit; S.confirmReset=false; render(); return true; }
@@ -3613,9 +3624,9 @@ function vExplore2(){
     h += '<p class="small">New Orleans has 4 streetcar lines. The <b>St. Charles</b> is the oldest in the world (since 1835). All accept cash or the Jazzy Pass.</p>';
     h += '<div class="sc-lines">';
     STREETCAR_LINES.forEach(l=>{
-      h += '<div class="sc-line-card"><div class="sc-line-hdr"><span class="sc-dot" style="background:'+l.color+'"></span><b>'+esc(l.name)+'</b></div>';
+      h += '<button class="sc-line-card" data-scline="'+l.id+'"><div class="sc-line-hdr"><span class="sc-dot" style="background:'+l.color+'"></span><b>'+esc(l.name)+'</b></div>';
       h += '<p class="small muted">'+esc(l.freq)+'<br>'+esc(l.hours)+'</p>';
-      h += '<p class="small">'+esc(l.note)+'</p></div>';
+      h += '<p class="small">'+esc(l.note)+'</p><span class="sc-line-go small">View route &amp; nearby places ›</span></button>';
     });
     h += '</div>';
     h += '<div class="row"><button class="btn" data-go="map" data-scmap="1">Show routes on map</button></div>';
@@ -3715,6 +3726,16 @@ function vDayTimeline(){
     +'<button type="button" class="btn cal-icon" data-share="1" title="Share" aria-label="Share"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></button>'
     +(window.NolaAccount&&window.NolaAccount.isAdmin?'<button type="button" class="btn cal-icon" data-bghome="1" title="Get Birthday Girl Home" aria-label="Get Birthday Girl Home" style="background:var(--lav);border-color:var(--lav);color:#fff"><span style="font-size:1.1rem">👽</span></button>':'')
     +'</span></div>';
+  if(window.STREETCAR_LINES){
+    h += '<div class="cal-sc-wrap">';
+    h += '<aside class="cal-sc-bar"><div class="cal-sc-hd">🚃 Streetcars</div>';
+    STREETCAR_LINES.forEach(function(line){
+      var hrs = line.hours.replace(/ daily/i,'').replace(/\s*\([^)]*\)/g,'').trim();
+      h += '<div class="cal-sc-line"><div class="cal-sc-nm"><span class="cal-sc-sdot" style="background:'+line.color+'"></span>'+esc(line.name)+'</div><div class="cal-sc-hrs">'+esc(hrs)+'</div></div>';
+    });
+    h += '<div class="cal-sc-fare">'+esc(STREETCAR_FARE.single)+'/ride<br>'+esc(STREETCAR_FARE.day)+'</div>';
+    h += '</aside>';
+  }
   h += '<div class="dayboard" style="grid-template-columns:68px repeat('+colCount+',minmax(0,1fr))" role="grid" aria-label="Schedule for '+esc(parts.long)+'">';
   for(let i=0;i<rows;i++){
     const m = from + i*ADD_STEP;
@@ -3735,6 +3756,7 @@ function vDayTimeline(){
     h += '</div>';
   });
   h += '</div>';
+  if(window.STREETCAR_LINES) h += '</div>';
   if(S.editingEv){
     const eit = items.find(i=>i.k===S.editingEv);
     if(eit){
@@ -3927,7 +3949,7 @@ vSheet = function(){
     return _vSheet();
   }
   const p = BY[S.sheet]; if(!p) return "";
-  const infoOnly = S.tab==="explore" || S.tab==="col" || S.tab==="all";
+  const infoOnly = false;
   const N = S.when || nolaNow(), x = p.hrs, v = myVisited()[p.id];
   let h = '<div class="sheet-top"><div><span class="eyebrow">'+esc(p.c.map(c=>CATS[c]).filter(Boolean).join(" · "))+'</span><h2 id="sheet-title">'+esc(p.n)+'</h2></div><button class="close" data-close="1" aria-label="Close">×</button></div>';
   if(!infoOnly){ const mine = new Set(myPicks()).has(p.id); h += '<div class="sheet-save-row"><button class="btn primary sheet-save" data-heart="'+p.id+'" aria-pressed="'+mine+'">'+(mine?'✓ Saved · tap to remove':'Save')+'</button>'+(readOnly?'':'<button class="btn sheet-plan" data-addto="'+p.id+'">Add to trip</button>')+'</div>'; }
@@ -4132,7 +4154,7 @@ render = function(){
 /* ---------- v2 events ---------- */
 window.addEventListener("error", e=>{ try{ toast("Something hiccuped. Pull down to refresh if a button stops working."); console.error(e.error||e.message); }catch(_){} });
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle],[data-surpclear],[data-bghome],[data-scmap]");
+  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle],[data-surpclear],[data-bghome],[data-scmap],[data-scline]");
   if(!el) return; const d = el.dataset;
   if(d.surp){ const [k,v]=d.surp.split(":"), nv = k==="hrs" ? +v : v; S.surp[k] = S.surp[k]===nv ? null : nv; S.surpRes = (S.surp.mood||S.surp.hrs||S.surp.mode) ? surpriseNow() : null; if(!d.go){ render(); return; } }
   if(d.surpclear){ S.surp.mood = S.surp.hrs = S.surp.mode = null; S.surpRes = null; render(); return; }
@@ -4156,6 +4178,7 @@ document.addEventListener("click", e=>{
   if(d.clearuq){ S.uq = ""; render(); return; }
   if(d.share){ shareLink(); return; }
   if(d.bghome){ openBirthdayGirlHome(); return; }
+  if(d.scline){ const lk = "sc_"+d.scline; S.tab = "map"; S.mapStreetcar = true; S.sheet = null; window.scrollTo(0,0); if(LVIEWS[lk]) S.mapGo = LVIEWS[lk][1]; render(); return; }
   if(d.inkstyle){ S.inkStyle = d.inkstyle; render(); return; }
   if(d.girl){ S.girl = d.girl; S.tab = "girl"; S.sheet = null; window.scrollTo(0,0); render(); return; }
   if(d.girlsurp){ S.surp.mood = GIRL_MOOD[d.girlsurp] || "hidden"; S.surpRes = surpriseNow(); S.tab = "home"; render(); setTimeout(()=>document.getElementById("adv")?.scrollIntoView({block:"start", behavior:"smooth"}), 60); return; }
@@ -4291,7 +4314,7 @@ document.addEventListener("change", e=>{
   .ask-fab:focus-visible{outline:3px solid #E0B65A;outline-offset:3px}
   .ask-fab .lbl{position:absolute;bottom:-6px;font:800 .78rem system-ui;background:#E0B65A;color:#23172C;padding:1px 7px;border-radius:999px}
   @media (min-width:900px){ .ask-fab{bottom:calc(24px + env(safe-area-inset-bottom,0px));right:max(24px,env(safe-area-inset-right,0px))} }
-  .ask-panel{position:fixed;right:12px;left:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:8600;max-width:420px;margin-left:auto;max-height:min(72vh,620px);display:flex;flex-direction:column;background:#FFF8F0;color:#23172C;border:2px solid #23172C;border-radius:20px;box-shadow:0 18px 50px rgba(20,12,28,.45);font:400 .95rem/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+  .ask-panel{position:fixed;right:12px;left:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:8600;max-width:420px;margin-left:auto;max-height:75vh;max-height:75dvh;display:flex;flex-direction:column;background:#FFF8F0;color:#23172C;border:2px solid #23172C;border-radius:20px;box-shadow:0 18px 50px rgba(20,12,28,.45);font:400 .95rem/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
   @media (min-width:900px){ .ask-panel{bottom:24px;right:24px;left:auto;width:400px} }
   @media (max-width:899px){
     .ask-panel{left:0;right:0;bottom:0;top:auto;max-width:none;width:100%;max-height:75vh;max-height:75dvh;border-radius:20px 20px 0 0;border:0;border-top:2px solid #23172C;padding-top:0}
