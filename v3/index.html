@@ -34,6 +34,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="V3 New · New Orleans trip hub: what is open now, a real map, the plan, and saved places.">
 <meta name="robots" content="noindex,nofollow">
+<meta property="og:title" content="NOLA Girls · Shared trip">
+<meta property="og:description" content="A read-only day-by-day New Orleans itinerary. No account required.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#23172C">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" href="../icon.svg" type="image/svg+xml">
@@ -712,6 +716,16 @@ button,a,.chip,.tab,.plink,.btn,.mood,.tile,.colcard,summary{touch-action:manipu
 .cal-ev{display:block;font-size:.68rem;line-height:1.25;background:var(--gold-soft);border-radius:6px;padding:2px 4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .cal-ev.flight{background:var(--accent-soft)}
 .cal-more{font-size:.68rem;color:var(--muted)}
+.share-map{position:relative;z-index:0;isolation:isolate;height:320px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--sunk);margin:8px 0}
+.share-rows{display:grid;gap:8px;margin:8px 0 16px}
+.share-row{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:36px minmax(0,1fr);gap:10px;align-items:center;width:100%;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:inherit;min-height:44px}
+.share-row.on{border-color:var(--coral);box-shadow:inset 0 0 0 1px var(--coral);background:var(--coral-soft)}
+.share-num{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--coral);color:#fff;font-weight:800}
+.share-row small{display:block;color:var(--muted);font-size:.78rem;line-height:1.3}
+.share-pin{background:transparent;border:0}
+.share-pin span{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:#D2614C;color:#fff;font:800 .9rem/1 system-ui,sans-serif;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.share-pin.on span{background:#23172C;outline:3px solid #E0B65A}
+@media (max-width:899px){ .share-map{height:240px} }
 .cal-editrow{align-items:center}
 .cal-editpair{display:flex;align-items:center;gap:10px;flex:1 1 100%;min-width:0}
 .cal-help{margin:0;flex:1;min-width:0;font-size:.78rem;line-height:1.3;color:var(--muted)}
@@ -2290,7 +2304,7 @@ function vEdit(sh){
 }
 function vSheet(){
   if(S.sheet && typeof S.sheet==="object"){
-    const inner = S.sheet.mode==="addto" ? vAddTo(S.sheet) : S.sheet.mode==="custom" ? vCustom(S.sheet) : S.sheet.mode==="edit" ? vEdit(S.sheet) : S.sheet.mode==="ink" ? vInkSheet(S.sheet) : vAlts(S.sheet);
+    const inner = S.sheet.mode==="addto" ? vAddTo(S.sheet) : S.sheet.mode==="custom" ? vCustom(S.sheet) : S.sheet.mode==="edit" ? vEdit(S.sheet) : S.sheet.mode==="sharecal" ? vShareDialog(S.sheet) : S.sheet.mode==="shstop" ? vShareStop(S.sheet) : S.sheet.mode==="ink" ? vInkSheet(S.sheet) : vAlts(S.sheet);
     return inner ? '<div class="scrim" data-scrim="1"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">'+inner+'</div></div>' : "";
   }
   const p = BY[S.sheet]; if(!p) return "";
@@ -2854,7 +2868,7 @@ document.addEventListener("click", e=>{
   if(el.dataset.clearex){ if(el.dataset.clearex==="q") S.q=""; else { S.q=""; S.cat="all"; S.area="all"; S.picksOnly=false; S.exOpen=false; S.exWalk=false; } render(); return; }
   if(el.id==="walkOnly"){ S.walkOnly=!S.walkOnly; render(); return; }
   if(el.id==="nowPicks"){ S.nowPicks=!S.nowPicks; render(); return; }
-  if(el.dataset.tab){ S.dayOpen=false; S.tab=el.dataset.tab; try{localStorage.setItem("nola-tab",S.tab);}catch(_){} window.scrollTo(0,0); render(); return; }
+  if(el.dataset.tab){ if(S.tab==="share") S.shareToken=""; S.dayOpen=false; S.tab=el.dataset.tab; try{localStorage.setItem("nola-tab",S.tab);}catch(_){} window.scrollTo(0,0); render(); return; }
   if(el.dataset.calday){ openDayView(+el.dataset.calday); return; }
   if(el.dataset.dayback){ S.dayOpen=false; render(); window.scrollTo(0,0); return; }
   if(el.dataset.daynav){ const dir = el.dataset.daynav==="1" ? 1 : el.dataset.daynav==="-1" ? -1 : 0; if(dir) shiftDayView(dir); return; }
@@ -3723,7 +3737,7 @@ function vDayTimeline(){
     return '<button type="button" class="chip" data-day="'+x.n+'" aria-pressed="'+on+'"'+(on?' aria-current="date"':'')+' aria-label="'+esc(p.long)+'">'+esc(p.chip)+'</button>';
   }).join("")+'</div></nav>';
   h += '<p class="muted small">'+(items.length?items.length+(items.length===1?' thing':' things')+' scheduled.':'Nothing scheduled yet.')+' Each row is 30 minutes, 6:00 am to 9:00 pm. Blank rows are open. Prev, Next, or a day above switches days.</p>';
-  h += '<div class="row"><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button></div>';
+  h += '<div class="row"><button type="button" class="btn" data-sharecal="1">Share</button><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button></div>';
   if(d.n===1 && typeof window.nolaFlightsCard==="function") h += window.nolaFlightsCard();
   h += '<div class="dayboard" style="grid-template-columns:68px repeat('+colCount+',minmax(0,1fr))" role="grid" aria-label="Schedule for '+esc(parts.long)+'">';
   for(let i=0;i<rows;i++){
@@ -3754,6 +3768,7 @@ function vCalendar(){
   if(S.dayOpen) return vDayTimeline();
   const ti = tripInfo();
   let h = '<div class="head"><span class="eyebrow">Wed Nov 4 – Sun Nov 8, 2026</span><h2>Calendar</h2><p class="muted small">Day by day for the trip. Emily\'s flight is already on arrival day. Tap a day for its hourly schedule. Prev, Next, and the day buttons at the top of that schedule switch days. <b>Add to trip</b> on a place still drops it into a free time.</p></div>';
+  h += '<div class="row"><button type="button" class="btn" data-sharecal="1">Share</button></div>';
   h += '<div class="cal-week" aria-label="Trip days">'+plan.days.map(x=>{
     const dt = ti ? ti.dateOf(x.n) : null;
     const items = (x.items||[]).slice().sort((a,b)=>toM(a.t||"00:00")-toM(b.t||"00:00"));
@@ -3982,6 +3997,14 @@ function routeFromState(){
 }
 function applyRoute(hash){
   const h = (hash||"").replace(/^#/,""); if(!h) return false;
+  if(h.startsWith("share/")){
+    S.tab = "share";
+    S.shareToken = decodeURIComponent(h.slice(6));
+    S.dayOpen = false;
+    S.sheet = null;
+    loadSharedItinerary(S.shareToken);
+    return true;
+  }
   const [base, sh] = h.split("~"), [v, arg] = base.split("."), view = (v==="plan" || v==="trip") ? "cal" : v;
   if(view==="ink" || view==="time" || view==="birthday"){ S.tab = "home"; S.sheet = null; return true; }
   if(!VIEWKEYS.includes(view)) return false;
@@ -4005,6 +4028,13 @@ function pageTitle(){
 }
 let lastRoute = null, routing = false;
 function syncURL(){
+  if(S.tab==="share" && S.shareToken){
+    const want = "share/"+encodeURIComponent(S.shareToken);
+    setShareMeta();
+    if((location.hash||"").replace(/^#/,"")!==want){ try{ history.replaceState(null, "", "#"+want); }catch(e){} }
+    lastRoute = want;
+    return;
+  }
   const r = routeFromState(); document.title = "NOLA Girls · "+pageTitle();
   const cur = (location.hash||"").replace(/^#/,"");
   if(r===lastRoute && cur===r) return;
@@ -4068,12 +4098,21 @@ render = function(){
   document.getElementById("tabs").innerHTML = TABS.map(([k,l])=>'<button class="tab" role="tab" data-tab="'+k+'" aria-selected="'+(cur===k)+'">'+(TAB_ICON[k]||"")+'<span>'+l+'</span>'+(k==="saved"&&savedN?'<span class="n">'+savedN+'</span>':'')+'</button>').join("");
   const sync = document.getElementById("sync"); if(sync){ sync.textContent = shared ? (readOnly?"Viewing the group's trip":"Shared with the group") : "Saved on this device"; sync.className = "sync"+(shared?" on":""); }
   const mb = document.getElementById("modebtn"); if(mb) mb.textContent = S.mode==="auto" ? (night?"☾ After Dark · auto":"☀ Day · auto") : S.mode==="night" ? "☾ After Dark" : "☀ Day";
-  try{ localStorage.setItem("nola2-tab", S.tab); }catch(e){}
+  if(S.tab!=="share") try{ localStorage.setItem("nola2-tab", S.tab); }catch(e){}
   const a = document.activeElement, timeEdit = a && /^(t-|e-|ce-time|ce-end|es-start|es-end)/.test(a.id||"");
   const fid = a && a.id && a.tagName==="INPUT" && (timeEdit || (a.type!=="time" && a.type!=="date")) ? a.id : null;
   let caret = null; try{ caret = fid ? a.selectionStart : null; }catch(_){}
   if(S.tab==="plan" || S.tab==="trip") S.tab = "cal";
   if(S.tab==="ink" || S.tab==="time" || S.tab==="birthday") S.tab = "home";
+  if(S.tab==="share"){
+    document.getElementById("tabs").innerHTML = '<button class="tab" type="button" data-tab="home" aria-selected="false"><span>Home</span></button>';
+    document.getElementById("main").innerHTML = '<section class="view share-view">'+vShare()+'</section>';
+    document.getElementById("sheet-root").innerHTML = S.sheet ? vSheet() : "";
+    syncURL();
+    try{ mountShareMap(); }catch(e){ console.error(e); }
+    return;
+  }
+  if(window._shareMap){ try{ window._shareMap.remove(); }catch(e){} window._shareMap = null; }
   const V = {help:vHelp, girl:vGirl, home:vHome, map:vMap2, explore:vExplore2, cal:vCalendar, trip:vCalendar, plan:vCalendar, saved:vSaved2, col:vCol, river:vRiver, info:vInfo2, now:vOpenNow, all:vExplore}[S.tab] || vHome;
   document.getElementById("main").innerHTML = '<section class="view">'+V()+'</section>';
   document.getElementById("sheet-root").innerHTML = S.sheet ? vSheet() : "";
@@ -4120,6 +4159,340 @@ document.addEventListener("change", e=>{
 });
 setInterval(()=>{ if(S.mode==="auto"){ const was = document.documentElement.getAttribute("data-mode"); applyMode(); if(was !== document.documentElement.getAttribute("data-mode")) render(); } }, 120000);
 loadWX(); setInterval(loadWX, 30*60*1000);
+/* ---------- public read-only itinerary ---------- */
+S.shareToken = "";
+S.shareState = null;
+S.shareDay = 1;
+S.shareFocus = "";
+let shareLoadGen = 0;
+function setShareMeta(){
+  const data = S.shareState && S.shareState.data;
+  const n = data && data.days ? data.days.reduce((a,d)=>a+((d.items||[]).length),0) : 0;
+  const title = "NOLA Girls · Shared trip";
+  const desc = n ? ("A read-only New Orleans itinerary, "+n+(n===1?" stop":" stops")+". No account required.") : "A read-only day-by-day New Orleans itinerary. No account required.";
+  document.title = title;
+  const robots = document.querySelector('meta[name="robots"]');
+  if(robots) robots.setAttribute("content", "noindex,nofollow");
+  [["property","og:title",title],["property","og:description",desc],["property","og:type","website"],["name","description",desc],["name","twitter:card","summary"]].forEach(([attr,key,val])=>{
+    let el = document.querySelector('meta['+attr+'="'+key+'"]');
+    if(!el){ el = document.createElement("meta"); el.setAttribute(attr, key); document.head.appendChild(el); }
+    el.setAttribute("content", val);
+  });
+}
+function sharePageUrl(token){
+  return location.origin + location.pathname + location.search + "#share/" + encodeURIComponent(token);
+}
+function newShareToken(){
+  const bytes = new Uint8Array(18);
+  (crypto.getRandomValues ? crypto.getRandomValues(bytes) : bytes).forEach((_,i)=>{ bytes[i] = crypto.getRandomValues ? bytes[i] : Math.floor(Math.random()*256); });
+  let s = "";
+  bytes.forEach(b=>{ s += String.fromCharCode(b); });
+  return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function extPlaces(){
+  try{ return JSON.parse(localStorage.getItem("nola-ext-places")||"{}")||{}; }catch(e){ return {}; }
+}
+function publicSchedule(planObj, tripObj, placesObj){
+  const used = new Set();
+  const days = ((planObj&&planObj.days)||[]).map(d=>({
+    n: d.n,
+    h: String(d.h||"").slice(0,80),
+    items: (d.items||[]).map(it=>{
+      (it.p||[]).forEach(id=>used.add(String(id)));
+      return {
+        k: String(it.k||"").slice(0,40),
+        t: String(it.t||"").slice(0,5),
+        end: String(it.end||"").slice(0,5),
+        h: String(it.h||"").slice(0,140),
+        d: String(it.d||"").slice(0,500),
+        p: (it.p||[]).map(id=>String(id).slice(0,80)).slice(0,8)
+      };
+    })
+  }));
+  const trip = {
+    arrive: String((tripObj&&tripObj.arrive)||"").slice(0,10),
+    depart: String((tripObj&&tripObj.depart)||"").slice(0,10),
+    hotel: String((tripObj&&tripObj.hotel)||"").slice(0,80),
+    addr: String((tripObj&&tripObj.addr)||"").slice(0,160),
+    lat: tripObj && typeof tripObj.lat==="number" ? tripObj.lat : null,
+    lon: tripObj && typeof tripObj.lon==="number" ? tripObj.lon : null
+  };
+  const places = {};
+  used.forEach(id=>{
+    if(BY[id] && !BY[id].ext) return;
+    const src = (placesObj&&placesObj[id]) || BY[id];
+    if(!src) return;
+    places[id] = {
+      n: String(src.n||src.name||"").slice(0,140),
+      ad: String(src.ad||src.addr||"").slice(0,180),
+      lat: typeof src.lat==="number" ? src.lat : null,
+      lon: typeof src.lon==="number" ? src.lon : null,
+      note: String(src.note||"").slice(0,400),
+      ph: String(src.ph||"").slice(0,40),
+      url: String(src.url||"").slice(0,300),
+      hours: String((src.hrs&&src.hrs.hoursText)||src.hours||"").slice(0,240)
+    };
+  });
+  return {days, trip, places};
+}
+window.nolaPublicSchedule = publicSchedule;
+function encodeSnap(obj){
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  let bin = "";
+  bytes.forEach(b=>{ bin += String.fromCharCode(b); });
+  return "snap."+btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function decodeSnap(token){
+  try{
+    if(!token || token.indexOf("snap.")!==0) return null;
+    const b64 = token.slice(5).replace(/-/g,"+").replace(/_/g,"/");
+    const pad = b64 + "===".slice((b64.length+3)%4);
+    const bin = atob(pad);
+    const bytes = new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+    const data = JSON.parse(new TextDecoder().decode(bytes));
+    if(!data || !Array.isArray(data.days)) return null;
+    return publicSchedule(data, data.trip, data.places);
+  }catch(e){ return null; }
+}
+window.nolaShareCodec = {encodeSnap, decodeSnap};
+function shareClient(){
+  return (window.NolaAccount && window.NolaAccount.client) || null;
+}
+function shareSignedIn(){
+  return !!(window.NolaAccount && window.NolaAccount.email);
+}
+async function buildShareLink(){
+  const snap = encodeSnap(publicSchedule(plan, trip, extPlaces()));
+  const snapUrl = sharePageUrl(snap);
+  const client = shareClient();
+  if(!shareSignedIn() || !client){
+    return {kind:"snap", url:snapUrl, token:snap, note:"Sign in to publish a link you can turn off. This snapshot is a copy of the calendar in the address, so anyone with it can view the schedule, and it can't be revoked."};
+  }
+  try{
+    const existing = await client.from("shares").select("token").is("revoked_at", null).maybeSingle();
+    if(existing.error) throw existing.error;
+    let token = existing.data && existing.data.token;
+    if(!token){
+      token = newShareToken();
+      const ins = await client.from("shares").insert({token});
+      if(ins.error) throw ins.error;
+    }
+    return {kind:"live", url:sharePageUrl(token), token, note:"Anyone with this link can view the schedule. They can't edit it, and they won't see your email or anyone else's saves. Turn the link off whenever you want."};
+  }catch(e){
+    return {kind:"snap", url:snapUrl, token:snap, err: (e&&e.message)||"The share service isn't ready.", note:"A revocable server link isn't available yet, so this address carries a copy of the schedule. Anyone with it can view that copy. It can't be turned off later."};
+  }
+}
+async function revokeShare(token){
+  const client = shareClient();
+  if(!client || !token || String(token).indexOf("snap.")===0) return;
+  const upd = await client.from("shares").update({revoked_at:new Date().toISOString()}).eq("token", token).is("revoked_at", null);
+  if(upd.error) throw upd.error;
+}
+async function regenerateShare(){
+  const client = shareClient();
+  if(!client) return buildShareLink();
+  await client.from("shares").update({revoked_at:new Date().toISOString()}).is("revoked_at", null);
+  const token = newShareToken();
+  const ins = await client.from("shares").insert({token});
+  if(ins.error) throw ins.error;
+  return {kind:"live", url:sharePageUrl(token), token, note:"This is a new link. The previous one no longer opens."};
+}
+function loadSharedItinerary(token){
+  const gen = ++shareLoadGen;
+  S.shareDay = 1;
+  S.shareFocus = "";
+  if(token && token.indexOf("snap.")===0){
+    const data = decodeSnap(token);
+    S.shareState = data ? {status:"ready", data} : {status:"missing", data:null};
+    return;
+  }
+  S.shareState = {status:"loading", data:null};
+  const client = shareClient();
+  const fail = ()=>{ if(gen!==shareLoadGen) return; S.shareState = {status:"missing", data:null}; if(S.tab==="share") render(); };
+  if(!client || !token){ fail(); return; }
+  client.rpc("get_shared_itinerary", {p_token:token}).then(res=>{
+    if(gen!==shareLoadGen || S.shareToken!==token) return;
+    if(res.error || !res.data || !Array.isArray(res.data.days)){ S.shareState = {status:"missing", data:null}; }
+    else S.shareState = {status:"ready", data:publicSchedule(res.data, res.data.trip, res.data.places)};
+    if(S.tab==="share") render();
+  }).catch(fail);
+}
+function sharePlace(id){
+  if(id && BY[id]) return BY[id];
+  const extra = S.shareState && S.shareState.data && S.shareState.data.places;
+  const src = extra && extra[id];
+  if(!src) return null;
+  return {id, n:src.n||"Stop", ad:src.ad||"", a:"", lat:src.lat, lon:src.lon, note:src.note||"", ph:src.ph||"", url:src.url||"", hrs:{hoursText:src.hours||""}};
+}
+function shareCoord(id){
+  if(id && COORD[id]) return COORD[id];
+  const p = sharePlace(id);
+  if(p && typeof p.lat==="number" && typeof p.lon==="number") return [p.lat, p.lon];
+  return null;
+}
+function shareWhen(it){
+  if(!it || !it.t) return "";
+  const times = itemTimes(it);
+  return times.end>times.start ? fmtClock(times.start)+"–"+fmtClock(times.end) : fmtM(times.start);
+}
+function shareDayLabel(n){
+  const t = S.shareState && S.shareState.data && S.shareState.data.trip;
+  const A = t && parseD(t.arrive);
+  if(!A) return "Day "+n;
+  return dayLabel(addD(A, (n||1)-1));
+}
+function vShareDialog(sh){
+  let h = '<div class="sheet-top"><div><span class="eyebrow">Calendar</span><h2 id="sheet-title">Share this calendar</h2></div><button class="close" data-close="1" aria-label="Close">×</button></div>';
+  if(sh.status==="loading") return h+'<p class="muted">Making a link…</p>';
+  h += '<p class="small">'+esc(sh.note||"Anyone with the link can view this schedule. They can't change it.")+'</p>';
+  if(sh.err) h += '<p class="time-err" role="alert">'+esc(sh.err)+'</p>';
+  h += '<label class="ce-field" for="share-url">Link<input class="field" id="share-url" readonly value="'+esc(sh.url||"")+'"></label>';
+  h += '<div class="row"><button type="button" class="btn primary" data-sharenav="1">Share</button><button type="button" class="btn" data-sharecopy="1">Copy link</button></div>';
+  if(sh.kind==="live") h += '<div class="row"><button type="button" class="btn" data-shareregen="1">New link</button><button type="button" class="btn" data-sharerevoke="1">Turn off this link</button></div>';
+  if(!shareSignedIn()) h += '<p class="small muted">The sign-in button is at the top of the page.</p>';
+  return h;
+}
+function vShareStop(sh){
+  const found = shareFind(sh.k);
+  if(!found) return "";
+  const it = found.it, p = found.place, id = (it.p||[])[0] || "";
+  let h = '<div class="sheet-top"><div><span class="eyebrow">'+esc(shareWhen(it)||"Stop")+'</span><h2 id="sheet-title">'+esc(it.h||"Stop")+'</h2></div><button class="close" data-close="1" aria-label="Close">×</button></div>';
+  if(id && typeof PLACE_PHOTOS!=="undefined" && PLACE_PHOTOS[id]){
+    h += '<figure class="pimg"><img src="places/'+esc(id)+'.webp" alt="'+esc(p?p.n:it.h)+'" width="640" height="400"></figure>';
+  }
+  const why = [it.d, p&&p.note, id&&WHY[id]].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i);
+  if(why.length) h += '<p>'+esc(why.join(" "))+'</p>';
+  h += '<dl class="kv">';
+  if(shareWhen(it)) h += '<dt>When</dt><dd>'+esc(shareWhen(it))+'</dd>';
+  if(p&&p.ad) h += '<dt>Address</dt><dd>'+esc(p.ad)+'</dd>';
+  else if(p&&p.a) h += '<dt>Area</dt><dd>'+esc(p.a)+'</dd>';
+  const hours = p&&p.hrs&&p.hrs.hoursText;
+  if(hours) h += '<dt>Hours</dt><dd>'+esc(hours)+'</dd>';
+  if(p&&p.ph) h += '<dt>Phone</dt><dd><a href="tel:'+esc(String(p.ph).replace(/[^0-9+]/g,""))+'">'+esc(p.ph)+'</a></dd>';
+  if(p&&p.url) h += '<dt>Website</dt><dd><a href="'+esc(p.url)+'" target="_blank" rel="noopener">Open site</a></dd>';
+  h += '</dl>';
+  if(p) h += '<div class="row"><a class="btn primary" href="'+dirUrl(p)+'" target="_blank" rel="noopener">Directions in Google Maps</a></div>';
+  h += '<p class="small muted">Read-only. This page can\'t change the trip.</p>';
+  return h;
+}
+function shareFind(k){
+  const days = (S.shareState&&S.shareState.data&&S.shareState.data.days)||[];
+  for(const d of days){
+    const it = (d.items||[]).find(x=>x.k===k);
+    if(it) return {day:d, it, place: sharePlace((it.p||[])[0])};
+  }
+  return null;
+}
+function vShare(){
+  const st = S.shareState;
+  if(!st || st.status==="loading") return '<div class="head"><span class="eyebrow">Read-only</span><h2>Shared trip</h2></div><p class="muted">Loading this itinerary…</p>';
+  if(st.status!=="ready" || !st.data) return '<div class="head"><span class="eyebrow">Read-only</span><h2>Link turned off</h2></div><p>This itinerary isn\'t available. The link may have been turned off, or it was copied wrong.</p><p><button class="btn" type="button" data-tab="home">Back to the trip guide</button></p>';
+  const days = st.data.days||[];
+  if(!days.find(d=>d.n===S.shareDay)) S.shareDay = (days[0]&&days[0].n)||1;
+  const day = days.find(d=>d.n===S.shareDay) || days[0];
+  const items = ((day&&day.items)||[]).slice().sort((a,b)=>toM(a.t||"00:00")-toM(b.t||"00:00"));
+  const tripLine = st.data.trip || {};
+  let h = '<div class="head"><span class="eyebrow">Read-only itinerary</span><h2>Shared trip</h2><p class="muted small">Day by day. Nothing on this page can be edited.</p></div>';
+  if(tripLine.hotel) h += '<p class="small">Home base: <b>'+esc(tripLine.hotel)+'</b>'+(tripLine.addr?' · '+esc(tripLine.addr):'')+'</p>';
+  h += '<nav class="daynav" aria-label="Switch day"><div class="daynav-mid"><span class="eyebrow">Day '+(days.indexOf(day)+1)+' of '+days.length+'</span><h2>'+esc(day?shareDayLabel(day.n):"Day")+'</h2><p class="muted small">'+esc((day&&day.h)||"")+'</p></div>';
+  h += '<div class="daynav-days" role="group" aria-label="Trip days">'+days.map(d=>{
+    const on = d.n===S.shareDay;
+    return '<button type="button" class="chip" data-shareday="'+d.n+'" aria-pressed="'+on+'"'+(on?' aria-current="date"':'')+'>'+esc(shareDayLabel(d.n))+'</button>';
+  }).join("")+'</div></nav>';
+  h += '<div id="shareMap" class="share-map" role="region" aria-label="Map of this day\'s stops"></div>';
+  if(!window.L) h += '<p class="small muted">The map library didn\'t load. The list below still has every stop.</p>';
+  if(!items.length) h += '<p class="muted">Nothing scheduled this day.</p>';
+  else {
+    h += '<div class="share-rows">'+items.map((it,i)=>{
+      const p = sharePlace((it.p||[])[0]);
+      const where = (p&&(p.ad||p.a)) || "";
+      const on = S.shareFocus===it.k;
+      return '<button type="button" class="share-row'+(on?' on':'')+'" data-shareitem="'+esc(it.k)+'" aria-pressed="'+on+'"><span class="share-num">'+(i+1)+'</span><span><b>'+esc(it.h||"Stop")+'</b><small>'+esc(shareWhen(it)+(where?" · "+where:""))+'</small></span></button>';
+    }).join("")+'</div>';
+  }
+  return h;
+}
+function mountShareMap(){
+  if(window._shareMap){ try{ window._shareMap.remove(); }catch(e){} window._shareMap = null; }
+  const slot = document.getElementById("shareMap");
+  if(!slot || !window.L || !S.shareState || S.shareState.status!=="ready") return;
+  const day = (S.shareState.data.days||[]).find(d=>d.n===S.shareDay) || (S.shareState.data.days||[])[0];
+  const items = ((day&&day.items)||[]).slice().sort((a,b)=>toM(a.t||"00:00")-toM(b.t||"00:00"));
+  const map = L.map(slot, {scrollWheelZoom:false, zoomControl:true}).setView([29.9585,-90.0640], 13);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom:19, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
+  const pts = [];
+  items.forEach((it,i)=>{
+    const id = (it.p||[])[0];
+    const c = shareCoord(id);
+    if(!c) return;
+    const on = S.shareFocus===it.k;
+    const mk = L.marker(c, {icon:L.divIcon({className:"share-pin"+(on?" on":""), html:"<span>"+(i+1)+"</span>", iconSize:[32,32], iconAnchor:[16,16]}), keyboard:true, title:it.h||"Stop"});
+    mk.on("click", ()=>{ openShareStop(it.k); });
+    mk.addTo(map);
+    pts.push(c);
+  });
+  const hotel = S.shareState.data.trip;
+  if(hotel && typeof hotel.lat==="number" && typeof hotel.lon==="number"){
+    L.circleMarker([hotel.lat, hotel.lon], {radius:8, color:"#23172C", weight:2, fillColor:"#fff", fillOpacity:1}).bindTooltip(hotel.hotel||"Home base").addTo(map);
+    pts.push([hotel.lat, hotel.lon]);
+  }
+  if(pts.length) map.fitBounds(pts, {padding:[28,28], maxZoom:15});
+  window._shareMap = map;
+  setTimeout(()=>{ try{ map.invalidateSize(); }catch(e){} }, 60);
+}
+function openShareStop(k){
+  S.shareFocus = k;
+  S.sheet = {mode:"shstop", k};
+  render();
+}
+async function copyShareUrl(){
+  const url = (S.sheet && S.sheet.url) || "";
+  if(!url) return;
+  try{ await navigator.clipboard.writeText(url); toast("Link copied"); }
+  catch(e){ toast(url); }
+}
+async function nativeShareUrl(){
+  const url = (S.sheet && S.sheet.url) || "";
+  if(!url) return;
+  const mobile = !!(window.matchMedia && (matchMedia("(max-width:899px)").matches || matchMedia("(pointer:coarse)").matches));
+  if(mobile && navigator.share){
+    try{ await navigator.share({title:"NOLA Girls · Shared trip", text:"A read-only New Orleans itinerary", url}); return; }
+    catch(e){ if(e && e.name==="AbortError") return; }
+  }
+  await copyShareUrl();
+}
+document.addEventListener("click", async e=>{
+  const el = e.target.closest && e.target.closest("[data-sharecal],[data-sharecopy],[data-sharenav],[data-sharerevoke],[data-shareregen],[data-shareitem],[data-shareday]");
+  if(!el) return;
+  if(el.dataset.sharecal){
+    S.sheet = {mode:"sharecal", status:"loading", url:"", kind:"", token:"", note:"", err:""};
+    render();
+    const result = await buildShareLink();
+    if(!S.sheet || S.sheet.mode!=="sharecal") return;
+    Object.assign(S.sheet, result, {status:"ready"});
+    render();
+    const input = document.getElementById("share-url"); if(input) input.focus();
+    return;
+  }
+  if(el.dataset.sharecopy){ e.preventDefault(); copyShareUrl(); return; }
+  if(el.dataset.sharenav){ e.preventDefault(); nativeShareUrl(); return; }
+  if(el.dataset.sharerevoke){
+    e.preventDefault();
+    try{ await revokeShare(S.sheet && S.sheet.token); if(S.sheet){ S.sheet.note = "This link is turned off. Anyone who opens it will see that the itinerary isn't available."; S.sheet.url = ""; S.sheet.kind = ""; } toast("Link turned off"); render(); }
+    catch(err){ toast((err&&err.message)||"Couldn't turn the link off"); }
+    return;
+  }
+  if(el.dataset.shareregen){
+    e.preventDefault();
+    try{ const result = await regenerateShare(); if(S.sheet && S.sheet.mode==="sharecal") Object.assign(S.sheet, result, {status:"ready", err:""}); toast("New link ready"); render(); }
+    catch(err){ toast((err&&err.message)||"Couldn't make a new link"); }
+    return;
+  }
+  if(el.dataset.shareday){ S.shareDay = +el.dataset.shareday; S.shareFocus = ""; S.sheet = null; render(); return; }
+  if(el.dataset.shareitem){ openShareStop(el.dataset.shareitem); }
+});
+
 applyRoute(location.hash);
 render();
 
