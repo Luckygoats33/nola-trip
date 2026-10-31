@@ -3726,15 +3726,27 @@ function vDayTimeline(){
     +'<button type="button" class="btn cal-icon" data-share="1" title="Share" aria-label="Share"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></button>'
     +(window.NolaAccount&&window.NolaAccount.isAdmin?'<button type="button" class="btn cal-icon" data-bghome="1" title="Get Birthday Girl Home" aria-label="Get Birthday Girl Home" style="background:var(--lav);border-color:var(--lav);color:#fff"><span style="font-size:1.1rem">👽</span></button>':'')
     +'</span></div>';
-  if(window.STREETCAR_LINES){
-    h += '<div class="cal-sc-wrap">';
-    h += '<aside class="cal-sc-bar"><div class="cal-sc-hd">🚃 Streetcars</div>';
-    STREETCAR_LINES.forEach(function(line){
-      var hrs = line.hours.replace(/ daily/i,'').replace(/\s*\([^)]*\)/g,'').trim();
-      h += '<div class="cal-sc-line"><div class="cal-sc-nm"><span class="cal-sc-sdot" style="background:'+line.color+'"></span>'+esc(line.name)+'</div><div class="cal-sc-hrs">'+esc(hrs)+'</div></div>';
+  window._calScWrap = false;
+  if(window.STREETCAR_LINES && window.streetcarStopsNear){
+    var nearLines = new Map();
+    items.forEach(function(it){
+      (it.p||[]).forEach(function(id){
+        if(!COORD[id]) return;
+        var hits = streetcarStopsNear(COORD[id][0], COORD[id][1], 1000);
+        hits.forEach(function(h2){ nearLines.set(h2.line.id, h2.line); });
+      });
     });
-    h += '<div class="cal-sc-fare">'+esc(STREETCAR_FARE.single)+'/ride<br>'+esc(STREETCAR_FARE.day)+'</div>';
-    h += '</aside>';
+    if(nearLines.size){
+      window._calScWrap = true;
+      h += '<div class="cal-sc-wrap">';
+      h += '<aside class="cal-sc-bar"><div class="cal-sc-hd">🚃 Nearby</div>';
+      nearLines.forEach(function(line){
+        var hrs = line.hours.replace(/ daily/i,'').replace(/\s*\([^)]*\)/g,'').trim();
+        h += '<div class="cal-sc-line"><div class="cal-sc-nm"><span class="cal-sc-sdot" style="background:'+line.color+'"></span>'+esc(line.name)+'</div><div class="cal-sc-hrs">'+esc(hrs)+'</div></div>';
+      });
+      h += '<div class="cal-sc-fare">'+esc(STREETCAR_FARE.single)+'/ride<br>'+esc(STREETCAR_FARE.day)+'</div>';
+      h += '</aside>';
+    }
   }
   h += '<div class="dayboard" style="grid-template-columns:68px repeat('+colCount+',minmax(0,1fr))" role="grid" aria-label="Schedule for '+esc(parts.long)+'">';
   for(let i=0;i<rows;i++){
@@ -3756,7 +3768,7 @@ function vDayTimeline(){
     h += '</div>';
   });
   h += '</div>';
-  if(window.STREETCAR_LINES) h += '</div>';
+  if(window._calScWrap) h += '</div>';
   if(S.editingEv){
     const eit = items.find(i=>i.k===S.editingEv);
     if(eit){
