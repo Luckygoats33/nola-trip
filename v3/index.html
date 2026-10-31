@@ -787,8 +787,10 @@ button.dayev-name{all:unset;display:block;max-width:100%;font-family:var(--displ
 .daynav-days .chip[aria-pressed="true"]{background:var(--coral);border-color:var(--coral);color:var(--surface)}
 .open-head p{margin:0}
 @media (max-width:899px){
-  .top-row{flex-wrap:wrap}
-  .who-row{flex:1 1 100%;order:3}
+  .top-row{flex-wrap:nowrap}
+  .who-row{flex:0 1 auto;min-width:0}
+  .nwho-mail{display:none}
+  .nwho-name{max-width:28vw}
 }
 /* safety zones sit on the map, above the scroll shield, without covering zoom */
 .mapwrap{position:relative}
@@ -806,6 +808,19 @@ button.dayev-name{all:unset;display:block;max-width:100%;font-family:var(--displ
 .leaflet-control-zoom{z-index:730}
 .safe-key{display:flex;flex-wrap:wrap;gap:8px}
 .safe-key span{display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:.85rem}
+
+/* ---- get birthday girl home popup ---- */
+.bgh-scrim{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+.bgh-popup{background:var(--surface);border-radius:18px;width:min(460px,100%);max-height:90dvh;overflow:auto;display:grid;gap:12px;padding:16px}
+.bgh-popup h3{margin:0;font-family:var(--display);font-style:italic;font-size:1.3rem}
+.bgh-map{width:100%;height:280px;border-radius:12px;overflow:hidden}
+.bgh-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.85rem;font-weight:700}
+.bgh-legend span{display:inline-flex;align-items:center;gap:6px}
+.bgh-acts{display:flex;flex-wrap:wrap;gap:8px}
+.bgh-close{position:absolute;top:8px;right:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;width:36px;height:36px;display:grid;place-items:center;font-size:1.2rem;cursor:pointer;z-index:1}
+.bgh-marker{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.bgh-marker.crown{background:#D4AF37}
+.bgh-marker.cat{background:#7558AE}
 
 /* ---- no sideways scrolling on phones: rows wrap ---- */
 .hscroll{flex-wrap:wrap!important;overflow:visible!important;padding-bottom:0}
@@ -3626,7 +3641,7 @@ function vDayTimeline(){
     return '<button type="button" class="chip" data-day="'+x.n+'" aria-pressed="'+on+'"'+(on?' aria-current="date"':'')+' aria-label="'+esc(p.long)+'">'+esc(p.chip)+'</button>';
   }).join("")+'</div></nav>';
   h += '<p class="muted small">'+(items.length?items.length+(items.length===1?' thing':' things')+' scheduled.':'Nothing scheduled yet.')+' Tap the pencil on any event to edit times. Prev, Next, or a day above switches days.</p>';
-  h += '<div class="row"><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button><button type="button" class="btn" data-share="1">Share</button></div>';
+  h += '<div class="row"><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button><button type="button" class="btn" data-share="1">Share</button><button type="button" class="btn" data-bghome="1" style="background:var(--lav);border-color:var(--lav);color:#fff">Get Birthday Girl Home</button></div>';
   h += '<div class="dayboard" style="grid-template-columns:68px repeat('+colCount+',minmax(0,1fr))" role="grid" aria-label="Schedule for '+esc(parts.long)+'">';
   for(let i=0;i<rows;i++){
     const m = from + i*ADD_STEP;
@@ -3659,7 +3674,7 @@ function vDayTimeline(){
       h += '</div>';
     }
   }
-  h += '<div class="row day-foot"><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button><button type="button" class="btn" data-share="1">Share</button></div>';
+  h += '<div class="row day-foot"><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button><button type="button" class="btn" data-share="1">Share</button><button type="button" class="btn" data-bghome="1" style="background:var(--lav);border-color:var(--lav);color:#fff">Get Birthday Girl Home</button></div>';
   h += '<nav class="daynav" aria-label="Switch day (bottom)">';
   h += '<button type="button" class="daynav-btn" data-daynav="-1"'+(prev?'':' disabled')+' aria-label="'+(prevParts?'Previous day, '+esc(prevParts.long):'Previous day')+'"><span aria-hidden="true">←</span> Prev</button>';
   h += '<div class="daynav-mid"><span class="eyebrow">Day '+(ix+1)+' of '+days.length+'</span><h2>'+esc(parts.long)+'</h2></div>';
@@ -3928,6 +3943,61 @@ function shareLink(){
   try{ navigator.clipboard.writeText(url).then(()=>toast("Link copied. Paste it anywhere to open this exact page."), ()=>toast(url)); }catch(e){ toast(url); }
 }
 
+/* ---------- Get Birthday Girl Home ---------- */
+const LAUREN_HOTEL = {n:"The Saint Hotel", ad:"931 Canal St, New Orleans, LA 70112", lat:29.9534, lon:-90.0706};
+function openBirthdayGirlHome(){
+  const existing = document.getElementById("bgh-scrim");
+  if(existing) existing.remove();
+  const scrim = document.createElement("div");
+  scrim.className = "bgh-scrim"; scrim.id = "bgh-scrim";
+  scrim.innerHTML = '<div class="bgh-popup" style="position:relative">'
+    + '<button class="bgh-close" id="bgh-close" aria-label="Close">&times;</button>'
+    + '<h3>Get the Birthday Girl Home</h3>'
+    + '<div class="bgh-map" id="bgh-map"></div>'
+    + '<div class="bgh-legend"><span><span class="bgh-marker crown" style="width:28px;height:28px;font-size:16px">👑</span> Lauren\'s hotel</span><span><span class="bgh-marker cat" style="width:28px;height:28px;font-size:16px">🐱</span> You</span></div>'
+    + '<p class="small muted" id="bgh-status">Finding your location...</p>'
+    + '<div class="bgh-acts" id="bgh-acts"></div>'
+    + '</div>';
+  document.body.appendChild(scrim);
+  scrim.addEventListener("click", e=>{
+    if(e.target===scrim || e.target.closest("#bgh-close")) scrim.remove();
+  });
+  const crownIcon = L.divIcon({html:'<div class="bgh-marker crown">👑</div>', className:'', iconSize:[44,44], iconAnchor:[22,22], popupAnchor:[0,-22]});
+  const catIcon = L.divIcon({html:'<div class="bgh-marker cat">🐱</div>', className:'', iconSize:[44,44], iconAnchor:[22,22], popupAnchor:[0,-22]});
+  const bmap = L.map("bgh-map", {zoomControl:true, attributionControl:false}).setView([LAUREN_HOTEL.lat, LAUREN_HOTEL.lon], 15);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom:19}).addTo(bmap);
+  L.marker([LAUREN_HOTEL.lat, LAUREN_HOTEL.lon], {icon:crownIcon}).addTo(bmap).bindPopup("<b>"+LAUREN_HOTEL.n+"</b><br>"+LAUREN_HOTEL.ad).openPopup();
+  const statusEl = document.getElementById("bgh-status");
+  const actsEl = document.getElementById("bgh-acts");
+  function showActs(fromLat, fromLon){
+    const uberUrl = "https://m.uber.com/ul/?action=setPickup&pickup[latitude]="+fromLat+"&pickup[longitude]="+fromLon+"&pickup[nickname]="+encodeURIComponent("Your location")+"&dropoff[latitude]="+LAUREN_HOTEL.lat+"&dropoff[longitude]="+LAUREN_HOTEL.lon+"&dropoff[nickname]="+encodeURIComponent(LAUREN_HOTEL.n)+"&dropoff[formatted_address]="+encodeURIComponent(LAUREN_HOTEL.ad);
+    const lyftUrl = "https://ride.lyft.com/ridetype?origin[latitude]="+fromLat+"&origin[longitude]="+fromLon+"&destination[latitude]="+LAUREN_HOTEL.lat+"&destination[longitude]="+LAUREN_HOTEL.lon+"&destination[address]="+encodeURIComponent(LAUREN_HOTEL.ad);
+    const dirUrl = "https://www.google.com/maps/dir/?api=1&origin="+fromLat+","+fromLon+"&destination="+encodeURIComponent(LAUREN_HOTEL.n+" "+LAUREN_HOTEL.ad)+"&travelmode=walking";
+    actsEl.innerHTML = '<a class="btn primary" href="'+uberUrl+'" target="_blank" rel="noopener">Uber to The Saint</a><a class="btn" href="'+lyftUrl+'" target="_blank" rel="noopener">Lyft</a><a class="btn" href="'+dirUrl+'" target="_blank" rel="noopener">Walking directions</a>';
+  }
+  if(LOC){
+    L.marker([LOC.lat, LOC.lon], {icon:catIcon}).addTo(bmap).bindPopup("You are here");
+    bmap.fitBounds([[LAUREN_HOTEL.lat,LAUREN_HOTEL.lon],[LOC.lat,LOC.lon]], {padding:[40,40]});
+    statusEl.textContent = "You and Lauren's hotel. Tap a button below for a ride.";
+    showActs(LOC.lat, LOC.lon);
+  } else if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(pos=>{
+      LOC = {lat:pos.coords.latitude, lon:pos.coords.longitude, acc:pos.coords.accuracy, ts:Date.now()};
+      L.marker([LOC.lat, LOC.lon], {icon:catIcon}).addTo(bmap).bindPopup("You are here");
+      bmap.fitBounds([[LAUREN_HOTEL.lat,LAUREN_HOTEL.lon],[LOC.lat,LOC.lon]], {padding:[40,40]});
+      statusEl.textContent = "Found you! Tap a button below for a ride.";
+      showActs(LOC.lat, LOC.lon);
+    }, ()=>{
+      statusEl.textContent = "Couldn't get your location. Showing Lauren's hotel.";
+      showActs(trip.lat||TRIP_DEFAULT.lat, trip.lon||TRIP_DEFAULT.lon);
+    }, {enableHighAccuracy:true, timeout:10000});
+  } else {
+    statusEl.textContent = "Location not available. Showing Lauren's hotel.";
+    showActs(trip.lat||TRIP_DEFAULT.lat, trip.lon||TRIP_DEFAULT.lon);
+  }
+  setTimeout(()=>bmap.invalidateSize(), 100);
+}
+
 /* ---------- tattoo shops: everything needed to book ---------- */
 const BOOK = (typeof TATTOO_BOOKING==="object" && TATTOO_BOOKING) || {};
 Object.entries(BOOK).forEach(([id,b])=>{ const p = BY[id]; if(!p) return;
@@ -3991,7 +4061,7 @@ render = function(){
 /* ---------- v2 events ---------- */
 window.addEventListener("error", e=>{ try{ toast("Something hiccuped. Pull down to refresh if a button stops working."); console.error(e.error||e.message); }catch(_){} });
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle],[data-surpclear]");
+  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle],[data-surpclear],[data-bghome]");
   if(!el) return; const d = el.dataset;
   if(d.surp){ const [k,v]=d.surp.split(":"), nv = k==="hrs" ? +v : v; S.surp[k] = S.surp[k]===nv ? null : nv; S.surpRes = (S.surp.mood||S.surp.hrs||S.surp.mode) ? surpriseNow() : null; if(!d.go){ render(); return; } }
   if(d.surpclear){ S.surp.mood = S.surp.hrs = S.surp.mode = null; S.surpRes = null; render(); return; }
@@ -4014,6 +4084,7 @@ document.addEventListener("click", e=>{
   if(d.nearme){ S.radius = 15; S.tab = "map"; render(); locate(()=>{ if(LMAP && LOC) S.mapGo = [[LOC.lat,LOC.lon],16]; }); return; }
   if(d.clearuq){ S.uq = ""; render(); return; }
   if(d.share){ shareLink(); return; }
+  if(d.bghome){ openBirthdayGirlHome(); return; }
   if(d.inkstyle){ S.inkStyle = d.inkstyle; render(); return; }
   if(d.girl){ S.girl = d.girl; S.tab = "girl"; S.sheet = null; window.scrollTo(0,0); render(); return; }
   if(d.girlsurp){ S.surp.mood = GIRL_MOOD[d.girlsurp] || "hidden"; S.surpRes = surpriseNow(); S.tab = "home"; render(); setTimeout(()=>document.getElementById("adv")?.scrollIntoView({block:"start", behavior:"smooth"}), 60); return; }
