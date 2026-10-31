@@ -3661,6 +3661,14 @@ function vDayTimeline(){
     }
   }
   h += '<div class="row day-foot"><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button><button type="button" class="btn" data-share="1">Share</button></div>';
+  h += '<nav class="daynav" aria-label="Switch day (bottom)">';
+  h += '<button type="button" class="daynav-btn" data-daynav="-1"'+(prev?'':' disabled')+' aria-label="'+(prevParts?'Previous day, '+esc(prevParts.long):'Previous day')+'"><span aria-hidden="true">←</span> Prev</button>';
+  h += '<div class="daynav-mid"><span class="eyebrow">Day '+(ix+1)+' of '+days.length+'</span><h2>'+esc(parts.long)+'</h2></div>';
+  h += '<button type="button" class="daynav-btn" data-daynav="1"'+(next?'':' disabled')+' aria-label="'+(nextParts?'Next day, '+esc(nextParts.long):'Next day')+'">Next <span aria-hidden="true">→</span></button>';
+  h += '<div class="daynav-days" role="group" aria-label="Trip days">'+days.map(x=>{
+    const p2 = tripDayParts(x.n), on2 = x.n===d.n;
+    return '<button type="button" class="chip" data-day="'+x.n+'" aria-pressed="'+on2+'"'+(on2?' aria-current="date"':'')+' aria-label="'+esc(p2.long)+'">'+esc(p2.chip)+'</button>';
+  }).join("")+'</div></nav>';
   return h;
 }
 function vCalendar(){
