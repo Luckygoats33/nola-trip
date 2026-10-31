@@ -721,6 +721,12 @@ button,a,.chip,.tab,.plink,.btn,.mood,.tile,.colcard,summary{touch-action:manipu
 .ce-hit{all:unset;box-sizing:border-box;cursor:pointer;display:grid;gap:2px;width:100%;text-align:left;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);min-height:44px;font:inherit;color:inherit}
 .ce-hit small{color:var(--muted);font-size:.75rem;font-weight:500}
 .ce-hit.on,.ce-hit[aria-selected="true"]{border-color:var(--coral);background:var(--coral-soft)}
+.time-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end;margin:6px 0}
+.time-pair .ce-field,.time-pair .field{min-width:0}
+.time-err{margin:0 0 6px;color:var(--warn);font-size:.82rem;font-weight:700}
+@media (max-width:899px){
+  .time-pair{grid-template-columns:1fr}
+}
 @media (max-width:600px){
   .card-top{flex-wrap:wrap}
   .card-top h3{flex:1 1 100%}
@@ -749,6 +755,8 @@ button,a,.chip,.tab,.plink,.btn,.mood,.tile,.colcard,summary{touch-action:manipu
 .dayev-name{font-family:var(--display);font-weight:650;font-size:.92rem;line-height:1.2;color:var(--ink)}
 button.dayev-name{all:unset;display:block;max-width:100%;font-family:var(--display);font-weight:650;font-size:.92rem;line-height:1.2;color:var(--ink);cursor:pointer;text-align:left;text-decoration:underline;text-underline-offset:2px}
 .dayev-when,.dayev-note{font-size:.75rem;color:var(--muted);line-height:1.3}
+button.dayev-when{all:unset;position:relative;display:inline;max-width:100%;font-size:.75rem;color:var(--muted);line-height:1.3;cursor:pointer;text-align:left;text-decoration:underline;text-underline-offset:2px}
+button.dayev-when::after{content:"";position:absolute;left:0;top:50%;width:100%;height:44px;transform:translateY(-50%)}
 .dayev-note{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .day-foot{margin-top:12px}
 .daynav{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--coral);border-radius:16px;padding:10px 10px 12px}
@@ -941,6 +949,8 @@ button.nola-install::after,.nm::after,.plink::after,.rt-g::after,.rt a::after,.s
   #tabs .tab .n{background:#FFF4EA!important;color:#7B2446!important}
   #tabs .tab:focus-visible{outline:3px solid #FFF4EA;outline-offset:-3px}
   :root[data-mode="night"] #tabs.tabs{background:#2A1A33;border-top-color:var(--brass,#D9A441)}
+  #tabs .tab{min-width:0}
+  #tabs .tab span{font-size:.6rem!important;white-space:normal;text-align:center;line-height:1.05}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
@@ -1222,6 +1232,8 @@ P.forEach(p=>{ p.hrs = HRS[p.id] || null; });
 
 const DOWS = ALLD, DOWL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const toM = s => { const [h,m]=String(s).split(":").map(Number); return h*60+(m||0); };
+const MIN_SPAN = 30, DAY_END = 23*60+59;
+const hm = m => String(Math.floor(((m%1440)+1440)%1440/60)).padStart(2,"0")+":"+String(((m%1440)+1440)%1440%60).padStart(2,"0");
 const fmtM = m => { m=((m%1440)+1440)%1440; let h=Math.floor(m/60); const mm=m%60, ap=h>=12?"pm":"am"; h=h%12||12; return h+(mm?":"+String(mm).padStart(2,"0"):"")+" "+ap; };
 const dur = m => m<60 ? m+" min" : Math.floor(m/60)+" hr"+(m%60?" "+(m%60)+" min":"");
 function nolaNow(){
@@ -1340,7 +1352,9 @@ function flightItem(){
   return {k:"emily-lands", t:"14:25", h:"Emily lands at MSY", d:"Southwest WN 1715 from Denver (left Portland 6:20 am). About 25–35 min by car to the hotel; Uber and Lyft pick up outside baggage claim.", p:[], key:true, sun:false};
 }
 function seedPlan(){
-  return {days: DAY_META.map(d=>({n:d.n, h:d.h, who:d.who, items:d.n===1?[flightItem()]:[]}))};
+  const p = {days: DAY_META.map(d=>({n:d.n, h:d.h, who:d.who, items:d.n===1?[flightItem()]:[]}))};
+  p.days.forEach(d=>(d.items||[]).forEach(normalizeItemTimes));
+  return p;
 }
 const STOCK_HEADS = new Set();
 const STOCK_PIDS = new Set();
@@ -1370,7 +1384,12 @@ function migratePlan(p){
   const flat = [];
   p.days.forEach(d=>(d.items||[]).forEach(it=>flat.push({day:d, it})));
   const looksStock = flat.some(x=>isStockItem(x.it)) || p.days.some(d=>STOCK_TITLES.has(d.h));
-  if(!looksStock) return {plan:p, changed:false};
+  if(!looksStock){
+    let timed = false;
+    p.days.forEach(d=>(d.items||[]).forEach(it=>{ if(normalizeItemTimes(it)) timed = true; }));
+    p.days.forEach(d=>d.items.sort((a,b)=>toM(a.t||"00:00")-toM(b.t||"00:00")));
+    return {plan:p, changed:timed};
+  }
   const next = seedPlan();
   flat.filter(x=>isCustomItem(x.it)).forEach(({day, it})=>{
     let dest = next.days.find(x=>x.n===day.n);
@@ -1382,7 +1401,12 @@ function migratePlan(p){
     dest.items.push(it);
   });
   next.days.forEach(d=>d.items.sort((a,b)=>toM(a.t||"00:00")-toM(b.t||"00:00")));
-  return {plan:next, changed:true};
+  const target = looksStock ? next : p;
+  let timed = false;
+  (target.days||[]).forEach(d=>(d.items||[]).forEach(it=>{ if(normalizeItemTimes(it)) timed = true; }));
+  (target.days||[]).forEach(d=>d.items.sort((a,b)=>toM(a.t||"00:00")-toM(b.t||"00:00")));
+  if(looksStock) return {plan:next, changed:true};
+  return {plan:p, changed:timed};
 }
 window.nolaMigratePlan = migratePlan;
 
@@ -1796,9 +1820,12 @@ function vPlan(cal){
       if(ix>0 && here && prev){ const m=meters(prev,here), tr=travel(m), prevEnd=d.items[ix-1].end && toM(d.items[ix-1].end)>toM(d.items[ix-1].t) ? toM(d.items[ix-1].end) : toM(d.items[ix-1].t), gap=toM(it.t)-prevEnd, tight = m>60 && tr.mins>gap;
         conn = m<60 ? '' : '<li class="conn'+(tight?' tight':'')+'"><span></span><span>↓ '+tr.txt+' · '+miles(m)+(tight?' · tight: only '+dur(Math.max(gap,0))+' between stops':'')+'</span></li>'; }
       const fixed = it.fixed!==undefined ? !!it.fixed : !!it.key;
-      const when = it.end && toM(it.end)>toM(it.t) ? fmtClock(toM(it.t))+"–"+fmtClock(toM(it.end)) : fmtM(toM(it.t));
-      let li = conn + '<li'+(it.key?' class="key"':'')+'><span class="t">'+(ed?'<input class="field" type="time" id="t-'+it.k+'" value="'+esc(it.t)+'" aria-label="Time" style="padding:4px 6px">':esc(when))+'</span><div class="what">';
+      const times = itemTimes(it);
+      const draft = (S.timeDraft && S.timeDraft[it.k]) || null;
+      const when = times.end>times.start ? fmtClock(times.start)+"–"+fmtClock(times.end) : fmtM(times.start);
+      let li = conn + '<li'+(it.key?' class="key"':'')+'><span class="t">'+esc(when)+'</span><div class="what">';
       const exp = ed || !!S.openStop[it.k], why = whyOf(it);
+      if(ed) li += timePairHtml("t-"+it.k, "e-"+it.k, draft?draft.t:hm(times.start), draft?draft.end:hm(times.end), "terr-"+it.k, draft&&draft.err);
       li += ed ? '<input class="field" id="h-'+it.k+'" value="'+esc(it.h)+'" aria-label="Stop name">' : '<button class="stop" data-stop="'+it.k+'" aria-expanded="'+exp+'">'+esc(it.h)+'</button>';
       li += '<span class="fx '+(fixed?'fixed':'flex')+'">'+(fixed?'Booked / fixed':'Flexible')+'</span>';
       li += planChips(it, W, ed);
@@ -1855,18 +1882,73 @@ function vAlts(sh){
 
 /* 30-minute free/busy slots, 6:00 am through 9:00 pm */
 const ADD_FROM = 6*60, ADD_TO = 21*60, ADD_STEP = 30;
-const hm = m => String(Math.floor(((m%1440)+1440)%1440/60)).padStart(2,"0")+":"+String(((m%1440)+1440)%1440%60).padStart(2,"0");
 const fmtClock = m => { m=((m%1440)+1440)%1440; let h=Math.floor(m/60); const mm=String(m%60).padStart(2,"0"), ap=h>=12?"pm":"am"; h=h%12||12; return h+":"+mm+" "+ap; };
 const holdLabel = (a,b) => fmtClock(a)+"–"+fmtClock(b)+" ("+dur(Math.max(0,b-a))+")";
-/* Older stops have only a start time and blocked that whole hour. A block with end occupies [start, end). */
-function itemSpan(it){
-  const start = toM(it && it.t || "12:00");
-  if(it && it.end && /^\d{1,2}:\d{2}$/.test(String(it.end))){
-    const end = toM(it.end);
-    if(end>start) return {start, end, h:it.h||"Taken"};
+/* Start is it.t. End is it.end, or start plus durationMin/duration, or the old one-hour block. */
+function itemTimes(it){
+  const start = toM((it && it.t) || "12:00");
+  let end = null;
+  if(it && /^\d{1,2}:\d{2}$/.test(String(it.end||""))){
+    const e = toM(it.end);
+    if(e > start) end = e;
   }
-  const hr = Math.floor(start/60)*60;
-  return {start:hr, end:hr+60, h:(it&&it.h)||"Taken"};
+  if(end == null && it){
+    const raw = it.durationMin != null ? it.durationMin : it.duration != null ? it.duration : it.dur;
+    const durN = Number(raw);
+    if(durN > 0) end = start + durN;
+  }
+  if(end == null || !(end > start)){
+    const hr = Math.floor(start/60)*60;
+    end = hr + 60;
+  }
+  if(end > DAY_END) end = DAY_END;
+  if(!(end > start)) end = Math.min(DAY_END, start + MIN_SPAN);
+  return {start, end};
+}
+function rangeFromEnd(startM, endM){
+  if(!(endM > startM)) return {ok:false, msg:"End has to be after the start."};
+  if(endM > DAY_END) endM = DAY_END;
+  if(!(endM > startM)) return {ok:false, msg:"That start is too late. End has to stay after it."};
+  return {ok:true, t:hm(startM), end:hm(endM)};
+}
+function rangeFromStartMove(oldStart, oldEnd, newStart){
+  const durN = Math.max(MIN_SPAN, (oldEnd > oldStart ? oldEnd - oldStart : MIN_SPAN));
+  let end = oldEnd;
+  if(!(oldEnd > newStart)) end = newStart + durN;
+  if(end > DAY_END){
+    if(newStart + MIN_SPAN <= DAY_END) end = newStart + MIN_SPAN;
+    else return {ok:false, msg:"That start is too late. End has to stay at least 30 minutes later."};
+  }
+  return rangeFromEnd(newStart, end);
+}
+function normalizeItemTimes(it){
+  if(!it || typeof it !== "object") return false;
+  let changed = false;
+  if(!/^\d{1,2}:\d{2}$/.test(String(it.t||""))){ it.t = "12:00"; changed = true; }
+  const tNorm = hm(toM(it.t));
+  if(it.t !== tNorm){ it.t = tNorm; changed = true; }
+  const validEnd = /^\d{1,2}:\d{2}$/.test(String(it.end||"")) && toM(it.end) > toM(it.t) && toM(it.end) <= DAY_END;
+  if(validEnd){
+    const eNorm = hm(toM(it.end));
+    if(it.end !== eNorm){ it.end = eNorm; changed = true; }
+    return changed;
+  }
+  const endStr = hm(itemTimes(it).end);
+  if(it.end !== endStr){ it.end = endStr; changed = true; }
+  return changed;
+}
+function timePairHtml(startId, endId, start, end, errId, err){
+  return '<div class="time-pair">'
+    + '<label class="ce-field" for="'+startId+'">Start<input class="field" type="time" id="'+startId+'" value="'+esc(start)+'" required aria-label="Start time"></label>'
+    + '<label class="ce-field" for="'+endId+'">End<input class="field" type="time" id="'+endId+'" value="'+esc(end)+'" required aria-label="End time"></label>'
+    + '</div>'
+    + '<p class="time-err" id="'+errId+'" role="alert"'+(err?'':' hidden')+'>'+esc(err||"")+'</p>';
+}
+window.nolaTimeLogic = {itemTimes, rangeFromStartMove, rangeFromEnd, normalizeItemTimes};
+/* A block occupies [start, end). Older stops with no end used the clock hour; itemTimes still derives that until migration writes end. */
+function itemSpan(it){
+  const t = itemTimes(it);
+  return {start:t.start, end:t.end, h:(it&&it.h)||"Taken"};
 }
 function slotTaken(items, m){
   return (items||[]).find(it=>{ const s=itemSpan(it); return s.start < m+ADD_STEP && s.end > m; }) || null;
@@ -1937,9 +2019,11 @@ function vCustom(sh){
   const hr = Math.floor(toM(sh.t||"12:00")/60);
   const clash = (d&&d.items||[]).find(it=>Math.floor(toM(it.t||"0")/60)===hr);
   let h = '<div class="sheet-top"><div><span class="eyebrow">Add to '+esc(when)+'</span><h2 id="sheet-title">Custom event</h2></div><button class="close" data-close="1" aria-label="Close">×</button></div>';
-  h += '<p class="small muted">A title and a start time. Location is optional. Pick a result to attach that place.</p>';
+  h += '<p class="small muted">A title, a start time, and an end time. Location is optional. Pick a result to attach that place.</p>';
   h += '<label class="ce-field" for="ce-title">Title<input class="field" id="ce-title" type="text" maxlength="80" required placeholder="e.g. Dinner with Rose" value="'+esc(sh.title||"")+'"></label>';
-  h += '<label class="ce-field" for="ce-time">Time<input class="field" id="ce-time" type="time" required value="'+esc(sh.t||"12:00")+'"></label>';
+  const ceStart = sh.t || "12:00";
+  const ceEnd = sh.end || hm(Math.min(toM(ceStart)+60, DAY_END));
+  h += timePairHtml("ce-time", "ce-end", ceStart, ceEnd, "ce-err", sh.err);
   if(clash) h += '<p class="small muted">'+esc(fmtM(hr*60))+' already has “'+esc(clash.h)+'”. You can still add this.</p>';
   h += '<label class="ce-field" for="ce-loc">Location <span class="muted">(optional)</span><input class="field" id="ce-loc" type="search" placeholder="Search places" value="'+esc(sh.loc||"")+'" autocomplete="off"></label>';
   if(sh.placeId && BY[sh.placeId]) h += '<p class="small">Attached: <b>'+esc(BY[sh.placeId].n)+'</b> <button type="button" class="btn" data-ceclear="1">Remove</button></p>';
@@ -2184,9 +2268,21 @@ function vInfo(){
    <p class="small muted">Researched October 11, 2026. Hours, prices, and closures change.</p></div>`;
 }
 
+function vEdit(sh){
+  const found = findItem(sh.k), it = found.it;
+  if(!it) return "";
+  const times = itemTimes(it);
+  const start = sh.t || hm(times.start);
+  const end = sh.end || hm(times.end);
+  let h = '<div class="sheet-top"><div><span class="eyebrow">Edit event</span><h2 id="sheet-title">'+esc(it.h||"Stop")+'</h2></div><button class="close" data-close="1" aria-label="Close">×</button></div>';
+  h += '<p class="small muted">Set when it starts and when it ends. End has to stay after the start.</p>';
+  h += timePairHtml("es-start", "es-end", start, end, "es-err", sh.err);
+  h += '<div class="row"><button class="btn primary" data-timesave="1">Save times</button><button class="btn" data-close="1">Cancel</button></div>';
+  return h;
+}
 function vSheet(){
   if(S.sheet && typeof S.sheet==="object"){
-    const inner = S.sheet.mode==="addto" ? vAddTo(S.sheet) : S.sheet.mode==="custom" ? vCustom(S.sheet) : S.sheet.mode==="ink" ? vInkSheet(S.sheet) : vAlts(S.sheet);
+    const inner = S.sheet.mode==="addto" ? vAddTo(S.sheet) : S.sheet.mode==="custom" ? vCustom(S.sheet) : S.sheet.mode==="edit" ? vEdit(S.sheet) : S.sheet.mode==="ink" ? vInkSheet(S.sheet) : vAlts(S.sheet);
     return inner ? '<div class="scrim" data-scrim="1"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">'+inner+'</div></div>' : "";
   }
   const p = BY[S.sheet]; if(!p) return "";
@@ -2286,7 +2382,11 @@ function vSaved(opts){
   const score = r => r.must.length*3 + r.maybe.length - r.skip.length*2 + r.saved.length*0.5;
   const rows = [...ids].map(id=>BY[id]).filter(Boolean).map(p=>({p, must:votersOf(p.id,"must"), maybe:votersOf(p.id,"maybe"), skip:votersOf(p.id,"skip"), saved:pickersOf(p.id)}))
     .sort((a,b)=>score(b)-score(a) || a.p.n.localeCompare(b.p.n));
-  const inPlan = id => plan.days.filter(d=>d.items.some(it=>it.p.includes(id))).map(d=>"Day "+d.n);
+  const inPlan = id => plan.days.flatMap(d=>(d.items||[]).filter(it=>(it.p||[]).includes(id)).map(it=>{
+    const times = itemTimes(it);
+    const when = times.end>times.start ? fmtClock(times.start)+"–"+fmtClock(times.end) : fmtM(times.start);
+    return "Day "+d.n+" "+when;
+  }));
   let h = '';
   if(!mineOnly) h += '<div class="head"><span class="eyebrow">The kitchen table</span><h2>Group picks</h2><p class="muted small">Everything anyone saved, ranked by the group\'s votes. '+(shared?'Everyone sees everyone\'s votes.':'Votes stay on this phone here.')+'</p></div>';
   if(!rows.length) return h + '<div class="empty">'+(mineOnly
@@ -2703,7 +2803,7 @@ async function refreshProfiles(){
 
 /* ---------- events ---------- */
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-tab],[data-day],[data-calday],[data-dayback],[data-daynav],[data-dayadd],[data-cat],[data-heart],[data-open],[data-close],[data-scrim],[data-copy],[data-check],[data-talk],[data-edit],[data-save],[data-cancel],[data-nowbtn],[data-when],[data-ncat],[data-editplan],[data-reset],[data-addday],[data-addstop],[data-planb],[data-addplace],[data-mv],[data-del],[data-rmp],[data-swap],[data-addp],[data-altsame],[data-addto],[data-doadd],[data-slot],[data-fixed],[data-vote],[data-ink],[data-inkfav],[data-locate],[data-next2],[data-lview],[data-ceadd],[data-ceplace],[data-cemap],[data-ceclear],#mapOpen,#mapSaved,[data-sec],[data-stop],[data-mapcat],[data-mapview],[data-mapzoom],[data-mapcolor],[data-clearq],[data-clearex],#mapSafety,[data-safetoggle],[data-safelv],#nowLate,#exOpen,#exWalk,#picksOnly,#walkOnly,#nowPicks");
+  const el = e.target.closest("[data-tab],[data-day],[data-calday],[data-dayback],[data-daynav],[data-dayadd],[data-cat],[data-heart],[data-open],[data-close],[data-scrim],[data-copy],[data-check],[data-talk],[data-edit],[data-save],[data-cancel],[data-nowbtn],[data-when],[data-ncat],[data-editplan],[data-reset],[data-addday],[data-addstop],[data-planb],[data-addplace],[data-mv],[data-del],[data-rmp],[data-swap],[data-addp],[data-altsame],[data-addto],[data-doadd],[data-slot],[data-fixed],[data-vote],[data-ink],[data-inkfav],[data-locate],[data-next2],[data-lview],[data-ceadd],[data-ceplace],[data-cemap],[data-ceclear],[data-editevt],[data-timesave],#mapOpen,#mapSaved,[data-sec],[data-stop],[data-mapcat],[data-mapview],[data-mapzoom],[data-mapcolor],[data-clearq],[data-clearex],#mapSafety,[data-safetoggle],[data-safelv],#nowLate,#exOpen,#exWalk,#picksOnly,#walkOnly,#nowPicks");
   if(!el) return;
   if(el.dataset.scrim && e.target!==el) return;
   if(el.dataset.sec){ e.preventDefault(); const det=el.parentElement; S.secs[el.dataset.sec]=!det.open; render(); return; }
@@ -2775,6 +2875,9 @@ document.addEventListener("input", e=>{
   if(S.sheet && S.sheet.mode==="custom"){
     if(e.target.id==="ce-title"){ S.sheet.title=e.target.value; return; }
     if(e.target.id==="ce-time"){ S.sheet.t=e.target.value||S.sheet.t; return; }
+    if(e.target.id==="ce-end"){ S.sheet.end=e.target.value||S.sheet.end; return; }
+    if(e.target.id==="es-start" && S.sheet){ S.sheet.t=e.target.value||S.sheet.t; return; }
+    if(e.target.id==="es-end" && S.sheet){ S.sheet.end=e.target.value||S.sheet.end; return; }
     if(e.target.id==="ce-loc"){ onCustomLoc(e.target.value); return; }
   }
   if(DRAFT_FIELDS[e.target.id] && S.draft){ S.draft[DRAFT_FIELDS[e.target.id]] = e.target.value; }
@@ -2802,7 +2905,7 @@ function planClick(el){
   if(ds.reset){ if(guard()) return true; if(S.confirmReset){ plan=seedPlan(); S.confirmReset=false; S.day=1; savePlan("Back to flights only."); } else { S.confirmReset=true; render(); } return true; }
   if(ds.addday){ if(guard()) return true; const n=Math.max(...plan.days.map(x=>x.n))+1; plan.days.push({n, h:"Free day", who:"Whole group", items:[]}); S.day=n; savePlan("Added Day "+n+"."); return true; }
   if(ds.addstop){ if(guard()) return true; const d=plan.days.find(x=>x.n===S.day); const last=d.items.length?toM(d.items[d.items.length-1].t)+60:600; const t=Math.min(last,23*60+30); const k=uidk();
-    d.items.push({k, t:String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0"), h:"New stop", d:"", p:[]}); savePlan();
+    const stop = {k, t:String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0"), h:"New stop", d:"", p:[]}; normalizeItemTimes(stop); d.items.push(stop); savePlan();
     S.sheet={mode:"alts", day:d.n, k, same:false, pick:true, q:""}; render(); return true; }
   if(ds.planb){ S.sheet={mode:"alts", day:S.day, k:ds.planb, same:true, q:""}; render(); return true; }
   if(ds.addplace){ S.sheet={mode:"alts", day:S.day, k:ds.addplace, same:false, pick:true, q:""}; render(); return true; }
@@ -2834,7 +2937,31 @@ function planClick(el){
   if(ds.cemap && S.sheet && S.sheet.mode==="custom"){ const r=(S.sheet.mapHits||[])[+ds.cemap]; if(r && window.nolaRegisterPlace){ const id=window.nolaRegisterPlace(r); const p=BY[id]; if(p){ S.sheet.placeId=p.id; S.sheet.loc=p.n; S.sheet.mapHits=[]; } } render(); return true; }
   if(ds.ceclear && S.sheet && S.sheet.mode==="custom"){ S.sheet.placeId=""; render(); return true; }
   if(ds.ceadd){ return addCustomEvent(); }
+  if(ds.editevt){ openEditItem(ds.editevt); return true; }
+  if(ds.timesave){ return saveEditTimes(); }
   return false;
+}
+function openEditItem(k){
+  if(readOnly){ toast("Only Contributors and Editors can change the plan."); return; }
+  const {it} = findItem(k); if(!it) return;
+  const times = itemTimes(it);
+  S.sheet = {mode:"edit", k, t:hm(times.start), end:hm(times.end), _start:hm(times.start), _end:hm(times.end), err:""};
+  render();
+  const f = document.getElementById("es-start"); if(f) f.focus();
+}
+function saveEditTimes(){
+  if(readOnly){ toast("Only Contributors and Editors can change the plan."); return true; }
+  const sh = S.sheet; if(!sh || sh.mode!=="edit") return true;
+  const {it} = findItem(sh.k); if(!it){ S.sheet = null; render(); return true; }
+  const startEl = document.getElementById("es-start"), endEl = document.getElementById("es-end");
+  const t = (startEl && startEl.value) || sh.t || "";
+  const end = (endEl && endEl.value) || sh.end || "";
+  const res = rangeFromEnd(toM(t), toM(end));
+  if(!res.ok){ sh.t = t; sh.end = end; sh.err = res.msg; render(); if(endEl) endEl.focus(); return true; }
+  it.t = res.t; it.end = res.end;
+  S.sheet = null;
+  savePlan("Updated "+(it.h||"event")+" · "+holdLabel(toM(res.t), toM(res.end))+".");
+  return true;
 }
 function openDayView(n){
   const day = plan.days.find(x=>x.n===n) || plan.days[0];
@@ -2854,7 +2981,7 @@ function openCustomDay(n){
   let t = "12:00";
   const busy = new Set((day.items||[]).map(it=>Math.floor(toM(it.t||"12:00")/60)));
   for(let hr=9; hr<=21; hr++){ if(!busy.has(hr)){ t=String(hr).padStart(2,"0")+":00"; break; } }
-  S.sheet = {mode:"custom", day:day.n, t, title:"", loc:"", placeId:"", mapHits:[], looking:false};
+  S.sheet = {mode:"custom", day:day.n, t, end:hm(Math.min(toM(t)+60, DAY_END)), _start:t, _end:hm(Math.min(toM(t)+60, DAY_END)), title:"", loc:"", placeId:"", mapHits:[], looking:false, err:""};
   render();
   const f=document.getElementById("ce-title"); if(f) f.focus();
 }
@@ -2882,26 +3009,76 @@ function onCustomLoc(val){
 function addCustomEvent(){
   if(readOnly){ toast("Only Contributors and Editors can change the plan."); return true; }
   const sh = S.sheet; if(!sh || sh.mode!=="custom") return true;
-  const titleEl = document.getElementById("ce-title"), timeEl = document.getElementById("ce-time");
+  const titleEl = document.getElementById("ce-title"), timeEl = document.getElementById("ce-time"), endEl = document.getElementById("ce-end");
   const title = ((titleEl&&titleEl.value)||sh.title||"").trim();
   const t = (timeEl&&timeEl.value)||sh.t||"";
+  const end = (endEl&&endEl.value)||sh.end||"";
   if(!title){ toast("Add a title."); if(titleEl) titleEl.focus(); return true; }
   if(!/^\d{2}:\d{2}$/.test(t)){ toast("Add a start time."); if(timeEl) timeEl.focus(); return true; }
+  if(!/^\d{2}:\d{2}$/.test(end)){ sh.err = "Add an end time."; sh.t = t; render(); if(endEl) endEl.focus(); return true; }
+  const res = rangeFromEnd(toM(t), toM(end));
+  if(!res.ok){ sh.t = t; sh.end = end; sh.err = res.msg; render(); if(endEl) endEl.focus(); return true; }
   const d = plan.days.find(x=>x.n===sh.day); if(!d) return true;
   const place = sh.placeId && BY[sh.placeId] ? BY[sh.placeId] : null;
   const note = place ? (place.ad||"") : ((document.getElementById("ce-loc")||{}).value||sh.loc||"").trim();
-  d.items.push({k:uidk(), t, h:title, d:note, p:place?[place.id]:[], custom:true});
+  d.items.push({k:uidk(), t:res.t, end:res.end, h:title, d:note, p:place?[place.id]:[], custom:true});
   S.sheet = null; S.day = d.n; S.tab = "cal";
-  savePlan("Added "+title+" · "+fmtM(toM(t))+".");
+  savePlan("Added "+title+" · "+holdLabel(toM(res.t), toM(res.end))+".");
   return true;
 }
 function planChange(e){
   const id = e.target.id||"";
   if(id==="addday" && S.sheet){ S.sheet.day=+e.target.value; render(); return true; }
   if(id==="addtime" && S.sheet){ if(e.target.value) S.sheet.t=e.target.value; render(); return true; }
-  if(id==="ce-time" && S.sheet && S.sheet.mode==="custom"){ if(e.target.value) S.sheet.t=e.target.value; render(); return true; }
+  if((id==="ce-time" || id==="ce-end") && S.sheet && S.sheet.mode==="custom"){
+    const sh = S.sheet;
+    const oldStart = toM(sh._start || sh.t || "12:00"), oldEnd = toM(sh._end || sh.end || "13:00");
+    if(id==="ce-time"){
+      const moved = rangeFromStartMove(oldStart, oldEnd, toM(e.target.value || sh.t));
+      if(moved.ok){ sh.t = moved.t; sh.end = moved.end; sh._start = moved.t; sh._end = moved.end; sh.err = ""; }
+      else { sh.t = e.target.value || sh.t; sh.err = moved.msg; }
+    } else {
+      const moved = rangeFromEnd(toM(sh.t), toM(e.target.value || sh.end));
+      if(moved.ok){ sh.end = moved.end; sh._end = moved.end; sh.err = ""; }
+      else { sh.end = e.target.value || sh.end; sh.err = moved.msg; }
+    }
+    render(); return true;
+  }
+  if((id==="es-start" || id==="es-end") && S.sheet && S.sheet.mode==="edit"){
+    const sh = S.sheet;
+    const oldStart = toM(sh._start || sh.t || "12:00"), oldEnd = toM(sh._end || sh.end || "13:00");
+    if(id==="es-start"){
+      const moved = rangeFromStartMove(oldStart, oldEnd, toM(e.target.value || sh.t));
+      if(moved.ok){ sh.t = moved.t; sh.end = moved.end; sh._start = moved.t; sh._end = moved.end; sh.err = ""; }
+      else { sh.t = e.target.value || sh.t; sh.err = moved.msg; }
+    } else {
+      const moved = rangeFromEnd(toM(sh.t), toM(e.target.value || sh.end));
+      if(moved.ok){ sh.end = moved.end; sh._end = moved.end; sh.err = ""; }
+      else { sh.end = e.target.value || sh.end; sh.err = moved.msg; }
+    }
+    render(); return true;
+  }
   if(readOnly) return false;
-  if(id.startsWith("t-")){ const {it}=findItem(id.slice(2)); if(it && e.target.value){ const old=toM(it.t), neu=toM(e.target.value); if(it.end && toM(it.end)>old){ it.end=hm(neu+(toM(it.end)-old)); } it.t=e.target.value; savePlan(); } return true; }
+  if(id.startsWith("t-") || id.startsWith("e-")){
+    const key = id.slice(2);
+    const {it} = findItem(key);
+    if(!it || !e.target.value) return true;
+    const saved = itemTimes(it);
+    const draft = (S.timeDraft && S.timeDraft[key]) || {t:hm(saved.start), end:hm(saved.end)};
+    const startVal = id.startsWith("t-") ? e.target.value : draft.t;
+    const endVal = id.startsWith("e-") ? e.target.value : draft.end;
+    const res = id.startsWith("t-") ? rangeFromStartMove(saved.start, saved.end, toM(startVal)) : rangeFromEnd(toM(it.t), toM(endVal));
+    if(!res.ok){
+      S.timeDraft = S.timeDraft || {};
+      S.timeDraft[key] = {t:startVal, end:id.startsWith("e-") ? endVal : (draft.end || hm(saved.end)), err:res.msg};
+      render();
+      return true;
+    }
+    if(S.timeDraft) delete S.timeDraft[key];
+    it.t = res.t; it.end = res.end;
+    savePlan();
+    return true;
+  }
   if(id.startsWith("h-")){ const {it}=findItem(id.slice(2)); if(it){ it.h=e.target.value.trim()||"Stop"; savePlan(); } return true; }
   if(id.startsWith("dh-")){ const d=plan.days.find(x=>x.n===+id.slice(3)); if(d){ d.h=e.target.value.trim()||("Day "+d.n); savePlan(); } return true; }
   return false;
@@ -3383,8 +3560,11 @@ function tourShow(i, list){
     const el = document.querySelector(s.sel);
     if(el){ el.classList.add("tour-hi"); if(!want && s.sel.indexOf("#tabs")!==0) el.scrollIntoView({block:"center", behavior:"smooth"}); }
     const d = document.createElement("div"); d.id = "tour"; d.className = "tour"+(want?" tour-up":""); d.setAttribute("role","dialog"); d.setAttribute("aria-labelledby","tourT");
+    const tourBody = (s.b && s.b.indexOf("Add to home screen")>=0 && window.nolaShowInstall && !window.nolaShowInstall())
+      ? "That's everything. <b>Help</b> has the full written guide and this tour any time. Now go have a beignet."
+      : s.b;
     d.innerHTML = '<div class="tour-top"><span class="badge-g" aria-hidden="true">'+s.g[0]+'</span><span class="tour-n">'+(tourList==="full"?"Tour · ":"")+'Step '+(i+1)+' of '+L.length+'</span><button class="tour-x" type="button" data-tourgo="skip" aria-label="Close the walkthrough">×</button></div>'
-      + '<h2 id="tourT">'+s.t+'</h2><p>'+s.b+'</p>'
+      + '<h2 id="tourT">'+s.t+'</h2><p>'+tourBody+'</p>'
       + '<div class="tour-dots" aria-hidden="true">'+L.map((_,k)=>'<i'+(k===i?' class="on"':'')+'></i>').join("")+'</div>'
       + '<div class="tour-acts">'+(i>0?'<button class="btn" type="button" data-tourgo="back">Back</button>':'<button class="btn" type="button" data-tourgo="skip">Skip</button>')
       + (s.last||'') + '<button class="btn primary" type="button" data-tourgo="next">'+(i===L.length-1?'Done':'Next')+'</button></div>';
@@ -3552,7 +3732,9 @@ function vDayTimeline(){
     const place = (it.p||[]).map(id=>BY[id]).find(Boolean);
     h += '<div class="dayev'+(isFlightItem(it)?' flight':'')+(it.custom?' custom':'')+'" style="grid-column:'+(p.col+2)+';grid-row:'+row+' / span '+p.slots+'" role="gridcell">';
     h += place ? '<button type="button" class="dayev-name" data-open="'+place.id+'">'+esc(it.h||"Stop")+'</button>' : '<b class="dayev-name">'+esc(it.h||"Stop")+'</b>';
-    h += '<span class="dayev-when">'+esc(whenLab)+'</span>';
+    h += readOnly
+      ? '<span class="dayev-when">'+esc(whenLab)+'</span>'
+      : '<button type="button" class="dayev-when" data-editevt="'+esc(it.k)+'" aria-label="Edit start and end for '+esc(it.h||"Stop")+'">'+esc(whenLab)+' · Edit</button>';
     if(it.d) h += '<span class="dayev-note">'+esc(it.d)+'</span>';
     h += '</div>';
   });
@@ -3880,7 +4062,8 @@ render = function(){
   const sync = document.getElementById("sync"); if(sync){ sync.textContent = shared ? (readOnly?"Viewing the group's trip":"Shared with the group") : "Saved on this device"; sync.className = "sync"+(shared?" on":""); }
   const mb = document.getElementById("modebtn"); if(mb) mb.textContent = S.mode==="auto" ? (night?"☾ After Dark · auto":"☀ Day · auto") : S.mode==="night" ? "☾ After Dark" : "☀ Day";
   try{ localStorage.setItem("nola2-tab", S.tab); }catch(e){}
-  const a = document.activeElement, fid = a && a.id && a.tagName==="INPUT" && a.type!=="time" && a.type!=="date" ? a.id : null;
+  const a = document.activeElement, timeEdit = a && /^(t-|e-|ce-time|ce-end|es-start|es-end)/.test(a.id||"");
+  const fid = a && a.id && a.tagName==="INPUT" && (timeEdit || (a.type!=="time" && a.type!=="date")) ? a.id : null;
   let caret = null; try{ caret = fid ? a.selectionStart : null; }catch(_){}
   if(S.tab==="plan" || S.tab==="trip") S.tab = "cal";
   if(S.tab==="ink" || S.tab==="time" || S.tab==="birthday") S.tab = "home";
@@ -3904,7 +4087,7 @@ document.addEventListener("click", e=>{
   if(d.col){ S.tab = "col"; S.col = d.col; S.sheet = null; window.scrollTo(0,0); render(); return; }
   if(d.surprun){ if(d.surprun==="again") S.surp.seed++; S.surpRes = surpriseNow(); render(); setTimeout(()=>document.getElementById("adv")?.scrollIntoView({block:"nearest", behavior:"smooth"}),30); return; }
   if(d.surpadd){ const R = S.surpRes; if(!R||!R.stops.length) return; const ts = tripStatus(), dn = (ts&&ts.day) || S.day || 1, day = plan.days.find(x=>x.n===dn) || plan.days[0];
-    R.stops.forEach(st=>{ const m = st.at%1440; day.items.push({k:uidk(), t:String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0"), h:st.p.n, d:"From Surprise Me", p:[st.p.id]}); });
+    R.stops.forEach(st=>{ const m = st.at%1440; const stop = {k:uidk(), t:String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0"), h:st.p.n, d:"From Surprise Me", p:[st.p.id]}; normalizeItemTimes(stop); day.items.push(stop); });
     S.tab = "cal"; S.day = day.n; savePlan("Added "+R.stops.length+" stops to the calendar · Day "+day.n+"."); return; }
   if(d.tm){ return; }
   if(d.visit || d.rate){ return; }
@@ -4007,7 +4190,7 @@ document.addEventListener("change", e=>{
       let n = (q.match(/day (\d)/)||[])[1]; n = n ? +n : (ts && ts.day ? ts.day + (/tomorrow/.test(q)?1:0) : 1);
       const d = plan.days.find(x=>x.n===n) || plan.days[0];
       const items = (d.items||[]).slice(0,8);
-      return {text:"Day "+d.n+(d.t?" — "+d.t:"")+":\n"+items.map(i=>"• "+(i.t?i.t+" ":"")+(i.h||"")).join("\n"), ids:[...new Set(items.flatMap(i=>i.p||[]))].slice(0,6)};
+      return {text:"Day "+d.n+(d.t?" — "+d.t:"")+":\n"+items.map(i=>{ const when = i.t ? ((i.end && toM(i.end)>toM(i.t)) ? holdLabel(toM(i.t), toM(i.end)) : fmtM(toM(i.t))) : ""; return "• "+(when?when+" ":"")+(i.h||""); }).join("\n"), ids:[...new Set(items.flatMap(i=>i.p||[]))].slice(0,6)};
     }
     const p = findPlace(q);
     if(p){
@@ -4034,7 +4217,7 @@ document.addEventListener("change", e=>{
   function context(){
     const W = nowW();
     const places = P.map(p=>{ const st = statusAt(p, W); return {id:p.id, n:p.n, type:p.c.join("/"), area:p.a, open:st.state==="open", status:st.label||"", hours:(p.hrs&&p.hrs.hoursText||"").slice(0,140), ad:p.ad||"", ph:p.ph||"", why:WHY[p.id]||""}; });
-    const days = (plan.days||[]).map(d=>({day:d.n, title:d.t||"", stops:(d.items||[]).map(i=>(i.t||"")+" "+(i.h||"")).slice(0,10)}));
+    const days = (plan.days||[]).map(d=>({day:d.n, title:d.t||"", stops:(d.items||[]).map(i=>{ const when = i.t ? ((i.end && toM(i.end)>toM(i.t)) ? i.t+"–"+i.end : i.t) : ""; return (when?when+" ":"")+(i.h||""); }).slice(0,10)}));
     return {now:"New Orleans local time: "+DOWL[W.dow]+" "+fmtM(W.mins), trip:"Wed Nov 4 to Sun Nov 8, 2026; hotel Olivier House Hotel, 828 Toulouse St", places, plan:days};
   }
   async function claudeAnswer(q, onText){
@@ -4476,7 +4659,7 @@ var SAFE_CONTACTS = {"groups":[{"title":"Emergency","items":[{"name":"Police / F
       + '<button type="button" data-go="map"><b>Find my way</b><span>Map & directions</span></button>'
       + '<button type="button" data-myink="1"><b>Design a tattoo</b><span>With AI</span></button>'
       + '<button type="button" data-go="info"><b>Trip details</b><span>Dates, hotel, settings</span></button>'
-      + '<button type="button" data-installnow="1"><b>Add to home screen</b><span>Opens full screen</span></button></div>';
+      + (window.nolaShowInstall && !window.nolaShowInstall() ? '' : '<button type="button" data-installnow="1"><b>Add to home screen</b><span>Opens full screen</span></button>')+'</div>';
     h += '<div class="sh"><h3>How everything works</h3></div><p class="small muted" style="margin:0 0 8px">Tap a topic to open it.</p>';
     h += HELP.filter(s=>s[0]!=="safe").map(([k,t,items])=>'<details class="help-acc" id="help-'+k+'"><summary>'+esc(t)+'</summary><dl>'+items.map(([q,a])=>'<dt>'+esc(q)+'</dt><dd>'+a+'</dd>').join("")+'</dl></details>').join("");
     h += '<details class="help-acc"><summary>Settings</summary><label class="doro-set"><input type="checkbox" data-dorotoggle="1"'+(dorothyOn()?' checked':'')+'> Dorothy nudges me after 33 seconds on one screen</label></details>';
@@ -4796,7 +4979,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     if(n === 0) return {text:plan.days.map(d => "Day "+d.n+(ti?" ("+dayLabel(ti.dateOf(d.n))+")":"")+": "+(d.t||"")+" — "+(d.items||[]).slice(0,4).map(i => i.h).join(", ")).join("\n"), ids:[]};
     const d = plan.days.find(x => x.n === n); if(!d) return {text:"Your plan has days 1 to "+plan.days.length+".", ids:[]};
     const items = d.items||[];
-    const lines = items.length ? items.map(i => "• "+(i.t?fmtM(toM(i.t))+" ":"")+(i.h||"")+(i.d?" — "+i.d:"")).join("\n") : "Nothing planned yet. Use Add to trip on a place.";
+    const lines = formatDayItems(d) || "Nothing planned yet. Use Add to trip on a place.";
     return {text:"Day "+d.n+(ti?" · "+dayLabel(ti.dateOf(d.n)):"")+(d.h?" — "+d.h:"")+":\n"+lines+"\n(Open Calendar to edit it.)", ids:[...new Set(items.flatMap(i => i.p||[]))].filter(id => BY[id]).slice(0,6)};
   }
 
@@ -4904,11 +5087,11 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     if(!how && !wants && !wants2) return null;
     if(/\b(uber|lyft|flight|doordash|uber eats)\b/.test(q)) return null;
     if(how && !/\b(add|put|schedule|book)\b.*\b(calendar|itinerary)\b/.test(q) && !wants2){
-      return {keep:true, text:"Two ways to add something. On the Calendar tab, tap a day to open its hours, then tap Add a custom event and fill in a title, a start time, and a location if you want. Or open a place and tap Add to trip to drop it into a free time. Sign in and it syncs to your account.", ids:[]};
+      return {keep:true, text:"Two ways to add something. On the Calendar tab, tap a day to open its hours, then tap Add a custom event and fill in a title, a start time, an end time, and a location if you want. Or open a place and tap Add to trip to drop it into a free time. Sign in and it syncs to your account.", ids:[]};
     }
     if(!(wants || wants2 || (how && /\b(calendar|itinerary)\b/.test(q) && /\b(add|put|schedule)\b/.test(q)))) return null;
     if(how && !wants2 && !/\b(add|put|schedule|book)\s+\w+/.test(q)){
-      return {keep:true, text:"Two ways to add something. On the Calendar tab, tap a day to open its hours, then tap Add a custom event and fill in a title, a start time, and a location if you want. Or open a place and tap Add to trip to drop it into a free time. Sign in and it syncs to your account.", ids:[]};
+      return {keep:true, text:"Two ways to add something. On the Calendar tab, tap a day to open its hours, then tap Add a custom event and fill in a title, a start time, an end time, and a location if you want. Or open a place and tap Add to trip to drop it into a free time. Sign in and it syncs to your account.", ids:[]};
     }
     const ps = findPlaces(q).filter(p=>BY[p.id]);
     if(ps.length>1) return {keep:true, text:"I found a few places. Open the one you want and tap Add to trip:\n"+ps.slice(0,3).map(p=>"• "+p.n).join("\n"), ids:ps.slice(0,3).map(p=>p.id)};
@@ -4935,10 +5118,11 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     const tm = q.match(/\b(?:add|schedule|put|book)\s+(.+?)\s+(?:on|to|at|for|into)\b/);
     if(tm) title = tm[1].replace(/^(a|an|the|my)\s+/,"").replace(/\b(to|on|the|my|calendar|itinerary|schedule|trip|day)\b/g," ").replace(/\s+/g," ").trim();
     if(/^(something|it|this|that|an event|event|a custom event|custom event)$/.test(title)) title = "";
-    S.sheet = {mode:"custom", day:day, t:t, title:title, loc:"", placeId:"", mapHits:[], looking:false};
+    const end = hm(Math.min(toM(t)+60, DAY_END));
+    S.sheet = {mode:"custom", day:day, t:t, end:end, _start:t, _end:end, title:title, loc:"", placeId:"", mapHits:[], looking:false, err:""};
     S.day = day; S.tab = "cal";
     setTimeout(()=>{ try{ render(); }catch(e){} }, 0);
-    return {keep:true, text:"I opened a custom event for Day "+day+(title?" (“"+title+"”)" : "")+(timeM?" at "+fmtM(toM(t)):"")+". Close this chat and confirm the title and time. You can search a location and attach a place. Or tap any day on the Calendar tab and choose Add a custom event.", ids:[]};
+    return {keep:true, text:"I opened a custom event for Day "+day+(title?" (“"+title+"”)" : "")+(timeM?" at "+fmtM(toM(t)):"")+". Close this chat and confirm the title, start, and end. You can search a location and attach a place. Or tap any day on the Calendar tab and choose Add a custom event.", ids:[]};
   }
   window.askEngine = function(qRaw, hist){
     let q = lc(qRaw).replace(/[’`]/g, "'").trim(); qNow = q;
@@ -5572,7 +5756,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
       if(localStorage.getItem("nola-flight-added") === "1" || !plan || !plan.days || (typeof readOnly !== "undefined" && readOnly)) return;
       const d1 = plan.days.find(d => d.n === 1); if(!d1) return;
       if(!(d1.items || []).some(i => i.k === "emily-lands")){
-        d1.items.push({k:"emily-lands", t:"14:25", h:"Emily lands at MSY", d:"Southwest WN 1715 from Denver (left Portland 6:20 am). About 25–35 min by car to the hotel; Uber and Lyft pick up outside baggage claim.", p:[], key:true, sun:false});
+        const flight = {k:"emily-lands", t:"14:25", h:"Emily lands at MSY", d:"Southwest WN 1715 from Denver (left Portland 6:20 am). About 25–35 min by car to the hotel; Uber and Lyft pick up outside baggage claim.", p:[], key:true, sun:false}; normalizeItemTimes(flight); d1.items.push(flight);
         savePlan();
       }
       localStorage.setItem("nola-flight-added", "1");
@@ -5630,14 +5814,32 @@ html body nav.vswitch.vswitch{display:none!important}
   var vn = cur ? +cur.id.replace("vlink","") : 2;
   var web = /github\.io$|^localhost$|^127\.0\.0\.1$/.test(location.hostname);
   var base = location.pathname.replace(/\/v[123]\/.*$/, "/").replace(/[^\/]*$/, "");
-  var standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
   var ua = navigator.userAgent || "";
   var ios = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   var android = /android/i.test(ua);
   var KEY = "nola-install-seen-v" + vn;
+  var INSTALLED_KEY = "nola-app-installed";
   var deferred = null;
   if(web){ try{ localStorage.setItem("nola-last-version", "v" + vn); }catch(e){} }
   function ls(k, v){ try{ if(v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }catch(e){ return null; } }
+  function runningStandalone(){
+    var mq = false;
+    try{ mq = !!(window.matchMedia && matchMedia("(display-mode: standalone)").matches); }catch(e){}
+    return mq || navigator.standalone === true;
+  }
+  function installedNow(){
+    if(runningStandalone()){ ls(INSTALLED_KEY, "1"); return true; }
+    return ls(INSTALLED_KEY) === "1";
+  }
+  function signedInNow(){
+    try{
+      if(window.NolaAccount && window.NolaAccount.email) return true;
+      if(typeof window.nolaSessionUid === "function" && window.nolaSessionUid()) return true;
+    }catch(e){}
+    return false;
+  }
+  function installAllowed(){ return !signedInNow() && !installedNow(); }
+  window.nolaShowInstall = installAllowed;
 
   /* styles: fixed colors so it looks the same in every version and mode */
   var css = document.createElement("style");
@@ -5690,13 +5892,24 @@ html body nav.vswitch.vswitch{display:none!important}
   btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>Add to home screen';
   btn.addEventListener("click", function(){ if(deferred && web){ deferred.prompt(); deferred.userChoice.finally(function(){ deferred = null; }); } else showPop(true); });
   var row = document.querySelector("header .top-row > .row");
-  if(row && !standalone) row.insertBefore(btn, row.firstChild);
+  function syncInstall(){
+    var show = installAllowed();
+    if(btn){
+      btn.hidden = !show;
+      if(show){ if(row && !btn.isConnected) row.insertBefore(btn, row.firstChild); }
+      else if(btn.isConnected) btn.remove();
+    }
+    if(!show && pop){ pop.remove(); pop = null; }
+    document.querySelectorAll("[data-installnow]").forEach(function(el){ el.hidden = !show; });
+  }
+  window.nolaSyncInstall = syncInstall;
+  if(row && installAllowed()) row.insertBefore(btn, row.firstChild);
 
   /* 3. the install pop-up */
   var pop = null;
   function closePop(){ if(pop){ pop.remove(); pop = null; } ls(KEY, "1"); }
   function showPop(fromButton){
-    if(pop || standalone) return;
+    if(pop || !installAllowed()) return;
     var name = vn === 1 ? "V1 Classic" : vn === 2 ? "V2" : "V3";
     var body, go = "";
     if(!web){
@@ -5725,13 +5938,24 @@ html body nav.vswitch.vswitch{display:none!important}
     if(fromButton) (pop.querySelector(".nola-go") || pop.querySelector(".nola-later")).focus();
   }
   addEventListener("keydown", function(e){ if(e.key === "Escape" && pop) closePop(); });
-  addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); deferred = e; });
-  addEventListener("appinstalled", function(){ closePop(); btn.remove(); });
+  addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); deferred = e; if(!installAllowed()) return; });
+  addEventListener("appinstalled", function(){ ls(INSTALLED_KEY, "1"); closePop(); syncInstall(); });
+  try{
+    var mq = window.matchMedia && matchMedia("(display-mode: standalone)");
+    if(mq && mq.addEventListener) mq.addEventListener("change", function(){ if(mq.matches) ls(INSTALLED_KEY, "1"); syncInstall(); });
+  }catch(e){}
+  var prevAuth = window.nolaAuthChanged;
+  window.nolaAuthChanged = function(){ syncInstall(); if(typeof prevAuth === "function") prevAuth(); };
+  if(typeof render === "function"){
+    var render0 = render;
+    render = function(){ var out = render0.apply(this, arguments); try{ syncInstall(); }catch(e){} return out; };
+  }
 
   /* pop up once per version on each phone, a few seconds after opening */
   /* the install pop-up is for first-time visitors only, and counts as seen as soon as it shows */
   const firstVisit = !ls("nola-seen-once") && !ls(KEY); ls("nola-seen-once", "1");
-  if(web && !standalone && firstVisit) setTimeout(function(){ if(!document.querySelector(".sheet.open, .sheet[open], #tour")) showPop(false); }, 4000);
+  if(web && installAllowed() && firstVisit) setTimeout(function(){ if(installAllowed() && !document.querySelector(".sheet.open, .sheet[open], #tour")) showPop(false); }, 4000);
+  syncInstall();
 })();
 
 </script>

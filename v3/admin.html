@@ -22,9 +22,11 @@ form{display:grid;gap:8px;max-width:360px} input{padding:10px;border-radius:10px
   var C = window.NOLA_SUPABASE, sb = window.supabase.createClient(C.url, C.key, {auth:{flowType:"implicit",detectSessionInUrl:true}}), app = document.getElementById("app");
   function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
   function when(t){ return t ? new Date(t).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}) : "—"; }
+  var ADMINS = (C.admins && C.admins.length) ? C.admins : [C.admin];
+  function isAdm(em){ return window.nolaIsAdminEmail ? window.nolaIsAdminEmail(em) : ADMINS.some(function(a){ return String(a).toLowerCase() === String(em||"").toLowerCase(); }); }
   function signInForm(note){
-    app.innerHTML = '<div class="card"><h2>Admin sign-in</h2><p class="muted">'+(note||"Only "+esc(C.admin)+" can see everyone. The database enforces this; anyone else sees only their own data.")+'</p>'+
-      '<form id="f"><input id="e" type="email" placeholder="email" value="'+esc(C.admin)+'" required><button class="go">Email me a link + code</button>'+
+    app.innerHTML = '<div class="card"><h2>Admin sign-in</h2><p class="muted">'+(note||"Only "+ADMINS.map(esc).join(" and ")+" can see everyone. The database enforces this; anyone else sees only their own data.")+'</p>'+
+      '<form id="f"><input id="e" type="email" placeholder="email" required><button class="go">Email me a link + code</button>'+
       '<input id="c" inputmode="numeric" autocomplete="one-time-code" maxlength="10" pattern="[0-9]{6,10}" placeholder="the code from your email" hidden><div id="m" class="muted"></div></form></div>';
     var f=document.getElementById("f"), c=document.getElementById("c"), m=document.getElementById("m"), sent=false;
     f.onsubmit=async function(e){ e.preventDefault(); var em=document.getElementById("e").value.trim().toLowerCase();
@@ -35,7 +37,7 @@ form{display:grid;gap:8px;max-width:360px} input{padding:10px;border-radius:10px
   async function load(session){
     document.getElementById("out").hidden = !session;
     if(!session) return signInForm();
-    if(session.user.email !== C.admin) return signInForm("You're signed in as "+esc(session.user.email)+", which isn't the admin account.");
+    if(!isAdm(session.user.email)) return signInForm("You're signed in as "+esc(session.user.email)+", which isn't an admin account.");
     app.innerHTML='<p class="muted">Loading everyone…</p>';
     var r = await Promise.all([
       sb.from("profiles").select("*").order("created_at"),

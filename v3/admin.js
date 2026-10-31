@@ -1,11 +1,17 @@
 /* fix6: in-app Admin tab. Shown only when the signed-in email is the admin (config.js). Row-level security is the real gate:
    anyone else's queries only ever return their own rows, and this view refuses to load for them anyway. */
 (function(){
-  var CFG = window.NOLA_SUPABASE || {}, ADMIN = String(CFG.admin || "").toLowerCase();
+  var CFG = window.NOLA_SUPABASE || {};
 
   /* ---------- pure logic (unit-tested) ---------- */
-  function isAdminEmail(email){ return !!email && !!ADMIN && String(email).trim().toLowerCase() === ADMIN; }
-  function planRefs(list){ var out = []; ((list && list.data && list.data.days) || []).forEach(function(d){ (d.items || []).forEach(function(it){ (it.p || []).forEach(function(id){ out.push({ id: String(id), day: d.n, t: it.t, h: it.h }); }); }); }); return out; }
+  function isAdminEmail(email){
+    if (typeof window.nolaIsAdminEmail === "function") return window.nolaIsAdminEmail(email);
+    var list = Array.isArray(CFG.admins) ? CFG.admins.slice() : [];
+    if (CFG.admin) list.push(CFG.admin);
+    var e = String(email || "").trim().toLowerCase();
+    return !!e && list.some(function(a){ return String(a || "").trim().toLowerCase() === e; });
+  }
+  function planRefs(list){ var out = []; ((list && list.data && list.data.days) || []).forEach(function(d){ (d.items || []).forEach(function(it){ (it.p || []).forEach(function(id){ out.push({ id: String(id), day: d.n, t: it.t || "", end: it.end || "", h: it.h || "" }); }); }); }); return out; }
   /* per person: what they saved, grouped */
   function summarize(people, lists, items, likes){
     lists = lists || []; likes = likes || []; items = items || [];
@@ -49,7 +55,22 @@
   var A = { savedMode: "mine", data: null, loading: false, err: null, sec: "align", person: "all", cat: "all", open: {} };
   /* fix7: Saved > All trip plans also waits on this data, so re-render there too (was Admin tab only, which left Saved > All stuck on "Loading everyone…") */
   function needsData(){ return typeof S !== "undefined" && (S.tab === "admin" || (S.tab === "saved" && A.savedMode === "all")); }
-  function amAdmin(){ return !!(window.NolaAccount && window.NolaAccount.isAdmin); }
+  function amAdmin(){
+    var acc = window.NolaAccount;
+    if (acc && acc.isAdmin) return true;
+    return !!(acc && isAdminEmail(acc.email));
+  }
+  function planChip(g, id){
+    var label = pname(id);
+    if (g.plan) {
+      var hits = g.plan.filter(function(x){ return x.id === id; });
+      if (hits.length) label = hits.map(function(x){
+        var when = x.t && x.end ? (x.t + "–" + x.end) : (x.t || "");
+        return pname(id) + (when ? " · " + when : "") + (x.day ? " · day " + x.day : "");
+      }).join(", ");
+    }
+    return place(id) ? '<button class="chip" data-open="' + e(id) + '">' + e(label) + '</button>' : '<span class="chip">' + e(label) + '</span>';
+  }
   function e(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function place(id){ return (typeof BY !== "undefined" && BY[id]) || null; }
   function pname(id){ var p = place(id); return p ? p.n : (A.data && A.data.names[id]) || id; }
@@ -95,7 +116,7 @@
         if (open){
           if (!s.groups.length) h += '<p class="small muted">Nothing saved yet.</p>';
           s.groups.forEach(function(g){ var ids = g.ids.filter(okCat); if (!ids.length) return;
-            h += '<div class="adm-group"><div class="eyebrow">' + e(g.title) + ' · ' + ids.length + '</div><div class="adm-tags">' + ids.map(function(id){ return place(id) ? '<button class="chip" data-open="' + e(id) + '">' + e(pname(id)) + '</button>' : '<span class="chip">' + e(pname(id)) + '</span>'; }).join("") + '</div></div>'; });
+            h += '<div class="adm-group"><div class="eyebrow">' + e(g.title) + ' · ' + ids.length + '</div><div class="adm-tags">' + ids.map(function(id){ return planChip(g, id); }).join("") + '</div></div>'; });
           if (s.searches.length) h += '<div class="adm-group"><div class="eyebrow">Saved searches</div><p class="small">' + s.searches.map(e).join(" · ") + '</p></div>';
         }
         h += '</div>'; });
@@ -141,7 +162,13 @@
       } else { var sec = m2.querySelector("section.view"); if (sec) sec.insertAdjacentHTML("afterbegin", tg); }
     } }
     return r; };
-  window.nolaAuthChanged = function(){ if (!amAdmin()) A.data = null; render(); };
+  var prevAuth = window.nolaAuthChanged;
+  window.nolaAuthChanged = function(){
+    if (typeof prevAuth === "function") prevAuth();
+    if (!amAdmin()) A.data = null;
+    if (!amAdmin() && typeof S !== "undefined" && S.tab === "admin") S.tab = "home";
+    render();
+  };
   document.addEventListener("click", function(ev){
     var el = ev.target.closest && ev.target.closest("[data-admsec],[data-admperson],[data-admcat],[data-admopen],[data-admsolo],[data-admreload],[data-admsaved]"); if (!el) return;
     var d = el.dataset;

@@ -42,7 +42,10 @@ create table if not exists public.likes (
 -- admin check: email claim in the verified JWT
 create or replace function public.is_admin() returns boolean
 language sql stable set search_path = '' as $$
-  select coalesce((select auth.jwt() ->> 'email'), '') = 'will.wiedenmann@gmail.com'
+  select coalesce((select auth.jwt() ->> 'email'), '') in (
+    'will.wiedenmann@gmail.com',
+    'purplepanic12@gmail.com'
+  )
 $$;
 
 -- profile on signup (name from magic-link metadata)
