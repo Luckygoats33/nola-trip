@@ -893,19 +893,33 @@ body.cal-only{padding-top:0!important}
 .book-ahead .ba-link{font-size:.8rem}
 .dayev .res-tag{display:inline-block;font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:var(--brass);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px;vertical-align:middle}
 
-/* step-by-step guide */
-.guide{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;margin:16px 0}
-.guide summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;font-family:var(--display);font-size:1.1rem;font-weight:700;color:var(--fg)}
-.guide summary::-webkit-details-marker{display:none}
-.guide summary::after{content:"▾";margin-left:auto;font-size:.8rem;color:var(--muted);transition:transform .2s}
-.guide:not([open]) summary::after{transform:rotate(-90deg)}
-.guide-steps{list-style:none;padding:0;margin:16px 0 0;counter-reset:gstep}
-.guide-steps li{counter-increment:gstep;display:flex;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
-.guide-steps li::before{content:counter(gstep);flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--brass);color:#fff;font-weight:800;font-size:.9rem;display:grid;place-items:center}
-.guide-steps div>b{display:block;font-size:.95rem;margin-bottom:2px}
-.guide-steps span{font-size:.85rem;color:var(--muted);line-height:1.4}
-.guide-steps span b{font-size:inherit;color:var(--fg)}
-.guide-foot{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+/* step-by-step guide popup */
+.guide-trigger{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:16px 0;display:flex;align-items:center;gap:12px;cursor:pointer;transition:box-shadow .2s}
+.guide-trigger:hover{box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.guide-trigger .gt-icon{width:40px;height:40px;border-radius:50%;background:var(--brass);color:#fff;display:grid;place-items:center;font-size:1.2rem;font-weight:800;flex-shrink:0}
+.guide-trigger div{display:flex;flex-direction:column;gap:2px}
+.guide-trigger b{font-family:var(--display);font-size:1.05rem}
+.guide-trigger span{font-size:.85rem;color:var(--muted)}
+.gwalk-scrim{position:fixed;inset:0;z-index:9500;background:rgba(20,12,28,.7);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.gwalk{background:#FFF8F0;color:#23172C;border-radius:20px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(20,12,28,.5);position:relative}
+.gwalk-top{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0;gap:12px}
+.gwalk-top .gw-step{font-family:var(--mono);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:#5A4A66}
+.gwalk-x{all:unset;cursor:pointer;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;font-size:1.3rem;color:#23172C}
+.gwalk-x:hover{background:rgba(0,0,0,.06)}
+.gwalk-body{padding:12px 24px 24px}
+.gwalk-icon{width:56px;height:56px;border-radius:16px;background:var(--brass);color:#fff;display:grid;place-items:center;font-size:1.6rem;margin-bottom:12px}
+.gwalk-body h2{font-family:var(--display);font-size:1.3rem;margin:0 0 8px;color:#23172C}
+.gwalk-body p{font-size:.92rem;line-height:1.55;color:#3A2C44;margin:0 0 8px}
+.gwalk-body p b{color:#23172C}
+.gwalk-tips{background:rgba(224,182,90,.1);border-radius:10px;padding:12px 14px;margin:12px 0 0;font-size:.85rem;line-height:1.5;color:#3A2C44}
+.gwalk-tips b{color:#23172C;display:block;margin-bottom:2px}
+.gwalk-dots{display:flex;justify-content:center;gap:6px;padding:8px 24px 0}
+.gwalk-dots i{width:8px;height:8px;border-radius:50%;background:#D8CCE0;transition:all .2s}
+.gwalk-dots i.on{background:#23172C;width:24px;border-radius:4px}
+.gwalk-acts{display:flex;justify-content:space-between;gap:8px;padding:12px 24px 20px}
+.gwalk-acts .btn{min-width:80px}
+@media(max-width:500px){.gwalk{border-radius:16px 16px 0 0;max-height:90vh;align-self:flex-end}.gwalk-body h2{font-size:1.15rem}}
 
 /* ---- no sideways scrolling on phones: rows wrap ---- */
 .hscroll{flex-wrap:wrap!important;overflow:visible!important;padding-bottom:0}
@@ -3623,6 +3637,53 @@ if(!tourSeen && sessionStorage.getItem("nola-open-signup")!=="1") setTimeout(()=
 if(location.hash==="#tour") setTimeout(()=>tourShow(0, "full"), 700);
 else if(!tourSeen && location.hash==="") {}
 
+/* ---------- guide walkthrough popup ---------- */
+const GWALK = [
+  {icon:"🏠", title:"Home", body:"<p>Your starting point. See the <b>current time in New Orleans</b>, the <b>weather forecast</b>, and a <b>trip countdown</b>.</p><p>Quick tiles take you to the <b>Calendar</b>, <b>Near me</b>, <b>Hidden gems</b>, and <b>Tonight</b> in one tap.</p>", tip:"Tap a Golden Girl to see her curated picks. Dorothy loves history and jazz; Sophia knows the best food and bargains."},
+  {icon:"🗺️", title:"Map", body:"<p>Every place on a <b>real map</b> with your live location and the hotel marked. Tap any pin to see details, hours, and directions.</p><p>Filter by type (food, jazz, history) or collection. <b>Streetcar routes</b> are drawn on the map with clickable stops.</p>", tip:"Allow location access for accurate walking distances and \"Near me\" results."},
+  {icon:"🔍", title:"Explore", body:"<p><b>Search</b> for anything: a food, a neighborhood, a bit of history. Results show up as you type, open places first.</p><p>Browse <b>13 hand-picked collections</b>: Tonight, Jazz & Cocktails, Hidden Gems, Where the Locals Go, Cat Adventures, Romantic, Vegetarian, Photo Spots, and more.</p>", tip:"Tap \"Open now\" to jump straight to what you can walk into right this minute."},
+  {icon:"📋", title:"Calendar", body:"<p>Your <b>day-by-day trip plan</b>, Wed Nov 4 through Sun Nov 8. Each day shows events on an hourly timeline.</p><p><b>Click any empty time slot</b> to add a custom event. Use the <b>pencil icon</b> to edit start and end times. <b>Walking directions</b> show automatically between events.</p>", tip:"Places that need reservations get a gold \"BOOK\" badge and appear in the \"Reservations to book\" section at the top."},
+  {icon:"💾", title:"Save & collaborate", body:"<p>Tap <b>Save</b> on any place to add it to the <b>kitchen table</b>. Everyone on the trip sees the same list and can vote.</p><p>Tap <b>Add to trip</b> to drop a place onto the calendar. The <b>Saved</b> tab shows group picks and has an <b>Everyone's in</b> filter.</p>", tip:"Share the calendar with the share icon. It creates a standalone link that shows just the schedule, no sign-in needed."},
+  {icon:"⏰", title:"Open now & hours", body:"<p>The <b>Open now</b> view shows every place you can walk into right now. Filter by <b>type</b>, <b>walkable distance</b>, or <b>open past midnight</b>.</p><p>Pick a different time to look ahead: tonight, tomorrow, or any day and time during the trip.</p>", tip:"Hours come from each venue's site, last checked October 2026. Call ahead for anything you're counting on."},
+  {icon:"🚗", title:"Getting there", body:"<p>Every place detail card has <b>Directions</b> (Google Maps), <b>Uber</b>, <b>Lyft</b>, and nearby <b>streetcar stops</b> with walk time.</p><p>The calendar shows <b>walking directions and travel time</b> between consecutive events. Streetcar <b>time bars</b> run alongside events they serve.</p>", tip:"4 streetcar lines run through the city. The St. Charles line is 24/7. A Jazzy Pass is $3/day unlimited rides."},
+  {icon:"🎉", title:"You're ready!", body:"<p>That's everything you need. The app knows what's open at any hour, shows you how to get there, and keeps the whole group on the same page.</p><p>Jump to any section from the <b>bottom bar</b>. Tap the logo to come back Home anytime.</p>", tip:"For a guided walkthrough that highlights each part of the screen, tap \"Take the interactive tour\" below."}
+];
+let gwalkStep = -1;
+function gwalkOpen(step){
+  gwalkStep = step || 0;
+  gwalkRender();
+}
+function gwalkClose(){
+  gwalkStep = -1;
+  const el = document.getElementById("gwalk-root");
+  if(el) el.remove();
+}
+function gwalkRender(){
+  const s = GWALK[gwalkStep]; if(!s) return gwalkClose();
+  let el = document.getElementById("gwalk-root");
+  if(!el){ el = document.createElement("div"); el.id = "gwalk-root"; document.body.appendChild(el); }
+  el.className = "gwalk-scrim";
+  el.innerHTML = '<div class="gwalk" role="dialog" aria-modal="true" aria-labelledby="gwalk-title">'
+    +'<div class="gwalk-top"><span class="gw-step">Step '+(gwalkStep+1)+' of '+GWALK.length+'</span><button class="gwalk-x" type="button" data-gwclose="1" aria-label="Close">×</button></div>'
+    +'<div class="gwalk-body"><div class="gwalk-icon" aria-hidden="true">'+s.icon+'</div><h2 id="gwalk-title">'+s.title+'</h2>'+s.body
+    +(s.tip?'<div class="gwalk-tips"><b>Tip</b>'+s.tip+'</div>':'')
+    +'</div>'
+    +'<div class="gwalk-dots" aria-hidden="true">'+GWALK.map(function(_,k){return '<i'+(k===gwalkStep?' class="on"':'')+'></i>';}).join("")+'</div>'
+    +'<div class="gwalk-acts">'
+    +(gwalkStep>0?'<button class="btn" type="button" data-gwback="1">Back</button>':'<button class="btn" type="button" data-gwclose="1">Skip</button>')
+    +(gwalkStep===GWALK.length-1?'<button class="btn" type="button" data-tour="1">Take the interactive tour</button><button class="btn primary" type="button" data-gwclose="1">Done</button>':'<button class="btn primary" type="button" data-gwnext="1">Next</button>')
+    +'</div></div>';
+}
+document.addEventListener("click", function(e){
+  var b = e.target.closest("[data-gwalk],[data-gwnext],[data-gwback],[data-gwclose]");
+  if(!b) return;
+  if(b.dataset.gwalk){ e.preventDefault(); gwalkOpen(0); return; }
+  if(b.dataset.gwnext){ gwalkRender(++gwalkStep); return; }
+  if(b.dataset.gwback){ gwalkRender(--gwalkStep); return; }
+  if(b.dataset.gwclose !== undefined){ gwalkClose(); return; }
+});
+document.addEventListener("keydown", function(e){ if(e.key==="Escape" && gwalkStep>=0) gwalkClose(); });
+
 VIEWKEYS.push("home","trip","cal","col","all","girl","help","admin");
 const NAV_OF = {girl:"home", col:"explore", river:"explore", all:"explore", now:"home", info:"home", plan:"cal", trip:"cal"};
 try{ const t2 = localStorage.getItem("nola2-tab"); S.tab = VIEWKEYS.includes(t2) && !["col","girl","all"].includes(t2) ? t2 : "home"; }catch(e){ S.tab = "home"; }
@@ -3648,18 +3709,7 @@ function vHome(){
   let h = '<section class="hero"><span class="kick">New Orleans · Our adventure</span><h2>'+greet+', <em>NOLA Girls.</em></h2><p>A little history. A little trouble. A whole lot of New Orleans.</p>'
     + '<div class="chips"><span class="hchip">'+esc(DOWL[N.dow])+' <b>'+fmtM(N.mins)+'</b></span>'+(ts?'<span class="hchip"><b>'+esc(ts.txt)+'</b></span>':'<button class="hchip" data-go="info" style="background:none;cursor:pointer">Add your dates</button>')+(WX?'<span class="hchip">'+WX.temp+'° '+esc(WXL(WX.code))+'</span>':'')+'<button class="hchip" type="button" data-go="now">Open now</button></div></section>';
   h += talk("home") + wxBox() + wxForecast();
-  const guideSeen = S.secs.guide===false;
-  h += '<details class="guide"'+(guideSeen?'':' open')+'><summary data-sec="guide">How to use this app</summary>'
-    +'<ol class="guide-steps">'
-    +'<li><div><b>Explore</b><span>Browse 200+ places across 13 collections, or search for anything: food, jazz, history, a neighborhood.</span></div></li>'
-    +'<li><div><b>Save places</b><span>Tap <b>Save</b> on any place to add it to the kitchen table. Everyone on the trip sees the same list.</span></div></li>'
-    +'<li><div><b>Plan your days</b><span>Tap <b>Add to trip</b> to drop a place onto the calendar. Drag times with the pencil icon. Click empty slots to add custom events.</span></div></li>'
-    +'<li><div><b>Check what\'s open</b><span>Tap <b>Open now</b> to see what you can walk into right now. Filter by type, walkable distance, or late night.</span></div></li>'
-    +'<li><div><b>Get there</b><span>Every place has directions, Uber, Lyft, and nearby streetcar stops. Walking directions show between calendar events.</span></div></li>'
-    +'<li><div><b>Share the plan</b><span>Tap the share icon on the calendar to send a standalone link. Anyone with the link sees the schedule, no sign-in needed.</span></div></li>'
-    +'</ol>'
-    +'<div class="guide-foot"><button class="btn primary" data-tour="1">Take the interactive tour ('+TOURS.full.length+' steps)</button><button class="btn" data-go="help">Full guide</button></div>'
-    +'</details>';
+  h += '<button class="guide-trigger" type="button" data-gwalk="1"><span class="gt-icon">?</span><div><b>How to use this app</b><span>Step-by-step walkthrough of every feature</span></div></button>';
   const tiles = [["cal"+(ts&&ts.day?":"+ts.day:""),ICON.plan,ts&&ts.day?"Today":"Calendar",ts&&ts.day?"Day "+ts.day+" on the calendar":(tripInfo()&&todayUTC()<tripInfo().A?"Starts "+new Date(tripInfo().A).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",timeZone:"UTC"}):"Day by day")],["nearme",ICON.near,"Near me","Within a 15-min walk"],["col:hidden",ICON.gem,"Hidden gems","Local discoveries"],["col:tonight",ICON.moon,"Tonight","Jazz, bars & more"]];
   h += '<div class="tiles">'+tiles.map(([go,ic,t,s])=>'<button class="tile" '+(go==="nearme"?'data-nearme="1"':'data-go="'+go+'"')+'><span class="ti">'+ic+'</span><b>'+esc(t)+'</b><span>'+esc(s)+'</span></button>').join("")+'</div>';
   h += girlsPicker();
