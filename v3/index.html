@@ -3675,7 +3675,7 @@ function vDayTimeline(){
   h += '<p class="muted small">'+(items.length?items.length+(items.length===1?' thing':' things')+' scheduled.':'Nothing scheduled yet.')+' Tap the pencil on any event to edit times. Prev, Next, or a day above switches days.</p>';
   h += '<div class="row" style="justify-content:space-between"><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button><span class="cal-icons">'
     +'<button type="button" class="btn cal-icon" data-share="1" title="Share" aria-label="Share"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></button>'
-    +(window.NolaAccount&&window.NolaAccount.isAdmin?'<button type="button" class="btn cal-icon" data-bghome="1" title="Get Birthday Girl Home" aria-label="Get Birthday Girl Home" style="background:var(--lav);border-color:var(--lav);color:#fff"><span style="font-size:1.1rem">🐱👑</span></button>':'')
+    +(window.NolaAccount&&window.NolaAccount.isAdmin?'<button type="button" class="btn cal-icon" data-bghome="1" title="Get Birthday Girl Home" aria-label="Get Birthday Girl Home" style="background:var(--lav);border-color:var(--lav);color:#fff"><span style="font-size:1.1rem">👽</span></button>':'')
     +'</span></div>';
   h += '<div class="dayboard" style="grid-template-columns:68px repeat('+colCount+',minmax(0,1fr))" role="grid" aria-label="Schedule for '+esc(parts.long)+'">';
   for(let i=0;i<rows;i++){
@@ -3711,7 +3711,7 @@ function vDayTimeline(){
   }
   h += '<div class="row day-foot" style="justify-content:space-between"><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button><span class="cal-icons">'
     +'<button type="button" class="btn cal-icon" data-share="1" title="Share" aria-label="Share"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></button>'
-    +(window.NolaAccount&&window.NolaAccount.isAdmin?'<button type="button" class="btn cal-icon" data-bghome="1" title="Get Birthday Girl Home" aria-label="Get Birthday Girl Home" style="background:var(--lav);border-color:var(--lav);color:#fff"><span style="font-size:1.1rem">🐱👑</span></button>':'')
+    +(window.NolaAccount&&window.NolaAccount.isAdmin?'<button type="button" class="btn cal-icon" data-bghome="1" title="Get Birthday Girl Home" aria-label="Get Birthday Girl Home" style="background:var(--lav);border-color:var(--lav);color:#fff"><span style="font-size:1.1rem">👽</span></button>':'')
     +'</span></div>';
   h += '<nav class="daynav" aria-label="Switch day (bottom)">';
   h += '<button type="button" class="daynav-btn" data-daynav="-1"'+(prev?'':' disabled')+' aria-label="'+(prevParts?'Previous day, '+esc(prevParts.long):'Previous day')+'"><span aria-hidden="true">←</span> Prev</button>';
@@ -3986,7 +3986,7 @@ function openBirthdayGirlHome(){
     + '<button class="bgh-close" id="bgh-close" aria-label="Close">&times;</button>'
     + '<h3>Get the Birthday Girl Home</h3>'
     + '<div class="bgh-map" id="bgh-map"></div>'
-    + '<div class="bgh-legend"><span><span class="bgh-marker crown" style="width:28px;height:28px;font-size:16px">👑</span> Lauren\'s hotel</span><span><span class="bgh-marker cat" style="width:28px;height:28px;font-size:16px">🐱</span> You</span></div>'
+    + '<div class="bgh-legend"><span><span class="bgh-marker crown" style="width:28px;height:28px;font-size:16px">👑</span> Lauren\'s hotel</span><span><span class="bgh-marker cat" style="width:28px;height:28px;font-size:16px">👽</span> You</span></div>'
     + '<p class="small muted" id="bgh-status">Finding your location...</p>'
     + '<div class="bgh-acts" id="bgh-acts"></div>'
     + '</div>';
@@ -3995,7 +3995,7 @@ function openBirthdayGirlHome(){
     if(e.target===scrim || e.target.closest("#bgh-close")) scrim.remove();
   });
   const crownIcon = L.divIcon({html:'<div class="bgh-marker crown">👑</div>', className:'', iconSize:[44,44], iconAnchor:[22,22], popupAnchor:[0,-22]});
-  const catIcon = L.divIcon({html:'<div class="bgh-marker cat">🐱</div>', className:'', iconSize:[44,44], iconAnchor:[22,22], popupAnchor:[0,-22]});
+  const catIcon = L.divIcon({html:'<div class="bgh-marker cat">👽</div>', className:'', iconSize:[44,44], iconAnchor:[22,22], popupAnchor:[0,-22]});
   const bmap = L.map("bgh-map", {zoomControl:true, attributionControl:false}).setView([LAUREN_HOTEL.lat, LAUREN_HOTEL.lon], 15);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom:19}).addTo(bmap);
   L.marker([LAUREN_HOTEL.lat, LAUREN_HOTEL.lon], {icon:crownIcon}).addTo(bmap).bindPopup("<b>"+LAUREN_HOTEL.n+"</b><br>"+LAUREN_HOTEL.ad).openPopup();
