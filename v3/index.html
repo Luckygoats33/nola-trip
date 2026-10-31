@@ -601,6 +601,12 @@ h3{font-family:var(--display);font-style:normal;font-weight:600}
 .ai-card .m b{font-size:.92rem}
 .ai-big img{display:block;width:100%;max-width:520px;margin:0 auto;border-radius:12px;background:#F7F3EC}
 .badge-every{font-family:var(--mono);font-size:.7rem;padding:2px 9px;border-radius:999px;background:var(--accent);color:var(--accent-ink)}
+.tattoo-share{padding:8px 0}.tattoo-preview{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;text-align:center;margin-bottom:16px}
+.tattoo-preview a{text-decoration:none;color:inherit;display:flex;flex-direction:column;align-items:center;gap:8px}
+.tattoo-thumb{width:80px;height:80px;border-radius:16px;background:var(--brass);display:grid;place-items:center;font-size:2.2rem;margin-bottom:4px}
+.tattoo-preview b{font-family:var(--display);font-size:1.1rem}.tattoo-actions{display:flex;flex-direction:column;gap:10px}
+.tattoo-actions h3{font-family:var(--display);font-size:1.05rem;margin:0 0 4px}
+.tattoo-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;text-decoration:none;font-size:.95rem;padding:14px}
 .who-picked{grid-column:1 / -1;margin:0;font-size:.9rem;line-height:1.35;color:var(--ink)}
 .who-picked b{font-weight:800}
 .who-chip{display:inline-flex;align-items:center;gap:6px}
@@ -4009,11 +4015,15 @@ function vTrip(){
 S.savedTab = "mine"; S.person = "all";
 function vSaved2(){
   if(S.savedTab==="passport" || S.savedTab==="journal" || S.savedTab==="trip" || S.savedTab==="designs") S.savedTab = "mine";
+  var isAdm = !!(window.NolaAccount && window.NolaAccount.isAdmin);
+  if(S.savedTab==="tattoo" && !isAdm) S.savedTab = "mine";
   const tabs = [["mine","My plans"],["picks","Group picks"]];
+  if(isAdm) tabs.push(["tattoo","Tattoo design"]);
   const mineCount = myPicks().size;
   let h = talk("saved") + '<div class="head"><span class="eyebrow">The kitchen table</span><h2>Saved</h2></div><div class="seg" role="tablist">'+tabs.map(([k,l])=>'<button class="chip" data-savedtab="'+k+'" aria-pressed="'+(S.savedTab===k)+'">'+l+(k==="mine"&&mineCount?' · '+mineCount:'')+'</button>').join("")+'</div>';
   if(S.savedTab==="mine" && mineCount===0) return h + '<div class="empty saved-empty">Nothing in your plans yet.<br><br>Browse the <b>Map</b> or <b>Explore</b>, open any place, and tap <b>Save</b>. Tap again anytime to remove it. Saves stay on this account and clear when you sign out.</div>';
   if(S.savedTab==="mine") return h + vSaved({mineOnly:true});
+  if(S.savedTab==="tattoo") return h + vTattooDesign();
   /* group picks with person filter and "everyone's in" */
   const people = [...new Set([...Object.keys(picks), ...Object.keys(votes)])].filter(k=>k!==LOCAL && ((picks[k]&&picks[k].size) || Object.keys(votes[k]||{}).length));
   const wants = (k,id) => (picks[k] && picks[k].has(id)) || ["must","maybe"].includes((votes[k]||{})[id]);
@@ -4028,6 +4038,24 @@ function vSaved2(){
   }
   body = body.replace(/<div class="res"><button class="nm" data-open="([^"]+)">/g, (m,id)=> m + (everyone(id)?'<span class="badge-every">Everyone\'s in</span> ':''));
   return h + body;
+}
+function vTattooDesign(){
+  var pdfUrl = "tattoo_design.pdf";
+  var fullUrl = location.origin + location.pathname.replace(/[^/]*$/,"") + pdfUrl;
+  var subj = encodeURIComponent("My tattoo design for NOLA");
+  var body = encodeURIComponent("Hey! Here's the tattoo design I want to get while I'm in New Orleans. Check it out:\n\n" + fullUrl + "\n\nLet me know if you can fit me in Nov 4-8!");
+  var smsBody = encodeURIComponent("Hey! Here's my tattoo design for NOLA: " + fullUrl + " - Can you fit me in Nov 4-8?");
+  var h = '<div class="tattoo-share">'
+    + '<div class="tattoo-preview"><a href="'+esc(pdfUrl)+'" target="_blank" rel="noopener"><div class="tattoo-thumb">🎨</div><b>tattoo_design.pdf</b><span class="muted small">Tap to view full design</span></a></div>'
+    + '<div class="tattoo-actions">'
+    + '<h3>Send to your artist</h3>'
+    + '<a class="btn primary tattoo-btn" href="mailto:?subject='+subj+'&body='+body+'">📧 Email design</a>'
+    + '<a class="btn tattoo-btn" href="sms:?&body='+smsBody+'">💬 Text design</a>'
+    + '<button class="btn tattoo-btn" type="button" data-copylink="'+esc(fullUrl)+'">📋 Copy link</button>'
+    + '</div>'
+    + '<p class="muted small" style="margin-top:12px">The link works for anyone, no sign-in needed. Your artist can open it on any device.</p>'
+    + '</div>';
+  return h;
 }
 function vPassport(){
   const vis = myVisited(), got = stampsFor(vis).map(s=>s.k);
@@ -4361,11 +4389,12 @@ render = function(){
 /* ---------- v2 events ---------- */
 window.addEventListener("error", e=>{ try{ toast("Something hiccuped. Pull down to refresh if a button stops working."); console.error(e.error||e.message); }catch(_){} });
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle],[data-surpclear],[data-bghome],[data-scmap],[data-scline]");
+  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle],[data-surpclear],[data-bghome],[data-scmap],[data-scline],[data-copylink]");
   if(!el) return; const d = el.dataset;
+  if(d.copylink){ navigator.clipboard.writeText(d.copylink).then(function(){ toast("Link copied!"); }).catch(function(){ prompt("Copy this link:", d.copylink); }); return; }
   if(d.surp){ const [k,v]=d.surp.split(":"), nv = k==="hrs" ? +v : v; S.surp[k] = S.surp[k]===nv ? null : nv; S.surpRes = (S.surp.mood||S.surp.hrs||S.surp.mode) ? surpriseNow() : null; if(!d.go){ render(); return; } }
   if(d.surpclear){ S.surp.mood = S.surp.hrs = S.surp.mode = null; S.surpRes = null; render(); return; }
-  if(d.savedtab){ S.savedTab = d.savedtab==="picks" ? "picks" : "mine"; if(!d.go){ render(); return; } }
+  if(d.savedtab){ S.savedTab = d.savedtab==="picks" ? "picks" : d.savedtab==="tattoo" ? "tattoo" : "mine"; if(!d.go){ render(); return; } }
   if(d.go){ let [v,arg] = d.go.split(":"); if(v==="trip"||v==="plan") v="cal"; if(v==="ink"||v==="time"||v==="birthday") v="home"; S.dayOpen=false; S.tab = v; if(v==="col") S.col = arg; if(v==="cal" && arg) S.day = +arg; if(d.scmap) S.mapStreetcar = true; S.sheet = null; window.scrollTo(0,0); render(); if(d.surp) document.getElementById("surprise")?.scrollIntoView({block:"start"}); return; }
   if(d.col){ S.tab = "col"; S.col = d.col; S.sheet = null; window.scrollTo(0,0); render(); return; }
   if(d.surprun){ if(d.surprun==="again") S.surp.seed++; S.surpRes = surpriseNow(); render(); setTimeout(()=>document.getElementById("adv")?.scrollIntoView({block:"nearest", behavior:"smooth"}),30); return; }
