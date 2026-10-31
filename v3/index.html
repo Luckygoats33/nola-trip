@@ -834,6 +834,16 @@ button.dayev-name{all:unset;display:block;max-width:100%;font-family:var(--displ
 .bgh-marker.crown{background:#D4AF37}
 .bgh-marker.cat{background:#7558AE}
 
+/* streetcar integration */
+.sc-near{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:10px 0;line-height:1.5}
+.sc-icon{font-size:1.1rem;vertical-align:middle}
+.sc-chip[aria-pressed="true"]{background:#00838F;color:#fff;border-color:#00838F}
+.sc-section summary .t2{display:inline-flex;align-items:center;gap:6px}
+.sc-lines{display:grid;gap:10px;margin:10px 0}
+.sc-line-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.sc-line-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.sc-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+
 /* ---- no sideways scrolling on phones: rows wrap ---- */
 .hscroll{flex-wrap:wrap!important;overflow:visible!important;padding-bottom:0}
 .hscroll>*{flex-shrink:1!important}
@@ -2417,7 +2427,7 @@ function vNext2(W){
 
 /* ---------- real map (Leaflet); falls back to the sketch map when tiles can't load ---------- */
 const RADAR = {green:"#1F8A4C", yellow:"#E0A100", red:"#C62828"};
-let LMAP=null, LCL=null, LZONES=null, LME=null, mapEl=null, tileOk=false, tileErr=0, LDARK=null;
+let LMAP=null, LCL=null, LZONES=null, LME=null, LSTREETCAR=null, mapEl=null, tileOk=false, tileErr=0, LDARK=null;
 const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888";
 const mapAvailable = () => !!(window.L && window.L.map) && !S.noTiles;
 function isDark(){ const t=document.documentElement.getAttribute("data-theme"); return t==="dark" || (t!=="light" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); }
@@ -2434,7 +2444,7 @@ function ensureMap(slot){
     LCL = L.markerClusterGroup ? L.markerClusterGroup({showCoverageOnHover:false, maxClusterRadius:38, spiderfyOnMaxZoom:true,
       iconCreateFunction:c=>L.divIcon({html:'<span>'+c.getChildCount()+'</span>', className:'clu', iconSize:[38,38]})}) : L.layerGroup();
     LCL.addTo(LMAP);
-    LZONES = L.layerGroup(); LME = L.layerGroup().addTo(LMAP);
+    LZONES = L.layerGroup(); LME = L.layerGroup().addTo(LMAP); LSTREETCAR = L.layerGroup();
     LMAP.on("moveend", updateMapList);
   }
   applyLock(slot);
@@ -2493,6 +2503,19 @@ function updateMarkers(){
   LME.clearLayers();
   if(LOC){ L.circle([LOC.lat,LOC.lon], {radius:Math.min(LOC.acc||30,300), color:"#2B7BFF", weight:1, fillOpacity:.12}).addTo(LME); L.circleMarker([LOC.lat,LOC.lon], {radius:7, color:"#fff", weight:3, fillColor:"#2B7BFF", fillOpacity:1}).bindTooltip("You are here").addTo(LME); }
   if(trip.lat && trip.lon) L.circleMarker([trip.lat,trip.lon], {radius:9, color:cssVar("--ink"), weight:2, fillColor:cssVar("--surface"), fillOpacity:1}).bindTooltip("Hotel: "+(trip.hotel||"")).addTo(LME);
+  LSTREETCAR.clearLayers();
+  if(S.mapStreetcar && window.STREETCAR_LINES){
+    STREETCAR_LINES.forEach(line=>{
+      L.polyline(line.route, {color:line.color, weight:4, opacity:.85, dashArray:"8 6"}).bindTooltip(line.name+" Line", {sticky:true}).addTo(LSTREETCAR);
+      line.stops.forEach(st=>{
+        const mk = L.circleMarker([st.lat,st.lon], {radius:5, color:"#fff", weight:2, fillColor:line.color, fillOpacity:1});
+        mk.bindTooltip(st.name+"<br><span style='color:"+line.color+"'>"+line.name+" Line</span>", {direction:"top", offset:[0,-6]});
+        mk.bindPopup("<b>"+st.name+"</b><br><span style='color:"+line.color+"'>"+line.name+" Line</span><br>"+line.freq+"<br>"+line.hours);
+        LSTREETCAR.addLayer(mk);
+      });
+    });
+    if(!LMAP.hasLayer(LSTREETCAR)) LSTREETCAR.addTo(LMAP);
+  } else if(LMAP.hasLayer(LSTREETCAR)) LMAP.removeLayer(LSTREETCAR);
 }
 function fitAll(){ const pts = mapList().map(coordOf); if(pts.length) LMAP.fitBounds(pts, {padding:[24,24], maxZoom:16}); }
 function updateMapList(){
@@ -2510,7 +2533,7 @@ function vMap(){
   let h = '<div class="row hscroll"><button class="btn primary" data-locate="1">◎ Locate me</button>'+Object.entries(LVIEWS).map(([k,v])=>'<button class="chip" data-lview="'+k+'">'+esc(v[0])+'</button>').join("")+'</div>';
   const show = mapShown(), phone = isPhone();
   if(show && !phone) h += '<div class="mapwrap" id="mapanchor"><div id="mapSlot" class="mapslot"></div></div>';
-  h += '<div class="row hscroll"><button class="chip" id="mapOpen" aria-pressed="'+!!S.mapOpen+'">Open now only</button><button class="chip cake" id="mapSaved" aria-pressed="'+!!S.mapSaved+'">Saved only</button><button class="chip" data-mapcolor="'+(S.mapColor==="open"?"type":"open")+'" aria-pressed="'+(S.mapColor==="open")+'">Color by open now</button><button class="chip" id="mapSafety" aria-pressed="'+!!S.mapSafety+'">Night-walking advice</button></div>';
+  h += '<div class="row hscroll"><button class="chip" id="mapOpen" aria-pressed="'+!!S.mapOpen+'">Open now only</button><button class="chip cake" id="mapSaved" aria-pressed="'+!!S.mapSaved+'">Saved only</button><button class="chip" data-mapcolor="'+(S.mapColor==="open"?"type":"open")+'" aria-pressed="'+(S.mapColor==="open")+'">Color by open now</button><button class="chip" id="mapSafety" aria-pressed="'+!!S.mapSafety+'">Night-walking advice</button><button class="chip sc-chip" id="mapStreetcar" aria-pressed="'+!!S.mapStreetcar+'">🚃 Streetcars</button></div>';
   h += '<div class="legend">'+(S.mapColor==="open" ? '<span><i style="background:var(--leaf)"></i>Open</span><span><i style="background:var(--gold)"></i>Opens later</span><span><i style="background:var(--line)"></i>Closed</span><span><i style="background:var(--muted)"></i>Check hours</span>'
      : FG.map(([lab],i)=>'<span><i style="background:'+GROUP_COLOR[i]+'"></i>'+esc(lab)+'</span>').join(""))+'<span><i style="background:#2B7BFF"></i>You</span><span><i style="background:var(--surface)"></i>Hotel</span></div>';
   h += '<details class="cat"'+(S.secs.mapf?' open':'')+'><summary data-sec="mapf"><span class="t2">Filter by type</span><span class="c">'+(cat!=="all"?esc(CATS[cat]):"Everything")+'</span><span class="hint">Coffee, food, jazz, Bourbon, history, tattoos, swamps…</span></summary><div class="body">'+filterBlock(cat, "data-mapcat", "")+'</div></details>';
@@ -2787,7 +2810,7 @@ async function refreshProfiles(){
 
 /* ---------- events ---------- */
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-tab],[data-day],[data-calday],[data-dayback],[data-daynav],[data-dayadd],[data-cat],[data-heart],[data-open],[data-close],[data-scrim],[data-copy],[data-check],[data-talk],[data-edit],[data-save],[data-cancel],[data-nowbtn],[data-when],[data-ncat],[data-editplan],[data-reset],[data-addday],[data-addstop],[data-planb],[data-addplace],[data-mv],[data-del],[data-rmp],[data-swap],[data-addp],[data-altsame],[data-addto],[data-doadd],[data-slot],[data-fixed],[data-vote],[data-ink],[data-inkfav],[data-locate],[data-next2],[data-lview],[data-ceadd],[data-ceplace],[data-cemap],[data-ceclear],[data-evedit],[data-evsave],[data-evcancel],[data-evdel],[data-share],#mapOpen,#mapSaved,[data-sec],[data-stop],[data-mapcat],[data-mapview],[data-mapzoom],[data-mapcolor],[data-clearq],[data-clearex],#mapSafety,[data-safetoggle],[data-safelv],#nowLate,#exOpen,#exWalk,#picksOnly,#walkOnly,#nowPicks");
+  const el = e.target.closest("[data-tab],[data-day],[data-calday],[data-dayback],[data-daynav],[data-dayadd],[data-cat],[data-heart],[data-open],[data-close],[data-scrim],[data-copy],[data-check],[data-talk],[data-edit],[data-save],[data-cancel],[data-nowbtn],[data-when],[data-ncat],[data-editplan],[data-reset],[data-addday],[data-addstop],[data-planb],[data-addplace],[data-mv],[data-del],[data-rmp],[data-swap],[data-addp],[data-altsame],[data-addto],[data-doadd],[data-slot],[data-fixed],[data-vote],[data-ink],[data-inkfav],[data-locate],[data-next2],[data-lview],[data-ceadd],[data-ceplace],[data-cemap],[data-ceclear],[data-evedit],[data-evsave],[data-evcancel],[data-evdel],[data-share],#mapOpen,#mapSaved,[data-sec],[data-stop],[data-mapcat],[data-mapview],[data-mapzoom],[data-mapcolor],[data-clearq],[data-clearex],#mapSafety,#mapStreetcar,[data-safetoggle],[data-safelv],#nowLate,#exOpen,#exWalk,#picksOnly,#walkOnly,#nowPicks");
   if(!el) return;
   if(el.dataset.scrim && e.target!==el) return;
   if(el.dataset.sec){ e.preventDefault(); const det=el.parentElement; S.secs[el.dataset.sec]=!det.open; render(); return; }
@@ -2823,6 +2846,7 @@ document.addEventListener("click", e=>{
   }
   if(el.id==="mapOpen"){ S.mapOpen=!S.mapOpen; render(); return; }
   if(el.id==="mapSaved"){ S.mapSaved=!S.mapSaved; render(); return; }
+  if(el.id==="mapStreetcar"){ S.mapStreetcar=!S.mapStreetcar; render(); return; }
   if(el.id==="nowLate"){ S.nowLate=!S.nowLate; render(); return; }
   if(el.id==="exOpen"){ S.exOpen=!S.exOpen; render(); return; }
   if(el.id==="exWalk"){ S.exWalk=!S.exWalk; render(); return; }
@@ -3584,6 +3608,20 @@ function vExplore2(){
   h += '<div class="cols">'+COLS.map(c=>{ const n = colPlaces(c.k).length;
     return '<button class="colcard" style="--cc:'+c.cc+'" data-col="'+c.k+'"><span class="n2">'+n+' places</span><b>'+esc(c.t)+'</b><span>'+esc(c.s)+'</span></button>'; }).join("")+'</div>';
   h += '<div class="row"><button class="btn" data-go="all">All places with filters</button><button class="btn" data-go="now">Everything open now</button><button class="btn" data-go="river">River cruise times</button></div>';
+  if(window.STREETCAR_LINES){
+    h += '<details class="cat sc-section"'+(S.secs.sctram?' open':'')+'><summary data-sec="sctram"><span class="t2">🚃 Getting Around by Streetcar</span><span class="hint">4 lines, $1.25 a ride, $3 day pass</span></summary><div class="body">';
+    h += '<p class="small">New Orleans has 4 streetcar lines. The <b>St. Charles</b> is the oldest in the world (since 1835). All accept cash or the Jazzy Pass.</p>';
+    h += '<div class="sc-lines">';
+    STREETCAR_LINES.forEach(l=>{
+      h += '<div class="sc-line-card"><div class="sc-line-hdr"><span class="sc-dot" style="background:'+l.color+'"></span><b>'+esc(l.name)+'</b></div>';
+      h += '<p class="small muted">'+esc(l.freq)+'<br>'+esc(l.hours)+'</p>';
+      h += '<p class="small">'+esc(l.note)+'</p></div>';
+    });
+    h += '</div>';
+    h += '<div class="row"><button class="btn" data-go="map" data-scmap="1">Show routes on map</button></div>';
+    h += '<p class="small muted">Fare: '+STREETCAR_FARE.single+' single ride · '+STREETCAR_FARE.day+' unlimited day pass · '+STREETCAR_FARE.senior+' seniors/disabled. Exact change or Jazzy Pass.</p>';
+    h += '</div></details>';
+  }
   return h;
 }
 
@@ -3874,7 +3912,7 @@ function vMap2(){
   h += '<div class="mapwrap"><div id="mapSlot" class="mapslot"></div>'+safeLegendHtml()+'</div>';
   h += '<div class="mapctl"><label class="mapsel wide"><span>Show</span><select class="field" id="mapcolsel" aria-label="Which places to show on the map"><option value="all"'+(!S.mapCol||S.mapCol==="all"?' selected':'')+'>All places</option>'+COLS.filter(c=>!c.special).map(c=>'<option value="'+c.k+'"'+(S.mapCol===c.k?' selected':'')+'>'+esc(c.t)+'</option>').join("")+'</select></label></div>';
   h += '<div class="row hscroll" role="group" aria-label="Walking radius"><span class="small muted">Within</span>'+[0,5,10,15,30].map(m=>'<button class="chip" data-radius="'+m+'" aria-pressed="'+((S.radius||0)===m)+'">'+(m?m+' min walk':'Any distance')+'</button>').join("")+(S.radius&&!o?'<span class="small muted">Tap Near me first</span>':'')+'</div>';
-  h += '<div class="row hscroll"><button class="chip" id="mapOpen" aria-pressed="'+!!S.mapOpen+'">Open now</button><button class="chip cake" id="mapSaved" aria-pressed="'+!!S.mapSaved+'">Saved</button><button class="chip" data-mapcolor="'+(S.mapColor==="open"?"type":"open")+'" aria-pressed="'+(S.mapColor==="open")+'">Color by open now</button><button class="chip" id="mapSafety" aria-pressed="'+!!S.mapSafety+'">Safety zones</button></div>';
+  h += '<div class="row hscroll"><button class="chip" id="mapOpen" aria-pressed="'+!!S.mapOpen+'">Open now</button><button class="chip cake" id="mapSaved" aria-pressed="'+!!S.mapSaved+'">Saved</button><button class="chip" data-mapcolor="'+(S.mapColor==="open"?"type":"open")+'" aria-pressed="'+(S.mapColor==="open")+'">Color by open now</button><button class="chip" id="mapSafety" aria-pressed="'+!!S.mapSafety+'">Safety zones</button><button class="chip sc-chip" id="mapStreetcar" aria-pressed="'+!!S.mapStreetcar+'">🚃 Streetcars</button></div>';
   h += '<div class="safety"><h3>Walking zones</h3><div class="safe-key" role="list"><span><i class="sw green"></i> Green · safer</span><span><i class="sw yellow"></i> Yellow · caution</span><span><i class="sw red"></i> Red · avoid at night</span></div><ul class="tips"><li>Green is the busier, better-lit visitor core: Bourbon, Royal, Decatur, Frenchmen, Canal, and St. Charles.</li><li>Yellow means fine by day; at night stay on the main street or take a car.</li><li>Red means don\'t walk it at night. Order the rideshare from inside and meet it at the door.</li></ul><p class="small muted">Shaded zones are visitor guidance, not legal advice or crime data. Edges are approximate. Emergency 911 · NOPD non-emergency <span class="mono">504-821-2222</span></p></div>';
   h += talk("map");
   h += '<details class="cat" open><summary data-sec="maplx"><span class="t2">Places in this view</span><span class="c" id="maplistcount"></span><span class="hint">Move the map to update the list.</span></summary><div class="body" id="maplist"></div></details>';
@@ -3913,6 +3951,7 @@ vSheet = function(){
     if(x.detail) h += '<p class="small">'+esc(x.detail)+'</p>';
   }
   h += '<dl class="kv"><dt>Area</dt><dd>'+esc(p.a)+'</dd>'+(p.ad?'<dt>Address</dt><dd>'+esc(p.ad)+(p.adNote?' <span class="small muted">('+esc(p.adNote)+')</span>':'')+'</dd>':'')+'<dt>Distance</dt><dd>'+esc(distLabel(p))+'</dd><dt>Price</dt><dd>'+esc((x&&x.price)||p.pr||"–")+'</dd>'+(x&&x.reserve?'<dt>Booking</dt><dd>'+esc(x.reserve)+'</dd>':'')+(p.ph?'<dt>Phone</dt><dd><a class="mono" href="tel:'+String(p.ph).replace(/[^0-9+]/g,'')+'">'+esc(p.ph)+'</a>'+(p.phw?' <span class="small muted">('+esc(p.phw)+')</span>':'')+'</dd>':(p.contact?'<dt>Contact</dt><dd>'+esc(p.contact)+'</dd>':''))+'</dl>';
+  if(window.streetcarNearestStop && COORD[p.id]){ const sc=streetcarNearestStop(COORD[p.id][0],COORD[p.id][1]); if(sc && sc.meters<1200){ const wk=streetcarWalkMin(sc.meters); h += '<div class="sc-near"><span class="sc-icon">🚃</span> <b>'+esc(sc.line.name)+' Line</b> · '+esc(sc.stop.name)+' · '+wk+' min walk<br><span class="small muted">'+esc(sc.line.freq)+' · '+STREETCAR_FARE.single+' per ride</span></div>'; } }
   if(x && x.source) h += '<p class="srcline">Hours source: <a href="'+esc(x.source.split(" ")[0])+'" target="_blank" rel="noopener">'+esc(x.source.replace(/^https?:\/\/(www\.)?/,'').split('/')[0])+'</a>'+(x.confidence?' · confidence '+esc(x.confidence):'')+'</p>';
   if(!infoOnly) h += '<div class="stickybar">'+cakeBtn(p)+'<a class="btn primary" href="'+dirUrl(p)+'" target="_blank" rel="noopener">Directions</a><a class="btn" href="'+mapsPlaceUrl(p)+'" target="_blank" rel="noopener">Maps</a>'+(readOnly?'':'<button class="btn" data-addto="'+p.id+'">Add to trip</button>')+(p.url?'<a class="btn" href="'+esc(p.url)+'" target="_blank" rel="noopener">Website</a>':'')+(p.ph?'<button class="btn" data-copy="'+esc(p.ph)+'">Copy phone</button>':'')+'<button class="btn" data-share="1">Copy link</button></div>';
   return '<div class="scrim" data-scrim="1"><div class="sheet" data-place="'+esc(p.id)+'"'+(infoOnly?' data-info="1"':'')+' role="dialog" aria-modal="true" aria-labelledby="sheet-title">'+h+'</div></div>';
@@ -4093,12 +4132,12 @@ render = function(){
 /* ---------- v2 events ---------- */
 window.addEventListener("error", e=>{ try{ toast("Something hiccuped. Pull down to refresh if a button stops working."); console.error(e.error||e.message); }catch(_){} });
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle],[data-surpclear],[data-bghome]");
+  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle],[data-surpclear],[data-bghome],[data-scmap]");
   if(!el) return; const d = el.dataset;
   if(d.surp){ const [k,v]=d.surp.split(":"), nv = k==="hrs" ? +v : v; S.surp[k] = S.surp[k]===nv ? null : nv; S.surpRes = (S.surp.mood||S.surp.hrs||S.surp.mode) ? surpriseNow() : null; if(!d.go){ render(); return; } }
   if(d.surpclear){ S.surp.mood = S.surp.hrs = S.surp.mode = null; S.surpRes = null; render(); return; }
   if(d.savedtab){ S.savedTab = d.savedtab==="picks" ? "picks" : "mine"; if(!d.go){ render(); return; } }
-  if(d.go){ let [v,arg] = d.go.split(":"); if(v==="trip"||v==="plan") v="cal"; if(v==="ink"||v==="time"||v==="birthday") v="home"; S.dayOpen=false; S.tab = v; if(v==="col") S.col = arg; if(v==="cal" && arg) S.day = +arg; S.sheet = null; window.scrollTo(0,0); render(); if(d.surp) document.getElementById("surprise")?.scrollIntoView({block:"start"}); return; }
+  if(d.go){ let [v,arg] = d.go.split(":"); if(v==="trip"||v==="plan") v="cal"; if(v==="ink"||v==="time"||v==="birthday") v="home"; S.dayOpen=false; S.tab = v; if(v==="col") S.col = arg; if(v==="cal" && arg) S.day = +arg; if(d.scmap) S.mapStreetcar = true; S.sheet = null; window.scrollTo(0,0); render(); if(d.surp) document.getElementById("surprise")?.scrollIntoView({block:"start"}); return; }
   if(d.col){ S.tab = "col"; S.col = d.col; S.sheet = null; window.scrollTo(0,0); render(); return; }
   if(d.surprun){ if(d.surprun==="again") S.surp.seed++; S.surpRes = surpriseNow(); render(); setTimeout(()=>document.getElementById("adv")?.scrollIntoView({block:"nearest", behavior:"smooth"}),30); return; }
   if(d.surpadd){ if(!needAccount("You need an account to add stops. Join the trip or sign in.")) return; const R = S.surpRes; if(!R||!R.stops.length) return; const ts = tripStatus(), dn = (ts&&ts.day) || S.day || 1, day = plan.days.find(x=>x.n===dn) || plan.days[0];
@@ -6003,6 +6042,7 @@ html body nav.vswitch.vswitch{display:none!important}
 <script src="rides.js"></script>
 <script src="config.js"></script>
 <script src="auth.js"></script>
+<script src="streetcars.js"></script>
 <script src="admin.js"></script>
 </body>
 </html>
