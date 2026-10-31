@@ -581,6 +581,16 @@ h3{font-family:var(--display);font-style:normal;font-weight:600}
 .wx{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
 .wx .deg{font-family:var(--display);font-size:1.8rem;font-weight:600}
 .wx.alert{border-color:var(--coral)}
+.wx-days{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.wx-days::-webkit-scrollbar{display:none}
+.wx-day{flex:0 0 auto;min-width:90px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.wx-day.rainy{border-color:var(--coral);background:color-mix(in srgb,var(--coral) 6%,var(--surface))}
+.wx-dow{font-weight:700;font-size:.85rem}
+.wx-icon{font-size:1.6rem;line-height:1}
+.wx-hilo{font-size:.88rem}
+.wx-desc{font-size:.75rem;color:var(--muted)}
+.wx-rain{font-size:.75rem;color:var(--muted)}
+.wx-rain.high{color:var(--coral);font-weight:700}
 /* AI ink gallery */
 .ai-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
 .ai-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:grid}
@@ -3157,12 +3167,15 @@ function nightNow(){ const N=nolaNow(), ss=sunsetNOLA(parseD(N.date)).mins; retu
 function applyMode(){ const night = S.mode==="night" || (S.mode==="auto" && nightNow()); document.documentElement.setAttribute("data-mode", night?"night":"day"); if(mapEl) mapEl.classList.toggle("dark", night); return night; }
 
 /* ---------- weather (public site only; fetch is blocked inside claude.ai) ---------- */
-let WX = null;
+let WX = null, WXDAYS = null;
 const WXL = c => c===0?"Clear":c<=3?"Partly cloudy":c<=48?"Foggy":c<=67?"Rain":c<=77?"Wintry mix":c<=82?"Showers":"Thunderstorms";
+const WXI = c => c===0?"☀️":c<=3?"⛅":c<=48?"🌫️":c<=67?"🌧️":c<=77?"❄️":c<=82?"🌦️":"⛈️";
 function loadWX(){
-  try{ fetch("https://api.open-meteo.com/v1/forecast?latitude=29.95&longitude=-90.07&current=temperature_2m,weather_code&hourly=precipitation_probability&temperature_unit=fahrenheit&timezone=America%2FChicago&forecast_days=2")
+  try{ fetch("https://api.open-meteo.com/v1/forecast?latitude=29.95&longitude=-90.07&current=temperature_2m,weather_code&hourly=precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&temperature_unit=fahrenheit&timezone=America%2FChicago&forecast_days=7")
     .then(r=>r.json()).then(j=>{ const t=j.current.time.slice(0,13), H=j.hourly, i0=Math.max(0,H.time.findIndex(x=>x.slice(0,13)>=t));
-      WX = {temp:Math.round(j.current.temperature_2m), code:j.current.weather_code, rain:Math.max(0,...H.precipitation_probability.slice(i0,i0+3))}; render(); }).catch(()=>{}); }catch(e){}
+      WX = {temp:Math.round(j.current.temperature_2m), code:j.current.weather_code, rain:Math.max(0,...H.precipitation_probability.slice(i0,i0+3))};
+      if(j.daily){ const D=j.daily; WXDAYS = D.time.map((d,i)=>({date:d, hi:Math.round(D.temperature_2m_max[i]), lo:Math.round(D.temperature_2m_min[i]), code:D.weather_code[i], rain:D.precipitation_probability_max[i]})); }
+      render(); }).catch(()=>{}); }catch(e){}
 }
 const OUTDOOR = ["garden","royal","magazine","ponchatoula","ferry","lakefront","gretna","chalmette","stl1","anansi","barataria","cajunpride","honeyisland","fontainebleau","covington","baystlouis","oakalley","whitney","laura","destrehan"];
 const isIndoor = p => (p.tags||[]).includes("indoor") || (!OUTDOOR.includes(p.id) && !has(p,"nature","daytrip","photo","river"));
@@ -3173,6 +3186,24 @@ function wxBox(){
   let h = '<div class="wx'+(bad?' alert':'')+'"><span class="deg">'+WX.temp+'°</span><div><b>'+esc(WXL(WX.code))+' in New Orleans</b><div class="small muted">Rain chance next 3 hrs: '+WX.rain+'%'+(bad?' · '+why+', so indoor picks come first.':'')+'</div></div></div>';
   if(bad){ const N=nolaNow(); const ins = P.filter(p=>isIndoor(p) && statusAt(p,N).state==="open").sort((a,b)=>{ const x=distInfo(a),y=distInfo(b); return (x&&y)?x.m-y.m:a.d-b.d; }).slice(0,4);
     if(ins.length) h += '<div class="links">'+ins.map(p=>'<button class="plink" data-open="'+p.id+'">'+esc(p.n)+'</button>').join("")+'</div>'; }
+  return h;
+}
+function wxForecast(){
+  if(!WXDAYS || !WXDAYS.length) return "";
+  const DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  let h = '<div class="sh"><h3>7-Day Forecast</h3></div><div class="wx-days">';
+  const today = new Date().toISOString().slice(0,10);
+  h += WXDAYS.map(d=>{
+    const dt = new Date(d.date+"T12:00:00"), dow = d.date===today?"Today":DOW[dt.getUTCDay()];
+    return '<div class="wx-day'+(d.rain>=50?' rainy':'')+'">'
+      +'<span class="wx-dow">'+dow+'</span>'
+      +'<span class="wx-icon">'+WXI(d.code)+'</span>'
+      +'<span class="wx-hilo"><b>'+d.hi+'°</b> / '+d.lo+'°</span>'
+      +'<span class="wx-desc">'+esc(WXL(d.code))+'</span>'
+      +'<span class="wx-rain'+(d.rain>=50?' high':'')+'">'+d.rain+'%</span>'
+      +'</div>';
+  }).join("");
+  h += '</div>';
   return h;
 }
 
@@ -3369,7 +3400,6 @@ TAB_ICON.cal = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" wi
 TABS.splice(0, TABS.length, ["home","Home"],["map","Map"],["explore","Explore"],["cal","Calendar"],["saved","Saved"]);
 /* ---------- help: the ? tab with the full guide, and a 3-step walkthrough on first visit ---------- */
 TAB_ICON.help = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.8-2.5 2.3-2.5 4"/><path d="M12 17.2v.3"/></svg>';
-TABS.push(["help","Help"]);
 const HELP = [
  ["start","Start here",[
   ["What this is","Your New Orleans trip in one place: what's open right now, a real map, the day-by-day plan, places to vote on, and the Golden Girls cheering you on. Trip dates (Wed Nov 4 to Sun Nov 8) and the Olivier House Hotel are already built in."],
@@ -3448,12 +3478,12 @@ const TOURS = {
  quick: [
   {go:"home", sel:"#tabs", g:"Rose", t:"Get around with the bottom bar", b:"<b>Home</b> is your start, <b>Map</b> shows everything nearby, <b>Explore</b> has collections and search, <b>Calendar</b> is the day-by-day trip, and <b>Saved</b> is the kitchen table."},
   {go:"home", sel:"#nwho", g:"Blanche", t:"Who's signed in", b:"The top right shows your name and email when you're signed in, with <b>Sign out</b> beside them. Signed out, <b>Sign in</b> there opens the same form as the bar above. Search lives on <b>Explore</b> and <b>Open now</b>."},
-  {go:"home", sel:'#tabs [data-tab="help"]', g:"Dorothy", t:"Stuck? Tap Help", b:"<b>Help</b> on the bottom bar has the full guide and a longer tour of everything. Tap the logo any time to come back Home.", last:'<button class="btn" type="button" data-tourfull="1">Take the full tour</button>'}
+  {go:"home", sel:"#tabs", g:"Dorothy", t:"Need help?", b:"The full guide is on the <b>Admin</b> page (top-right ? button). Tap the logo any time to come back Home.", last:'<button class="btn" type="button" data-tourfull="1">Take the full tour</button>'}
  ],
  full: [
   {go:"home", sel:"#main .hero", g:"Sophia", t:"Welcome to The NOLA Girls", b:"Picture it: Wed Nov 4 to Sun Nov 8, home base at the Olivier House on Toulouse St. This card shows the New Orleans time, the countdown and the weather. The app knows what's open at any hour, so you never walk up to a locked door."},
   {go:"home", sel:"#nwho", g:"Blanche", t:"Who's signed in", b:"The top right is your account: the name you joined with, and your email when it isn't the same. <b>Sign out</b> is right there. To look up a place, open <b>Explore</b> and use the search box."},
-  {go:"home", sel:"#tabs", g:"Rose", t:"The bottom bar", b:"Six buttons get you everywhere: <b>Home</b>, <b>Map</b>, <b>Explore</b>, <b>Calendar</b>, <b>Saved</b>, and <b>Help</b>. The gold one is where you are. The logo at the top always brings you back Home."},
+  {go:"home", sel:"#tabs", g:"Rose", t:"The bottom bar", b:"Five buttons get you everywhere: <b>Home</b>, <b>Map</b>, <b>Explore</b>, <b>Calendar</b>, and <b>Saved</b>. The gold one is where you are. The logo at the top always brings you back Home."},
   {go:"home", sel:"#main .talk", g:"Blanche", t:"The girls have opinions", b:"Dorothy, Blanche, Rose and Sophia chime in on every screen. Tap <b>Another one</b> for a new line. They're also a shortcut to good picks, as you'll see."},
   {go:"home", sel:"#main .tile", g:"Rose", t:"Quick tiles", b:"<b>Calendar</b> (it turns into <b>Today</b> once you're there), <b>Near me</b> (about a 15-minute walk), <b>Hidden gems</b>, and <b>Tonight</b>. One tap each."},
   {go:"home", sel:"#main .girls", g:"Dorothy", t:"Who's leading tonight?", b:"Can't decide? Let a Golden Girl choose. Dorothy brings history and jazz, Blanche romance and late nights, Rose beignets, cats and swamps, and Sophia food, Voodoo and bargains. Her page lists her picks, open ones first."},
@@ -3529,7 +3559,7 @@ function vHome(){
   const ts = tripStatus(), night = document.documentElement.getAttribute("data-mode")==="night";
   let h = '<section class="hero"><span class="kick">New Orleans · Our adventure</span><h2>'+greet+', <em>NOLA Girls.</em></h2><p>A little history. A little trouble. A whole lot of New Orleans.</p>'
     + '<div class="chips"><span class="hchip">'+esc(DOWL[N.dow])+' <b>'+fmtM(N.mins)+'</b></span>'+(ts?'<span class="hchip"><b>'+esc(ts.txt)+'</b></span>':'<button class="hchip" data-go="info" style="background:none;cursor:pointer">Add your dates</button>')+(WX?'<span class="hchip">'+WX.temp+'° '+esc(WXL(WX.code))+'</span>':'')+'<button class="hchip" type="button" data-go="now">Open now</button></div></section>';
-  h += talk("home") + wxBox();
+  h += talk("home") + wxBox() + wxForecast();
   const tiles = [["cal"+(ts&&ts.day?":"+ts.day:""),ICON.plan,ts&&ts.day?"Today":"Calendar",ts&&ts.day?"Day "+ts.day+" on the calendar":(tripInfo()&&todayUTC()<tripInfo().A?"Starts "+new Date(tripInfo().A).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",timeZone:"UTC"}):"Day by day")],["nearme",ICON.near,"Near me","Within a 15-min walk"],["col:hidden",ICON.gem,"Hidden gems","Local discoveries"],["col:tonight",ICON.moon,"Tonight","Jazz, bars & more"]];
   h += '<div class="tiles">'+tiles.map(([go,ic,t,s])=>'<button class="tile" '+(go==="nearme"?'data-nearme="1"':'data-go="'+go+'"')+'><span class="ti">'+ic+'</span><b>'+esc(t)+'</b><span>'+esc(s)+'</span></button>').join("")+'</div>';
   h += girlsPicker();
@@ -3641,7 +3671,7 @@ function vDayTimeline(){
     return '<button type="button" class="chip" data-day="'+x.n+'" aria-pressed="'+on+'"'+(on?' aria-current="date"':'')+' aria-label="'+esc(p.long)+'">'+esc(p.chip)+'</button>';
   }).join("")+'</div></nav>';
   h += '<p class="muted small">'+(items.length?items.length+(items.length===1?' thing':' things')+' scheduled.':'Nothing scheduled yet.')+' Tap the pencil on any event to edit times. Prev, Next, or a day above switches days.</p>';
-  h += '<div class="row"><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button><button type="button" class="btn" data-share="1">Share</button><button type="button" class="btn" data-bghome="1" style="background:var(--lav);border-color:var(--lav);color:#fff">Get Birthday Girl Home</button></div>';
+  h += '<div class="row"><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button><button type="button" class="btn" data-share="1">Share</button>'+(window.NolaAccount&&window.NolaAccount.isAdmin?'<button type="button" class="btn" data-bghome="1" style="background:var(--lav);border-color:var(--lav);color:#fff">Get Birthday Girl Home</button>':'')+'</div>';
   h += '<div class="dayboard" style="grid-template-columns:68px repeat('+colCount+',minmax(0,1fr))" role="grid" aria-label="Schedule for '+esc(parts.long)+'">';
   for(let i=0;i<rows;i++){
     const m = from + i*ADD_STEP;
@@ -3674,7 +3704,7 @@ function vDayTimeline(){
       h += '</div>';
     }
   }
-  h += '<div class="row day-foot"><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button><button type="button" class="btn" data-share="1">Share</button><button type="button" class="btn" data-bghome="1" style="background:var(--lav);border-color:var(--lav);color:#fff">Get Birthday Girl Home</button></div>';
+  h += '<div class="row day-foot"><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button><button type="button" class="btn" data-share="1">Share</button>'+(window.NolaAccount&&window.NolaAccount.isAdmin?'<button type="button" class="btn" data-bghome="1" style="background:var(--lav);border-color:var(--lav);color:#fff">Get Birthday Girl Home</button>':'')+'</div>';
   h += '<nav class="daynav" aria-label="Switch day (bottom)">';
   h += '<button type="button" class="daynav-btn" data-daynav="-1"'+(prev?'':' disabled')+' aria-label="'+(prevParts?'Previous day, '+esc(prevParts.long):'Previous day')+'"><span aria-hidden="true">←</span> Prev</button>';
   h += '<div class="daynav-mid"><span class="eyebrow">Day '+(ix+1)+' of '+days.length+'</span><h2>'+esc(parts.long)+'</h2></div>';
@@ -3895,7 +3925,7 @@ function routeFromState(){
   if(S.tab==="col") r += "."+S.col;
   else if(S.tab==="girl") r += "."+S.girl;
   else if((S.tab==="cal" || S.tab==="trip") && S.day) r += "."+S.day;
-  else if(S.tab==="saved" && S.savedTab && S.savedTab!=="picks") r += "."+S.savedTab;
+  else if(S.tab==="saved" && S.savedTab) r += "."+S.savedTab;
   else if(S.tab==="map" && S.mapCol && S.mapCol!=="all") r += "."+S.mapCol;
   if(S.sheet && (S.sheet.mode==="aiink" || S.sheet.mode==="ink")) S.sheet = null;
   if(typeof S.sheet==="string" && BY[S.sheet]) r += "~place."+S.sheet;
@@ -4950,7 +4980,7 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
     const words = q.replace(/[^a-z ]/g," ").split(/\s+/).filter(w => w.length > 3 && !STOP.test(w));
     let best = null, sc = 0;
     (HELP||[]).forEach(([k, t, items]) => items.forEach(([h, a]) => { const txt = lc(t+" "+h+" "+a.replace(/<[^>]+>/g,"")); let s = 0; words.forEach(w => { if(txt.includes(w)) s += lc(h).includes(w) ? 3 : 1; }); if(s > sc){ sc = s; best = [t, h, a]; } }));
-    return best && sc >= 2 ? {text:best[1]+": "+best[2].replace(/<[^>]+>/g,"")+"\n(More in the Help tab.)", ids:[]} : null;
+    return best && sc >= 2 ? {text:best[1]+": "+best[2].replace(/<[^>]+>/g,""), ids:[]} : null;
   }
 
   function planAnswer(q){

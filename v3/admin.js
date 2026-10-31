@@ -103,7 +103,7 @@
   window.NolaAdminSetData = function(d){ var summary = summarize(d.profiles, d.lists, d.list_items, d.likes), names = {}; summary.forEach(function(s){ Object.assign(names, s.mapNames); }); A.data = { summary: summary, names: names }; if (needsData()) render(); };
   function chip(attr, val, cur, label){ return '<button class="chip" ' + attr + '="' + e(val) + '" aria-pressed="' + (cur === val) + '">' + label + '</button>'; }
   function vAdmin(){
-    var h = '<div class="head"><span class="eyebrow">Only you can see this</span><h2>Admin</h2><p class="muted small">Who saved what, and where the group lines up.</p></div>';
+    var h = '<div class="head" style="position:relative"><span class="eyebrow">Only you can see this</span><h2>Admin</h2><p class="muted small">Who saved what, and where the group lines up.</p><button class="btn" data-go="help" style="position:absolute;top:12px;right:0;padding:6px 14px;font-size:.85rem">? Help</button></div>';
     if (!amAdmin()) return '<div class="head"><span class="eyebrow">Admin</span><h2>Admin only</h2></div><div class="empty" id="adm-denied"><p><b>Sorry, this page is just for the trip organizer.</b></p><p class="small">Your saves are still yours. Head back to Home to keep planning.</p><button class="btn primary" data-tab="home">Back to Home</button></div>';
     if (!A.data){ if (!A.loading && !A.err) setTimeout(load, 0); return h + (A.err ? '<div class="empty">Couldn\'t load: ' + e(A.err) + ' <button class="btn" data-admreload="1">Try again</button></div>' : '<div class="empty">Loading everyone…</div>'); }
     var sum = A.data.summary, people = sum.filter(function(s){ return A.person === "all" || s.id === A.person; });
