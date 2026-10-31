@@ -750,6 +750,17 @@ button,a,.chip,.tab,.plink,.btn,.mood,.tile,.colcard,summary{touch-action:manipu
 button.dayev-name{all:unset;display:block;max-width:100%;font-family:var(--display);font-weight:650;font-size:.92rem;line-height:1.2;color:var(--ink);cursor:pointer;text-align:left;text-decoration:underline;text-underline-offset:2px}
 .dayev-when,.dayev-note{font-size:.75rem;color:var(--muted);line-height:1.3}
 .dayev-note{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.dayev-edit{position:absolute;top:0;right:4px;width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:.75rem;display:grid;place-content:center;cursor:pointer;z-index:2;opacity:.7}
+.dayev-edit:hover,.dayev-edit:focus-visible{opacity:1;border-color:var(--coral);color:var(--coral)}
+.dayev{position:relative}
+.ev-edit-sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;gap:10px;margin-bottom:10px;box-shadow:0 4px 24px var(--scrim)}
+.ev-edit-sheet h3{font-size:1rem}
+.ev-edit-row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.ev-edit-row label{display:grid;gap:2px;font-size:.78rem;font-weight:700;color:var(--muted);flex:1;min-width:100px}
+.ev-edit-row input[type="time"]{font-size:1.1rem;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);color:var(--ink);font-family:var(--mono);min-height:44px;width:100%}
+.ev-edit-row input[type="time"]:focus{border-color:var(--coral);outline:2px solid var(--coral);outline-offset:-1px}
+.ev-edit-row input[type="text"]{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);color:var(--ink);min-height:44px;width:100%;font-size:.95rem}
+.ev-edit-acts{display:flex;gap:8px;flex-wrap:wrap}
 .day-foot{margin-top:12px}
 .daynav{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--coral);border-radius:16px;padding:10px 10px 12px}
 .daynav-btn{min-width:64px;min-height:48px;padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);font-weight:800;font-size:.85rem;line-height:1.1;display:inline-flex;align-items:center;justify-content:center;gap:4px}
@@ -1492,7 +1503,7 @@ else {
   const mig = migratePlan(plan);
   if(mig.changed){ plan = mig.plan; try{ localStorage.setItem("nola-plan", JSON.stringify(plan)); }catch(e){} }
 }
-S.planEdit = false; S.confirmReset = false;
+S.planEdit = false; S.confirmReset = false; S.editingEv = null;
 try{ const t = localStorage.getItem("nola-tab"); if(t && VIEWKEYS.includes(t)) S.tab=t; }catch(e){}
 if(location.hash && VIEWKEYS.includes(location.hash.slice(1))) S.tab = location.hash.slice(1);
 
@@ -1937,9 +1948,9 @@ function vCustom(sh){
   const hr = Math.floor(toM(sh.t||"12:00")/60);
   const clash = (d&&d.items||[]).find(it=>Math.floor(toM(it.t||"0")/60)===hr);
   let h = '<div class="sheet-top"><div><span class="eyebrow">Add to '+esc(when)+'</span><h2 id="sheet-title">Custom event</h2></div><button class="close" data-close="1" aria-label="Close">×</button></div>';
-  h += '<p class="small muted">A title and a start time. Location is optional. Pick a result to attach that place.</p>';
+  h += '<p class="small muted">A title, start and end time. Location is optional. Pick a result to attach that place.</p>';
   h += '<label class="ce-field" for="ce-title">Title<input class="field" id="ce-title" type="text" maxlength="80" required placeholder="e.g. Dinner with Rose" value="'+esc(sh.title||"")+'"></label>';
-  h += '<label class="ce-field" for="ce-time">Time<input class="field" id="ce-time" type="time" required value="'+esc(sh.t||"12:00")+'"></label>';
+  h += '<div class="ev-edit-row"><label>Start<input type="time" class="field" id="ce-time" required value="'+esc(sh.t||"12:00")+'"></label><label>End<input type="time" class="field" id="ce-end" value="'+esc(sh.end||hm(toM(sh.t||"12:00")+60))+'"></label></div>';
   if(clash) h += '<p class="small muted">'+esc(fmtM(hr*60))+' already has “'+esc(clash.h)+'”. You can still add this.</p>';
   h += '<label class="ce-field" for="ce-loc">Location <span class="muted">(optional)</span><input class="field" id="ce-loc" type="search" placeholder="Search places" value="'+esc(sh.loc||"")+'" autocomplete="off"></label>';
   if(sh.placeId && BY[sh.placeId]) h += '<p class="small">Attached: <b>'+esc(BY[sh.placeId].n)+'</b> <button type="button" class="btn" data-ceclear="1">Remove</button></p>';
@@ -2703,7 +2714,7 @@ async function refreshProfiles(){
 
 /* ---------- events ---------- */
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-tab],[data-day],[data-calday],[data-dayback],[data-daynav],[data-dayadd],[data-cat],[data-heart],[data-open],[data-close],[data-scrim],[data-copy],[data-check],[data-talk],[data-edit],[data-save],[data-cancel],[data-nowbtn],[data-when],[data-ncat],[data-editplan],[data-reset],[data-addday],[data-addstop],[data-planb],[data-addplace],[data-mv],[data-del],[data-rmp],[data-swap],[data-addp],[data-altsame],[data-addto],[data-doadd],[data-slot],[data-fixed],[data-vote],[data-ink],[data-inkfav],[data-locate],[data-next2],[data-lview],[data-ceadd],[data-ceplace],[data-cemap],[data-ceclear],#mapOpen,#mapSaved,[data-sec],[data-stop],[data-mapcat],[data-mapview],[data-mapzoom],[data-mapcolor],[data-clearq],[data-clearex],#mapSafety,[data-safetoggle],[data-safelv],#nowLate,#exOpen,#exWalk,#picksOnly,#walkOnly,#nowPicks");
+  const el = e.target.closest("[data-tab],[data-day],[data-calday],[data-dayback],[data-daynav],[data-dayadd],[data-cat],[data-heart],[data-open],[data-close],[data-scrim],[data-copy],[data-check],[data-talk],[data-edit],[data-save],[data-cancel],[data-nowbtn],[data-when],[data-ncat],[data-editplan],[data-reset],[data-addday],[data-addstop],[data-planb],[data-addplace],[data-mv],[data-del],[data-rmp],[data-swap],[data-addp],[data-altsame],[data-addto],[data-doadd],[data-slot],[data-fixed],[data-vote],[data-ink],[data-inkfav],[data-locate],[data-next2],[data-lview],[data-ceadd],[data-ceplace],[data-cemap],[data-ceclear],[data-evedit],[data-evsave],[data-evcancel],[data-evdel],[data-share],#mapOpen,#mapSaved,[data-sec],[data-stop],[data-mapcat],[data-mapview],[data-mapzoom],[data-mapcolor],[data-clearq],[data-clearex],#mapSafety,[data-safetoggle],[data-safelv],#nowLate,#exOpen,#exWalk,#picksOnly,#walkOnly,#nowPicks");
   if(!el) return;
   if(el.dataset.scrim && e.target!==el) return;
   if(el.dataset.sec){ e.preventDefault(); const det=el.parentElement; S.secs[el.dataset.sec]=!det.open; render(); return; }
@@ -2748,9 +2759,30 @@ document.addEventListener("click", e=>{
   if(el.id==="nowPicks"){ S.nowPicks=!S.nowPicks; render(); return; }
   if(el.dataset.tab){ S.dayOpen=false; S.tab=el.dataset.tab; try{localStorage.setItem("nola-tab",S.tab);}catch(_){} window.scrollTo(0,0); render(); return; }
   if(el.dataset.calday){ openDayView(+el.dataset.calday); return; }
-  if(el.dataset.dayback){ S.dayOpen=false; render(); window.scrollTo(0,0); return; }
+  if(el.dataset.dayback){ S.dayOpen=false; S.editingEv=null; render(); window.scrollTo(0,0); return; }
   if(el.dataset.daynav){ const dir = el.dataset.daynav==="1" ? 1 : el.dataset.daynav==="-1" ? -1 : 0; if(dir) shiftDayView(dir); return; }
   if(el.dataset.dayadd){ openCustomDay(S.day); return; }
+  if(el.dataset.evedit){ S.editingEv = S.editingEv===el.dataset.evedit ? null : el.dataset.evedit; render(); const f=document.getElementById("ev-ed-start"); if(f) f.focus(); return; }
+  if(el.dataset.evsave){
+    const {it}=findItem(el.dataset.evsave);
+    if(it){
+      const nameEl=document.getElementById("ev-ed-name"), sEl=document.getElementById("ev-ed-start"), eEl=document.getElementById("ev-ed-end");
+      if(nameEl && nameEl.value.trim()) it.h = nameEl.value.trim();
+      if(sEl && sEl.value){ const oldS=toM(it.t); it.t=sEl.value; }
+      if(eEl && eEl.value){
+        const newEnd=toM(eEl.value), newStart=toM(it.t);
+        if(newEnd>newStart) it.end=eEl.value;
+        else { toast("End must be after start."); return; }
+      }
+      S.editingEv=null; savePlan("Updated "+it.h+"."); } return; }
+  if(el.dataset.evcancel){ S.editingEv=null; render(); return; }
+  if(el.dataset.evdel){ if(readOnly) return; const {d,it}=findItem(el.dataset.evdel); if(it){ d.items.splice(d.items.indexOf(it),1); S.editingEv=null; savePlan("Removed "+it.h+"."); } return; }
+  if(el.dataset.share){
+    const ti=tripInfo(), dLabel=ti?"NOLA Trip: "+plan.days.map(x=>{const dt=ti.dateOf(x.n);return dt?dayLabel(dt):"Day "+x.n;}).join(", "):"NOLA Girls Trip";
+    const url=location.href.split("#")[0]+"#cal";
+    if(navigator.share) navigator.share({title:"NOLA Girls Trip", text:dLabel, url}).catch(()=>{});
+    else { try{navigator.clipboard.writeText(url);toast("Link copied!");}catch(_){toast(url);} }
+    return; }
   if(el.dataset.day){ if(S.dayOpen && el.closest(".daynav")){ goDayView(+el.dataset.day); return; } S.day=+el.dataset.day; render(); return; }
   if(el.dataset.cat){ S.cat=el.dataset.cat; render(); return; }
   if(el.id==="picksOnly"){ S.picksOnly=!S.picksOnly; render(); return; }
@@ -2888,9 +2920,12 @@ function addCustomEvent(){
   if(!title){ toast("Add a title."); if(titleEl) titleEl.focus(); return true; }
   if(!/^\d{2}:\d{2}$/.test(t)){ toast("Add a start time."); if(timeEl) timeEl.focus(); return true; }
   const d = plan.days.find(x=>x.n===sh.day); if(!d) return true;
+  const endEl = document.getElementById("ce-end");
+  const endVal = (endEl&&endEl.value)||sh.end||"";
+  const endTime = /^\d{2}:\d{2}$/.test(endVal) && toM(endVal)>toM(t) ? endVal : hm(toM(t)+60);
   const place = sh.placeId && BY[sh.placeId] ? BY[sh.placeId] : null;
   const note = place ? (place.ad||"") : ((document.getElementById("ce-loc")||{}).value||sh.loc||"").trim();
-  d.items.push({k:uidk(), t, h:title, d:note, p:place?[place.id]:[], custom:true});
+  d.items.push({k:uidk(), t, end:endTime, h:title, d:note, p:place?[place.id]:[], custom:true});
   S.sheet = null; S.day = d.n; S.tab = "cal";
   savePlan("Added "+title+" · "+fmtM(toM(t))+".");
   return true;
@@ -2900,6 +2935,7 @@ function planChange(e){
   if(id==="addday" && S.sheet){ S.sheet.day=+e.target.value; render(); return true; }
   if(id==="addtime" && S.sheet){ if(e.target.value) S.sheet.t=e.target.value; render(); return true; }
   if(id==="ce-time" && S.sheet && S.sheet.mode==="custom"){ if(e.target.value) S.sheet.t=e.target.value; render(); return true; }
+  if(id==="ce-end" && S.sheet && S.sheet.mode==="custom"){ if(e.target.value) S.sheet.end=e.target.value; return true; }
   if(readOnly) return false;
   if(id.startsWith("t-")){ const {it}=findItem(id.slice(2)); if(it && e.target.value){ const old=toM(it.t), neu=toM(e.target.value); if(it.end && toM(it.end)>old){ it.end=hm(neu+(toM(it.end)-old)); } it.t=e.target.value; savePlan(); } return true; }
   if(id.startsWith("h-")){ const {it}=findItem(id.slice(2)); if(it){ it.h=e.target.value.trim()||"Stop"; savePlan(); } return true; }
@@ -2930,8 +2966,8 @@ document.addEventListener("keydown", e=>{
     shiftDayView(e.key==="ArrowRight" ? 1 : -1);
     return;
   }
-  if(e.key==="Escape" && S.sheet){ S.sheet=null; render(); }
-  else if(e.key==="Escape" && S.dayOpen && (S.tab==="cal" || S.tab==="plan" || S.tab==="trip")){ S.dayOpen=false; render(); }
+  if(e.key==="Escape" && S.editingEv){ S.editingEv=null; render(); }
+  else if(e.key==="Escape" && S.sheet){ S.sheet=null; render(); }
   if(e.key==="Enter" && DRAFT_FIELDS[e.target.id]){ e.preventDefault(); saveTrip(); }
 });
 let daySwipe = null;
@@ -3302,7 +3338,7 @@ const HELP = [
  ["place","Place details",[
   ["Open a place","Tap any place name or card. A panel slides up with everything you need."],
   ["What you'll see","Open or closed right now and today's hours, the 5-cat Google rating with a <b>See reviews on Google</b> link, why you'll love it, address, phone, price, music and reservation notes."],
-  ["Buttons","On Home, the Map, and Saved, <b>Save</b> (the cheesecake) saves it to the kitchen table. <b>Add to trip</b> opens free times from 6:00 am. Tap a start, then a later free slot, to hold a longer block. <b>Maps</b> opens the place in Google Maps. <b>Copy link</b> copies a link straight to this place. <b>Copy phone</b> and directions are there too. Explore’s place panel is the details only. On the Calendar tab, tap a day to see its hours, then add a custom event."],
+  ["Buttons","On Home, the Map, and Saved, <b>Save</b> (the cheesecake) saves it to the kitchen table. <b>Add to trip</b> opens free times from 6:00 am. Tap a start, then a later free slot, to hold a longer block. <b>Maps</b> opens the place in Google Maps. <b>Copy link</b> copies a link straight to this place. <b>Copy phone</b> and directions are there too. Explore’s place panel is the details only. On the Calendar, tap the pencil on any event to edit its times."],
   ["Booking","Tours, cruises and tattoo shops show how to book, the price, and any deposit or ID rules."],
   ["Closing it","Tap the ×, tap outside the panel, or use your phone's back button."]]],
  ["map","Map",[
@@ -3312,7 +3348,7 @@ const HELP = [
   ["Safety colors","Green, yellow and red areas show how comfortable each area is for walking at night. Green is busy and well lit, yellow means stay on main streets, red means take a car."],
   ["Collections on the map","Pick a collection to show only those places."]]],
  ["trip","Calendar",[
-  ["Day by day","Calendar is the trip, Wed Nov 4 through Sun Nov 8. Tap a day to open its hourly schedule. Prev, Next, and the day buttons at the top switch days. Arrival day starts with Emily's flight. The other days start empty. <b>Add a custom event</b> is on that day."],
+  ["Day by day","Calendar opens straight to Day 1's hourly schedule. Prev, Next, and the day buttons at the top switch days. Tap the pencil on any event to edit its start and end time. <b>Add a custom event</b> is at the bottom."],
   ["Add to trip","On any place, tap <b>Add to trip</b>. A calendar pops up with free and busy times. Pick a slot, confirm, and it shows on that day."],
   ["Editing","Add stops, move them, remove them, or swap in a Plan B if something is closed or it rains. Changes save automatically."],
   ["Route this day","Opens all of that day's stops as one walking route in Google Maps, starting at the hotel."]]],
@@ -3362,7 +3398,7 @@ const TOURS = {
   {go:"explore", sel:"#main .cols", g:"Blanche", t:"Collections", b:"Thirteen hand-picked lists: Tonight, Jazz & Cocktails, Hidden Gems, Where the Locals Go, Cat Adventures, Romantic, Vegetarian Eats, Photo Spots and more. Each has <b>See on the map</b> and <b>Surprise me from these</b>."},
   {go:"explore", sheet:"cdm", sel:"#sheet-root .sheet", g:"Rose", t:"Inside a place", b:"Tap any place and this opens: open or closed right now, hours, the 5-cat Google rating, why you'll love it, the address and a tap-to-call phone."},
   {go:"map", sel:"#main .mapwrap", g:"Dorothy", t:"The map", b:"Every place, the hotel and (if you allow it) you. On phones tap <b>Tap here to move the map</b> to pan and zoom. The green, yellow and red areas show night-walking comfort: after dark, take a car for anything yellow or red."},
-  {go:"cal", sel:"#main .cal-week", g:"Sophia", t:"Calendar", b:"Day by day from Nov 4 to Nov 8. Arrival day starts with Emily's flight and the other days start empty. Tap a day to see its hours. Prev and Next at the top switch days, and Add a custom event is on that screen. Tap <b>Add to trip</b> on a place to drop it into a free time. <b>Route this day in Google Maps</b> walks the day's stops from the hotel."},
+  {go:"cal", sel:"#main .daynav", g:"Sophia", t:"Calendar", b:"Day by day from Nov 4 to Nov 8. Calendar opens to Day 1's hourly view. Prev, Next, and the day buttons switch days. Tap the pencil on any event to edit start and end times. <b>Add a custom event</b> and <b>Share</b> are at the bottom. Tap <b>Add to trip</b> on a place to drop it into a free time."},
   {go:"saved", sel:"#main .view", g:"Sophia", t:"The kitchen table", b:"Everything anyone saved. Filter by person or tap <b>Everyone's in</b> to see what all three of you want."},
   {go:"help", sel:'#tabs [data-tab="help"]', g:"Rose", t:"You're ready", b:"That's everything. <b>Help</b> has the full written guide and this tour any time. Tip: tap <b>Add to home screen</b> at the top to put it on your home screen. Now go have a beignet."}
  ]
@@ -3479,6 +3515,7 @@ function goDayView(n){
   if(!day || (day.n===S.day && S.dayOpen)) return;
   S.day = day.n;
   S.dayOpen = true;
+  S.editingEv = null;
   render();
   const t = document.getElementById("daynav-title");
   if(t) t.focus({preventScroll:true});
@@ -3525,8 +3562,7 @@ function vDayTimeline(){
   const nextParts = next ? tripDayParts(next.n) : null;
   const bits = [d.h||"", d.who||""].filter(Boolean);
   if(parts.extra==="After you leave" || (parts.extra && !/depart/i.test(bits.join(" ")))) bits.push(parts.extra);
-  let h = '<div class="row"><button type="button" class="btn" data-dayback="1">← Calendar</button></div>';
-  h += '<nav class="daynav" aria-label="Switch day">';
+  let h = '<nav class="daynav" aria-label="Switch day">';
   h += '<button type="button" class="daynav-btn" data-daynav="-1"'+(prev?'':' disabled')+' aria-label="'+(prevParts?'Previous day, '+esc(prevParts.long):'Previous day')+'"><span aria-hidden="true">←</span> Prev</button>';
   h += '<div class="daynav-mid"><span class="eyebrow">Day '+(ix+1)+' of '+days.length+'</span><h2 id="daynav-title" tabindex="-1">'+esc(parts.long)+'</h2>';
   h += '<p class="muted small">'+esc(bits.join(" · ")||"This day")+'</p></div>';
@@ -3535,9 +3571,8 @@ function vDayTimeline(){
     const p = tripDayParts(x.n), on = x.n===d.n;
     return '<button type="button" class="chip" data-day="'+x.n+'" aria-pressed="'+on+'"'+(on?' aria-current="date"':'')+' aria-label="'+esc(p.long)+'">'+esc(p.chip)+'</button>';
   }).join("")+'</div></nav>';
-  h += '<p class="muted small">'+(items.length?items.length+(items.length===1?' thing':' things')+' scheduled.':'Nothing scheduled yet.')+' Each row is 30 minutes, 6:00 am to 9:00 pm. Blank rows are open. Prev, Next, or a day above switches days.</p>';
+  h += '<p class="muted small">'+(items.length?items.length+(items.length===1?' thing':' things')+' scheduled.':'Nothing scheduled yet.')+' Tap the pencil on any event to edit times. Prev, Next, or a day above switches days.</p>';
   h += '<div class="row"><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button></div>';
-  if(d.n===1 && typeof window.nolaFlightsCard==="function") h += window.nolaFlightsCard();
   h += '<div class="dayboard" style="grid-template-columns:68px repeat('+colCount+',minmax(0,1fr))" role="grid" aria-label="Schedule for '+esc(parts.long)+'">';
   for(let i=0;i<rows;i++){
     const m = from + i*ADD_STEP;
@@ -3551,34 +3586,32 @@ function vDayTimeline(){
     const whenLab = it.end && toM(it.end)>startM ? fmtClock(startM)+"–"+fmtClock(toM(it.end)) : fmtClock(startM);
     const place = (it.p||[]).map(id=>BY[id]).find(Boolean);
     h += '<div class="dayev'+(isFlightItem(it)?' flight':'')+(it.custom?' custom':'')+'" style="grid-column:'+(p.col+2)+';grid-row:'+row+' / span '+p.slots+'" role="gridcell">';
+    if(!readOnly) h += '<button type="button" class="dayev-edit" data-evedit="'+it.k+'" aria-label="Edit '+esc(it.h||"stop")+'">&#9998;</button>';
     h += place ? '<button type="button" class="dayev-name" data-open="'+place.id+'">'+esc(it.h||"Stop")+'</button>' : '<b class="dayev-name">'+esc(it.h||"Stop")+'</b>';
     h += '<span class="dayev-when">'+esc(whenLab)+'</span>';
     if(it.d) h += '<span class="dayev-note">'+esc(it.d)+'</span>';
     h += '</div>';
   });
   h += '</div>';
-  h += '<div class="row day-foot"><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button><button type="button" class="btn" data-dayback="1">Back to calendar</button></div>';
+  if(S.editingEv){
+    const eit = items.find(i=>i.k===S.editingEv);
+    if(eit){
+      const startM = toM(eit.t||"12:00");
+      const endVal = eit.end && toM(eit.end)>startM ? eit.end : hm(startM+30);
+      h += '<div class="ev-edit-sheet" role="dialog" aria-label="Edit event"><h3>'+esc(eit.h||"Stop")+'</h3>';
+      h += '<div class="ev-edit-row"><label>Title<input type="text" id="ev-ed-name" value="'+esc(eit.h||"")+'" maxlength="80"></label></div>';
+      h += '<div class="ev-edit-row"><label>Start<input type="time" id="ev-ed-start" value="'+esc(eit.t||"12:00")+'"></label><label>End<input type="time" id="ev-ed-end" value="'+esc(endVal)+'"></label></div>';
+      h += '<div class="ev-edit-acts"><button type="button" class="btn primary" data-evsave="'+eit.k+'">Save</button><button type="button" class="btn" data-evcancel="1">Cancel</button><button type="button" class="btn" data-evdel="'+eit.k+'" style="color:var(--warn)">Remove</button></div>';
+      h += '</div>';
+    }
+  }
+  h += '<div class="row day-foot"><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button><button type="button" class="btn" data-share="1">Share</button></div>';
   return h;
 }
 function vCalendar(){
   if(!plan.days.find(x=>x.n===S.day)) S.day = (plan.days[0]||{n:1}).n;
-  if(S.dayOpen) return vDayTimeline();
-  const ti = tripInfo();
-  let h = '<div class="head"><span class="eyebrow">Wed Nov 4 – Sun Nov 8, 2026</span><h2>Calendar</h2><p class="muted small">Day by day for the trip. Emily\'s flight is already on arrival day. Tap a day for its hourly schedule. Prev, Next, and the day buttons at the top of that schedule switch days. <b>Add to trip</b> on a place still drops it into a free time.</p></div>';
-  h += '<div class="cal-week" aria-label="Trip days">'+plan.days.map(x=>{
-    const dt = ti ? ti.dateOf(x.n) : null;
-    const items = (x.items||[]).slice().sort((a,b)=>toM(a.t||"00:00")-toM(b.t||"00:00"));
-    const chips = items.slice(0,3).map(it=>{ const when = it.end && toM(it.end)>toM(it.t) ? fmtClock(toM(it.t))+"–"+fmtClock(toM(it.end)) : fmtM(toM(it.t)); return '<span class="cal-ev'+(it.k==="emily-lands"?" flight":"")+'">'+esc(when)+' '+esc(it.h)+'</span>'; }).join("");
-    return '<button type="button" class="cal-cell'+(x.n===S.day?" on":"")+'" data-calday="'+x.n+'" aria-label="Open '+(dt?esc(dayLabel(dt)):("day "+x.n))+' hourly schedule">'
-      + '<span class="cal-dow">'+esc(dt?fmtD(dt,{weekday:"short"}):("Day "+x.n))+'</span>'
-      + '<span class="cal-num">'+(dt?dt.getUTCDate():x.n)+'</span>'
-      + '<span class="cal-n">'+(items.length?items.length+(items.length===1?" stop":" stops"):"Open")+'</span>'
-      + chips + (items.length>3?'<span class="cal-more">+'+(items.length-3)+' more</span>':'')
-      + '</button>';
-  }).join("")+'</div>';
-  if(S.day===1 && typeof window.nolaFlightsCard==="function") h += window.nolaFlightsCard();
-  h += vPlan(true);
-  return h;
+  S.dayOpen = true;
+  return vDayTimeline();
 }
 function vTripSaved(){ S.tab = "cal"; return vCalendar(); }
 function vTrip(){
@@ -5562,9 +5595,9 @@ const PLACE_PHOTOS = {"cdm":{"author":"Jeremy Thompson","license":"CC BY 4.0","s
       + '<div class="fl-acts"><a class="ci-btn gold" href="' + escH(uberFromAirport) + '" target="_blank" rel="noopener">Uber: airport → hotel</a><a class="ci-btn" href="' + escH(lyftFromAirport) + '" target="_blank" rel="noopener">Lyft</a></div>'
       + '<p class="fl-note">About 25–35 minutes by car from MSY to the Olivier House. Rideshare pickup is outside baggage claim; follow the signs.</p></div>';
   }
-  window.nolaFlightsCard = () => FLIGHTS.map(card).join("");
+  window.nolaFlightsCard = () => "";
 
-  const _vI = vInfo2; vInfo2 = function(){ return window.nolaFlightsCard() + _vI.apply(this, arguments); };
+  const _vI = vInfo2; vInfo2 = function(){ return _vI.apply(this, arguments); };
 
   /* add Emily's landing to Day 1 once (if someone deletes it, it stays deleted) */
   function addToPlan(){
