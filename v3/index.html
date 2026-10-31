@@ -2861,7 +2861,7 @@ function planClick(el){
     render(); return true;
   }
   if(ds.addto){ if(guard()) return true; const slot=firstFree(S.day); S.sheet={mode:"addto", id:ds.addto, day:slot.day, t:slot.t, end:slot.end}; render(); return true; }
-  if(ds.doadd){ if(guard()) return true; const sh=S.sheet, p=BY[sh.id], d=plan.days.find(x=>x.n===sh.day); if(p&&d){ const hold=holdOf(sh); if(!rangeFree(d.items, hold.a, hold.b)){ toast("Part of that block is already taken."); return true; } d.items.push({k:uidk(), t:hm(hold.a), end:hm(hold.b), h:p.n, d:"", p:[p.id]}); S.sheet=null; S.day=d.n; S.tab="cal"; savePlan("Added "+p.n+" · "+holdLabel(hold.a, hold.b)+"."); } return true; }
+  if(ds.doadd){ if(guard()) return true; const sh=S.sheet, p=BY[sh.id], d=plan.days.find(x=>x.n===sh.day); if(p&&d){ const hold=holdOf(sh); if(!rangeFree(d.items, hold.a, hold.b)){ toast("Part of that block is already taken."); return true; } d.items.push({k:uidk(), t:hm(hold.a), end:hm(hold.b), h:p.n, d:"", p:[p.id]}); S.sheet=null; S.day=d.n; savePlan(); toast(p.n+" added to Day "+d.n+" at "+fmtClock(hold.a)+"."); } return true; }
   if(ds.ceplace && S.sheet && S.sheet.mode==="custom"){ const p=BY[ds.ceplace]; if(p){ S.sheet.placeId=p.id; S.sheet.loc=p.n; S.sheet.mapHits=[]; } render(); return true; }
   if(ds.cemap && S.sheet && S.sheet.mode==="custom"){ const r=(S.sheet.mapHits||[])[+ds.cemap]; if(r && window.nolaRegisterPlace){ const id=window.nolaRegisterPlace(r); const p=BY[id]; if(p){ S.sheet.placeId=p.id; S.sheet.loc=p.n; S.sheet.mapHits=[]; } } render(); return true; }
   if(ds.ceclear && S.sheet && S.sheet.mode==="custom"){ S.sheet.placeId=""; render(); return true; }
@@ -2926,8 +2926,8 @@ function addCustomEvent(){
   const place = sh.placeId && BY[sh.placeId] ? BY[sh.placeId] : null;
   const note = place ? (place.ad||"") : ((document.getElementById("ce-loc")||{}).value||sh.loc||"").trim();
   d.items.push({k:uidk(), t, end:endTime, h:title, d:note, p:place?[place.id]:[], custom:true});
-  S.sheet = null; S.day = d.n; S.tab = "cal";
-  savePlan("Added "+title+" · "+fmtM(toM(t))+".");
+  S.sheet = null; S.day = d.n;
+  savePlan(); toast(title+" added to Day "+d.n+" at "+fmtM(toM(t))+".");
   return true;
 }
 function planChange(e){
@@ -3069,6 +3069,7 @@ const PHOTO_IDS = ["garden","royal","ferry","cruise-eve","oakalley","lakefront"]
 const has = (p,...cs) => cs.some(c=>p.c.includes(c));
 const COLS = [
  {k:"tonight", t:"Tonight", s:"Jazz, bars & more", cc:"var(--brass)", intro:"Where the night goes: live music, cocktails, dancing, and the late spots. Open-tonight places come first.", f:p=>has(p,"jazz","party","drink","queer") || ["cruise-eve","cq-eve","cq-halloween"].includes(p.id)},
+ {k:"shop", t:"Antiques & Flea Markets", s:"Treasure hunting", cc:"#A0522D", intro:"Royal Street antique dealers, Magazine Street vintage, and small-town treasure hunts an hour away. Browsing is free and the buildings alone are worth the walk.", f:p=>has(p,"shop")},
  {k:"jazz", t:"Jazz & Cocktails", s:"Small rooms, big horns", cc:"#7B2446", intro:"Traditional jazz in small rooms, brass bands on Frenchmen, and the bars where you can still hear each other.", f:p=>has(p,"jazz","drink")},
  {k:"hidden", t:"Hidden Gems", s:"What most visitors miss", cc:"#17796C", intro:"The places most visitors walk right past: a bar across the river, a strange little museum, a forest in the middle of the city.", f:p=>HIDDEN.includes(p.id) || has(p,"locals") || (p.tags||[]).includes("local")},
  {k:"locals", t:"Where the Locals Go", s:"Neighborhood favorites", cc:"#D9A441", intro:"Neighborhoods and hangouts locals actually choose: Bayou St. John, the Bywater, Freret, the Irish Channel, and the bars in between.", f:p=>LOCALS.includes(p.id) || has(p,"locals")},
@@ -3862,6 +3863,7 @@ window.addEventListener("popstate", onRoute);
 window.addEventListener("hashchange", onRoute);
 function shareLink(){
   const url = location.href;
+  if(navigator.share) try{ navigator.share({title:document.title, url}); return; }catch(_){}
   try{ navigator.clipboard.writeText(url).then(()=>toast("Link copied. Paste it anywhere to open this exact page."), ()=>toast(url)); }catch(e){ toast(url); }
 }
 
