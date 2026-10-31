@@ -127,8 +127,9 @@ main{padding-top:20px;display:grid;gap:20px}
 .view{display:grid;gap:18px}
 .head{display:grid;gap:4px}
 
-/* girl talk */
-.talk{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;border-radius:14px;padding:12px 14px;background:var(--lav-soft);border:1px solid var(--line)}
+/* girl talk — hidden */
+.talk,.talk.quip{display:none!important}
+.talk-x{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;border-radius:14px;padding:12px 14px;background:var(--lav-soft);border:1px solid var(--line)}
 .talk[data-g="Blanche"]{background:var(--coral-soft)}
 .talk[data-g="Rose"]{background:var(--accent-soft)}
 .talk[data-g="Sophia"]{background:var(--gold-soft)}
@@ -766,6 +767,9 @@ button,a,.chip,.tab,.plink,.btn,.mood,.tile,.colcard,summary{touch-action:manipu
 .daytime.hour{border-top-color:var(--line);color:var(--ink);font-weight:700}
 .daylane{border-top:1px dashed var(--line);background:var(--bg)}
 .daylane.hour{border-top-color:var(--line);background:var(--surface)}
+.daylane[data-slotadd]{cursor:pointer}
+.daylane[data-slotadd]:hover{background:rgba(217,164,65,.08)}
+.dayev.sc-near-ev{border-left:4px solid #1B5E20}
 .dayev{z-index:1;margin:3px 6px 3px 4px;padding:5px 8px;border-radius:10px;background:var(--gold-soft);border-left:4px solid var(--coral);overflow:hidden;display:flex;flex-direction:column;gap:1px;min-width:0;align-self:stretch}
 .dayev.flight{background:var(--accent-soft);border-left-color:var(--accent)}
 .dayev.custom{background:var(--coral-soft)}
@@ -864,8 +868,30 @@ button.dayev-name{all:unset;display:block;max-width:100%;font-family:var(--displ
 .daywalk-txt{font-weight:700;white-space:nowrap}
 .daywalk a{color:var(--brass);font-weight:800;text-decoration:none;white-space:nowrap}
 .daywalk a:hover{text-decoration:underline}
+
+/* streetcar time bars on calendar */
+.sc-bar-ov{border-left:5px solid;background:rgba(46,139,87,.06);border-radius:0;display:flex;align-items:flex-start;padding:4px 2px;cursor:pointer;z-index:1;pointer-events:auto;overflow:hidden}
+.sc-bar-ov:hover{background:rgba(46,139,87,.12)}
+.sc-bar-nm{writing-mode:vertical-lr;text-orientation:mixed;font-size:.55rem;font-weight:800;color:var(--muted);white-space:nowrap;transform:rotate(180deg)}
 .cal-sc-fare{border-top:1px solid rgba(255,255,255,.3);padding-top:5px;text-align:center;font-weight:800;font-size:.58rem;margin-top:auto;line-height:1.4}
 @media(max-width:599px){.cal-sc-bar{width:56px;padding:8px 4px}.cal-sc-nm{font-size:.56rem}.cal-sc-hrs{font-size:.5rem}.cal-sc-fare{font-size:.52rem}}
+
+/* calendar-only share view */
+body.cal-only .topbar,body.cal-only .logo-row,body.cal-only .tabbar,body.cal-only .global-alert,body.cal-only footer{display:none!important}
+body.cal-only{padding-top:0!important}
+
+/* reservation reminders */
+.book-ahead{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--brass);border-radius:8px;padding:12px 16px;margin:8px 0}
+.book-ahead summary{cursor:pointer;font-weight:700;font-size:.9rem;color:var(--brass);list-style:none;display:flex;align-items:center;gap:6px}
+.book-ahead summary::-webkit-details-marker{display:none}
+.book-ahead summary::before{content:"▸";transition:transform .2s}
+.book-ahead[open] summary::before{transform:rotate(90deg)}
+.book-ahead ul{margin:8px 0 0;padding:0;list-style:none}
+.book-ahead li{padding:6px 0;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;font-size:.85rem}
+.book-ahead .ba-name{font-weight:600}
+.book-ahead .ba-how{color:var(--muted);font-size:.8rem}
+.book-ahead .ba-link{font-size:.8rem}
+.dayev .res-tag{display:inline-block;font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:var(--brass);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px;vertical-align:middle}
 
 /* ---- no sideways scrolling on phones: rows wrap ---- */
 .hscroll{flex-wrap:wrap!important;overflow:visible!important;padding-bottom:0}
@@ -1576,6 +1602,7 @@ else {
 S.planEdit = false; S.confirmReset = false; S.editingEv = null;
 try{ const t = localStorage.getItem("nola-tab"); if(t && VIEWKEYS.includes(t)) S.tab=t; }catch(e){}
 if(location.hash && VIEWKEYS.includes(location.hash.slice(1))) S.tab = location.hash.slice(1);
+if(/[?&]view=cal/.test(location.search)){ document.body.classList.add('cal-only'); S.tab = 'cal'; }
 
 const me = () => shared ? uid : LOCAL;
 const myPicks = () => picks[me()] || new Set();
@@ -2291,7 +2318,7 @@ function vSheet(){
     })()
    +'<dl class="kv"><dt>Area</dt><dd>'+esc(p.a)+'</dd>'+(p.ad?'<dt>Address</dt><dd>'+esc(p.ad)+(p.adNote?' <span class="small muted">('+esc(p.adNote)+')</span>':'')+'</dd>':'')+'<dt>Distance</dt><dd>'+esc(distLabel(p))+'</dd><dt>Price</dt><dd class="mono">'+esc((p.hrs&&p.hrs.price)||p.pr||"–")+'</dd>'+(p.hrs&&p.hrs.reserve?'<dt>Booking</dt><dd>'+esc(p.hrs.reserve)+'</dd>':'')+(p.ph?'<dt>Phone</dt><dd><a class="mono" href="tel:'+String(p.ph).replace(/[^0-9+]/g,'')+'">'+esc(p.ph)+'</a>'+(p.phw?' <span class="small muted">('+esc(p.phw)+')</span>':'')+'</dd>':(p.contact?'<dt>Contact</dt><dd>'+esc(p.contact)+'</dd>':''))+'<dt>Type</dt><dd>'+esc(p.c.map(c=>CATS[c]).join(", "))+'</dd></dl>'
    +(p.hrs&&p.hrs.source?'<p class="srcline">Hours source: <a href="'+esc(p.hrs.source)+'" target="_blank" rel="noopener">'+esc(p.hrs.source.replace(/^https?:\/\/(www\.)?/,'').split('/')[0])+'</a>'+(p.hrs.confidence?' · confidence '+esc(p.hrs.confidence):'')+'</p>':'')
-   +'<div class="actions">'+cakeBtn(p)+(readOnly?'':'<button class="btn" data-addto="'+p.id+'">Add to trip</button>')+dirBtns(p)+(p.ph?'<button class="btn" data-copy="'+esc(p.ph)+'">Copy phone</button>':'')+(p.url?'<a class="btn" href="'+esc(p.url)+'" target="_blank" rel="noopener">Website</a>':'')+'</div>'
+   +'<div class="actions">'+cakeBtn(p)+(readOnly?'':'<button class="btn" data-addto="'+p.id+'">Add to trip</button>')+dirBtns(p)+(function(){ var c2=coordOf(p); if(!c2||typeof uberLink!=="function") return ""; var dest={n:p.n,ad:p.ad||"",lat:c2[0],lon:c2[1]}; return '<a class="btn" href="'+esc(uberLink(dest))+'" target="_blank" rel="noopener">Uber</a><a class="btn" href="'+esc(lyftLink(dest))+'" target="_blank" rel="noopener">Lyft</a>'; })()+(p.ph?'<button class="btn" data-copy="'+esc(p.ph)+'">Copy phone</button>':'')+(p.url?'<a class="btn" href="'+esc(p.url)+'" target="_blank" rel="noopener">Website</a>':'')+'</div>'
    +(shared&&who.length?'<p class="small muted">On the kitchen table for '+who.map(id=>esc((profiles[id]&&profiles[id].name)||(id===uid?"you":"someone"))).join(", ")+'</p>':'')
    +'</div></div>';
 }
@@ -2829,7 +2856,7 @@ async function refreshProfiles(){
 
 /* ---------- events ---------- */
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-tab],[data-day],[data-calday],[data-dayback],[data-daynav],[data-dayadd],[data-cat],[data-heart],[data-open],[data-close],[data-scrim],[data-copy],[data-check],[data-talk],[data-edit],[data-save],[data-cancel],[data-nowbtn],[data-when],[data-ncat],[data-editplan],[data-reset],[data-addday],[data-addstop],[data-planb],[data-addplace],[data-mv],[data-del],[data-rmp],[data-swap],[data-addp],[data-altsame],[data-addto],[data-doadd],[data-slot],[data-fixed],[data-vote],[data-ink],[data-inkfav],[data-locate],[data-next2],[data-lview],[data-ceadd],[data-ceplace],[data-cemap],[data-ceclear],[data-evedit],[data-evsave],[data-evcancel],[data-evdel],[data-share],#mapOpen,#mapSaved,[data-sec],[data-stop],[data-mapcat],[data-mapview],[data-mapzoom],[data-mapcolor],[data-clearq],[data-clearex],#mapSafety,#mapStreetcar,[data-safetoggle],[data-safelv],#nowLate,#exOpen,#exWalk,#picksOnly,#walkOnly,#nowPicks");
+  const el = e.target.closest("[data-tab],[data-day],[data-calday],[data-dayback],[data-daynav],[data-dayadd],[data-cat],[data-heart],[data-open],[data-close],[data-scrim],[data-copy],[data-check],[data-talk],[data-edit],[data-save],[data-cancel],[data-nowbtn],[data-when],[data-ncat],[data-editplan],[data-reset],[data-addday],[data-addstop],[data-planb],[data-addplace],[data-mv],[data-del],[data-rmp],[data-swap],[data-addp],[data-altsame],[data-addto],[data-doadd],[data-slot],[data-fixed],[data-vote],[data-ink],[data-inkfav],[data-locate],[data-next2],[data-lview],[data-ceadd],[data-ceplace],[data-cemap],[data-ceclear],[data-evedit],[data-evsave],[data-evcancel],[data-evdel],[data-share],#mapOpen,#mapSaved,[data-sec],[data-stop],[data-mapcat],[data-mapview],[data-mapzoom],[data-mapcolor],[data-clearq],[data-clearex],#mapSafety,#mapStreetcar,[data-safetoggle],[data-safelv],#nowLate,#exOpen,#exWalk,#picksOnly,#walkOnly,#nowPicks,[data-slotadd]");
   if(!el) return;
   if(el.dataset.scrim && e.target!==el) return;
   if(el.dataset.sec){ e.preventDefault(); const det=el.parentElement; S.secs[el.dataset.sec]=!det.open; render(); return; }
@@ -2878,6 +2905,7 @@ document.addEventListener("click", e=>{
   if(el.dataset.dayback){ S.dayOpen=false; S.editingEv=null; render(); window.scrollTo(0,0); return; }
   if(el.dataset.daynav){ const dir = el.dataset.daynav==="1" ? 1 : el.dataset.daynav==="-1" ? -1 : 0; if(dir) shiftDayView(dir); return; }
   if(el.dataset.dayadd){ if(!needAccount("You need an account to add a calendar event. Join the trip or sign in.")) return; openCustomDay(S.day); return; }
+  if(el.dataset.slotadd){ if(!needAccount("You need an account to add a calendar event. Join the trip or sign in.")) return; const day=plan.days.find(x=>x.n===S.day)||plan.days[0]; if(!day) return; const m2=+el.dataset.slotadd; S.sheet={mode:"custom",day:day.n,t:hm(m2),title:"",loc:"",placeId:"",mapHits:[],looking:false}; render(); const f=document.getElementById("ce-title"); if(f) f.focus(); return; }
   if(el.dataset.evedit){ S.editingEv = S.editingEv===el.dataset.evedit ? null : el.dataset.evedit; render(); const f=document.getElementById("ev-ed-start"); if(f) f.focus(); return; }
   if(el.dataset.evsave){
     const {it}=findItem(el.dataset.evsave);
@@ -3592,6 +3620,7 @@ try{
   if(sessionStorage.getItem("nola-open-signup")==="1" || h0==="signup" || h0==="join") S.tab = "home";
 }catch(e){ S.tab = "home"; }
 if(S.tab==="plan" || S.tab==="trip") S.tab = "cal";
+if(/[?&]view=cal/.test(location.search)){ document.body.classList.add('cal-only'); S.tab = 'cal'; }
 
 function tripStatus(){
   const ti = tripInfo(); if(!ti) return null; const T = todayUTC(), until = Math.round((ti.A-T)/DAY);
@@ -3730,47 +3759,82 @@ function vDayTimeline(){
     return '<button type="button" class="chip" data-day="'+x.n+'" aria-pressed="'+on+'"'+(on?' aria-current="date"':'')+' aria-label="'+esc(p.long)+'">'+esc(p.chip)+'</button>';
   }).join("")+'</div></nav>';
   h += '<p class="muted small">'+(items.length?items.length+(items.length===1?' thing':' things')+' scheduled.':'Nothing scheduled yet.')+' Tap the pencil on any event to edit times. Prev, Next, or a day above switches days.</p>';
+  var bookItems = [];
+  var seenBook = {};
+  days.forEach(function(dd){
+    (dd.items||[]).forEach(function(it2){
+      (it2.p||[]).forEach(function(id){
+        if(seenBook[id]) return;
+        var bp = BY[id];
+        if(!bp || !bp.hrs) return;
+        var rv = (bp.hrs.reserve||"").toLowerCase();
+        if(rv.includes("reserv") || rv.includes("ticket") || rv.includes("resy") || rv.includes("opentable") || rv.includes("book")){
+          seenBook[id] = true;
+          bookItems.push({p:bp, day:dd.n, reserve:bp.hrs.reserve, url:bp.hrs.url||bp.url||""});
+        }
+      });
+    });
+  });
+  if(bookItems.length){
+    h += '<details class="book-ahead"'+(S.secs.bookahead!==false?' open':'')+'><summary data-sec="bookahead">Reservations to book ('+bookItems.length+')</summary><ul>';
+    bookItems.forEach(function(bi){
+      h += '<li><span class="ba-name"><button class="plink" data-open="'+bi.p.id+'">'+esc(bi.p.n)+'</button></span>';
+      h += '<span class="ba-how">'+esc(bi.reserve)+'</span>';
+      if(bi.url) h += '<a class="ba-link" href="'+esc(bi.url)+'" target="_blank" rel="noopener">Book ›</a>';
+      h += '</li>';
+    });
+    h += '</ul></details>';
+  }
   h += '<div class="row" style="justify-content:space-between"><button type="button" class="btn primary" data-dayadd="1"'+(readOnly?' disabled':'')+'>Add a custom event</button><span class="cal-icons">'
     +'<button type="button" class="btn cal-icon" data-share="1" title="Share" aria-label="Share"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></button>'
     +(window.NolaAccount&&window.NolaAccount.isAdmin?'<button type="button" class="btn cal-icon" data-bghome="1" title="Get Birthday Girl Home" aria-label="Get Birthday Girl Home" style="background:var(--lav);border-color:var(--lav);color:#fff"><span style="font-size:1.1rem">👽</span></button>':'')
     +'</span></div>';
   window._calScWrap = false;
+  var scBarData = [];
   if(window.STREETCAR_LINES && window.streetcarStopsNear){
     var nearLines = new Map();
-    items.forEach(function(it){
-      (it.p||[]).forEach(function(id){
+    items.forEach(function(it2){
+      (it2.p||[]).forEach(function(id){
         if(!COORD[id]) return;
-        var hits = streetcarStopsNear(COORD[id][0], COORD[id][1], 1000);
-        hits.forEach(function(h2){ nearLines.set(h2.line.id, h2.line); });
+        var hits2 = streetcarStopsNear(COORD[id][0], COORD[id][1], 1000);
+        hits2.forEach(function(h2){ nearLines.set(h2.line.id, h2.line); });
       });
     });
-    if(nearLines.size){
-      window._calScWrap = true;
-      h += '<div class="cal-sc-wrap">';
-      h += '<aside class="cal-sc-bar"><div class="cal-sc-hd">🚃 Nearby</div>';
-      nearLines.forEach(function(line){
-        var hrs = line.hours.replace(/ daily/i,'').replace(/\s*\([^)]*\)/g,'').trim();
-        h += '<button class="cal-sc-line" data-scline="'+line.id+'"><div class="cal-sc-nm"><span class="cal-sc-sdot" style="background:'+line.color+'"></span>'+esc(line.name)+'</div><div class="cal-sc-hrs">'+esc(hrs)+'</div></button>';
-      });
-      h += '<div class="cal-sc-fare">'+esc(STREETCAR_FARE.single)+'/ride<br>'+esc(STREETCAR_FARE.day)+'</div>';
-      h += '</aside>';
-    }
+    nearLines.forEach(function(line){
+      var startMin, endMin;
+      if(/24\/7/.test(line.hours)){ startMin = 0; endMin = 1440; }
+      else {
+        var m2 = line.hours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*[-–]\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+        if(m2){
+          var sh = +m2[1], sm = +m2[2], sp = m2[3].toUpperCase();
+          var eh = +m2[4], em = +m2[5], ep = m2[6].toUpperCase();
+          if(sp==="PM" && sh!==12) sh+=12; if(sp==="AM" && sh===12) sh=0;
+          if(ep==="PM" && eh!==12) eh+=12; if(ep==="AM" && eh===12) eh=0;
+          startMin = sh*60+sm; endMin = eh*60+em;
+          if(endMin <= startMin) endMin = 24*60;
+        } else { startMin = 360; endMin = 1320; }
+      }
+      scBarData.push({line:line, startMin:startMin, endMin:endMin});
+    });
   }
   h += '<div class="dayboard" style="grid-template-columns:68px repeat('+colCount+',minmax(0,1fr))" role="grid" aria-label="Schedule for '+esc(parts.long)+'">';
   for(let i=0;i<rows;i++){
     const m = from + i*ADD_STEP;
     const hour = m%60===0;
     h += '<div class="daytime'+(hour?' hour':'')+'" style="grid-row:'+(i+1)+'" role="rowheader">'+fmtClock(m)+'</div>';
-    for(let c=0;c<colCount;c++) h += '<div class="daylane'+(hour?' hour':'')+'" style="grid-column:'+(c+2)+';grid-row:'+(i+1)+'"></div>';
+    for(let c=0;c<colCount;c++) h += '<div class="daylane'+(hour?' hour':'')+'" style="grid-column:'+(c+2)+';grid-row:'+(i+1)+'"'+(readOnly?'':' data-slotadd="'+m+'"')+'></div>';
   }
   placed.forEach(p=>{
     const it = p.it, row = Math.round((p.a-from)/ADD_STEP)+1;
     const startM = toM(it.t||"12:00");
     const whenLab = it.end && toM(it.end)>startM ? fmtClock(startM)+"–"+fmtClock(toM(it.end)) : fmtClock(startM);
     const place = (it.p||[]).map(id=>BY[id]).find(Boolean);
-    h += '<div class="dayev'+(isFlightItem(it)?' flight':'')+(it.custom?' custom':'')+'" style="grid-column:'+(p.col+2)+';grid-row:'+row+' / span '+p.slots+'" role="gridcell">';
+    const nearSc = window.streetcarStopsNear && (it.p||[]).some(function(id){ return COORD[id] && streetcarStopsNear(COORD[id][0],COORD[id][1],800).length>0; });
+    h += '<div class="dayev'+(isFlightItem(it)?' flight':'')+(it.custom?' custom':'')+(nearSc?' sc-near-ev':'')+'" style="grid-column:'+(p.col+2)+';grid-row:'+row+' / span '+p.slots+'" role="gridcell">';
     if(!readOnly) h += '<button type="button" class="dayev-edit" data-evedit="'+it.k+'" aria-label="Edit '+esc(it.h||"stop")+'">&#9998;</button>';
+    var needsRes = place && place.hrs && (function(rv){ rv=rv.toLowerCase(); return rv.includes("reserv")||rv.includes("ticket")||rv.includes("resy")||rv.includes("opentable")||rv.includes("book"); })(place.hrs.reserve||"");
     h += place ? '<button type="button" class="dayev-name" data-open="'+place.id+'">'+esc(it.h||"Stop")+'</button>' : '<b class="dayev-name">'+esc(it.h||"Stop")+'</b>';
+    if(needsRes) h += '<span class="res-tag">Book</span>';
     h += '<span class="dayev-when">'+esc(whenLab)+'</span>';
     if(it.d) h += '<span class="dayev-note">'+esc(it.d)+'</span>';
     h += '</div>';
@@ -3788,8 +3852,14 @@ function vDayTimeline(){
     const dirHref=aP&&bP?"https://www.google.com/maps/dir/?api=1&origin="+encodeURIComponent(fullDest(aP))+"&destination="+encodeURIComponent(fullDest(bP))+"&travelmode="+(tr.mode==="walk"?"walking":"driving"):"";
     h+='<div class="daywalk" style="grid-row:'+endRow+'"><span class="daywalk-icon">'+(tr.mode==="walk"?"🚶":"🚗")+'</span><span class="daywalk-txt">'+esc(tr.txt)+'</span>'+(dirHref?'<a href="'+esc(dirHref)+'" target="_blank" rel="noopener">Directions ›</a>':'')+'</div>';
   }
+  scBarData.forEach(function(sb, si){
+    var barStart = Math.max(sb.startMin, from), barEnd = Math.min(sb.endMin, to+ADD_STEP);
+    if(barEnd <= barStart) return;
+    var r1 = Math.round((barStart - from)/ADD_STEP) + 1;
+    var r2 = Math.round((barEnd - from)/ADD_STEP) + 1;
+    h += '<div class="sc-bar-ov" data-scline="'+sb.line.id+'" style="grid-column:1;grid-row:'+r1+'/'+r2+';border-left-color:'+sb.line.color+'" title="'+esc(sb.line.name)+': '+esc(sb.line.freq)+'"><span class="sc-bar-nm">'+esc(sb.line.name.replace(/ - /g,"-").replace("Rampart-St. Claude","Rampart"))+'</span></div>';
+  });
   h += '</div>';
-  if(window._calScWrap) h += '</div>';
   if(S.editingEv){
     const eit = items.find(i=>i.k===S.editingEv);
     if(eit){
@@ -3953,12 +4023,7 @@ function safeLegendHtml(){
   const on = !!S.mapSafety;
   const lv = S.safeOn || {green:true, yellow:true, red:true};
   const btn = (k, name, mean) => '<button type="button" class="safe-leg-btn" data-safelv="'+k+'" aria-pressed="'+(on && lv[k]!==false)+'"><i class="sw '+k+'" aria-hidden="true"></i><span><b>'+name+'</b> · '+mean+'</span></button>';
-  return '<div class="safe-legend" role="group" aria-label="Safety zone legend. Green is safer, yellow is caution, red is avoid at night.">'
-    + '<button type="button" class="safe-leg-all" data-safetoggle="1" aria-pressed="'+on+'">'+(on?'Zones on':'Show zones')+'</button>'
-    + btn("green","Green","safer")
-    + btn("yellow","Yellow","caution")
-    + btn("red","Red","avoid")
-    + '<p>Guidance, not legal advice.</p></div>';
+  return '';
 }
 function vMap2(){
   if(!mapAvailable()) return vSketch();
@@ -4008,7 +4073,7 @@ vSheet = function(){
   h += '<dl class="kv"><dt>Area</dt><dd>'+esc(p.a)+'</dd>'+(p.ad?'<dt>Address</dt><dd>'+esc(p.ad)+(p.adNote?' <span class="small muted">('+esc(p.adNote)+')</span>':'')+'</dd>':'')+'<dt>Distance</dt><dd>'+esc(distLabel(p))+'</dd><dt>Price</dt><dd>'+esc((x&&x.price)||p.pr||"–")+'</dd>'+(x&&x.reserve?'<dt>Booking</dt><dd>'+esc(x.reserve)+'</dd>':'')+(p.ph?'<dt>Phone</dt><dd><a class="mono" href="tel:'+String(p.ph).replace(/[^0-9+]/g,'')+'">'+esc(p.ph)+'</a>'+(p.phw?' <span class="small muted">('+esc(p.phw)+')</span>':'')+'</dd>':(p.contact?'<dt>Contact</dt><dd>'+esc(p.contact)+'</dd>':''))+'</dl>';
   if(window.streetcarNearestStop && COORD[p.id]){ const sc=streetcarNearestStop(COORD[p.id][0],COORD[p.id][1]); if(sc && sc.meters<1200){ const wk=streetcarWalkMin(sc.meters); h += '<div class="sc-near"><span class="sc-icon">🚃</span> <b>'+esc(sc.line.name)+' Line</b> · '+esc(sc.stop.name)+' · '+wk+' min walk<br><span class="small muted">'+esc(sc.line.freq)+' · '+STREETCAR_FARE.single+' per ride</span></div>'; } }
   if(x && x.source) h += '<p class="srcline">Hours source: <a href="'+esc(x.source.split(" ")[0])+'" target="_blank" rel="noopener">'+esc(x.source.replace(/^https?:\/\/(www\.)?/,'').split('/')[0])+'</a>'+(x.confidence?' · confidence '+esc(x.confidence):'')+'</p>';
-  if(!infoOnly) h += '<div class="stickybar">'+cakeBtn(p)+'<a class="btn primary" href="'+dirUrl(p)+'" target="_blank" rel="noopener">Directions</a><a class="btn" href="'+mapsPlaceUrl(p)+'" target="_blank" rel="noopener">Maps</a>'+(readOnly?'':'<button class="btn" data-addto="'+p.id+'">Add to trip</button>')+(p.url?'<a class="btn" href="'+esc(p.url)+'" target="_blank" rel="noopener">Website</a>':'')+(p.ph?'<button class="btn" data-copy="'+esc(p.ph)+'">Copy phone</button>':'')+'<button class="btn" data-share="1">Copy link</button></div>';
+  if(!infoOnly) h += '<div class="stickybar">'+cakeBtn(p)+'<a class="btn primary" href="'+dirUrl(p)+'" target="_blank" rel="noopener">Directions</a><a class="btn" href="'+mapsPlaceUrl(p)+'" target="_blank" rel="noopener">Maps</a>'+(readOnly?'':'<button class="btn" data-addto="'+p.id+'">Add to trip</button>')+(function(){ var c2=coordOf(p); if(!c2||typeof uberLink!=="function") return ""; var dest={n:p.n,ad:p.ad||"",lat:c2[0],lon:c2[1]}; return '<a class="btn" href="'+esc(uberLink(dest))+'" target="_blank" rel="noopener">Uber</a><a class="btn" href="'+esc(lyftLink(dest))+'" target="_blank" rel="noopener">Lyft</a>'; })()+(p.url?'<a class="btn" href="'+esc(p.url)+'" target="_blank" rel="noopener">Website</a>':'')+(p.ph?'<button class="btn" data-copy="'+esc(p.ph)+'">Copy phone</button>':'')+'<button class="btn" data-share="1">Copy link</button></div>';
   return '<div class="scrim" data-scrim="1"><div class="sheet" data-place="'+esc(p.id)+'"'+(infoOnly?' data-info="1"':'')+' role="dialog" aria-modal="true" aria-labelledby="sheet-title">'+h+'</div></div>';
 };
 
@@ -4064,9 +4129,9 @@ function onRoute(){ if(location.hash==="#"+lastRoute) return; routing = true; if
 window.addEventListener("popstate", onRoute);
 window.addEventListener("hashchange", onRoute);
 function shareLink(){
-  const url = location.href;
-  if(navigator.share) try{ navigator.share({title:document.title, url}); return; }catch(_){}
-  try{ navigator.clipboard.writeText(url).then(()=>toast("Link copied. Paste it anywhere to open this exact page."), ()=>toast(url)); }catch(e){ toast(url); }
+  const base = location.origin + location.pathname + '?view=cal' + location.hash;
+  if(navigator.share) try{ navigator.share({title:document.title, url:base}); return; }catch(_){}
+  try{ navigator.clipboard.writeText(base).then(()=>toast("Calendar link copied. It shows just the calendar, no nav."), ()=>toast(base)); }catch(e){ toast(base); }
 }
 
 /* ---------- Get Birthday Girl Home ---------- */
@@ -4733,7 +4798,7 @@ var SAFE_CONTACTS = {"groups":[{"title":"Emergency","items":[{"name":"Police / F
     doroKey = key; clearTimeout(doroTimer);
     const old = document.getElementById("doro"); if(old) old.remove();
     if(doroOff || doroShown[key]) return;
-    doroTimer = setTimeout(()=>doroShow(key), 33000);
+    return;
   }
   function doroShow(key){
     if(doroOff || key !== doroKey) return;
