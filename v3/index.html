@@ -899,6 +899,21 @@ button.dayev-name{all:unset;display:block;max-width:100%;font-family:var(--displ
 .sc-map-legend b{display:block;margin-bottom:6px;font-size:.85rem}
 .sc-leg-row{display:flex;align-items:center;gap:6px;margin:3px 0;font-weight:600}
 .sc-leg-swatch{width:24px;height:5px;border-radius:3px;flex:none}
+
+/* movie filming locations */
+.mv-grid{display:grid;gap:10px;margin:10px 0}
+.mv-card{all:unset;display:block;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;width:100%;box-sizing:border-box}
+.mv-card:hover,.mv-card:focus-visible{border-color:var(--coral);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.mv-hdr{display:flex;align-items:baseline;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+.mv-hdr b{font-family:var(--display);font-size:1rem}
+.mv-year{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+.mv-loc{font-weight:700;font-size:.88rem;color:var(--coral);margin-bottom:2px}
+.mv-scene{font-size:.82rem;color:var(--muted);margin-bottom:4px}
+.mv-tip{font-size:.78rem;color:var(--brass);font-style:italic}
+.mv-tip::before{content:"📸 "}
+.mv-daytrip{display:inline-block;font-size:.65rem;font-weight:800;text-transform:uppercase;background:var(--brass);color:#fff;border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.mv-go{display:block;margin-top:6px;color:var(--coral);font-weight:700;font-size:.82rem}
+
 /* calendar-only share view */
 body.cal-only .topbar,body.cal-only .logo-row,body.cal-only .tabbar,body.cal-only .global-alert,body.cal-only footer{display:none!important}
 body.cal-only{padding-top:0!important}
@@ -3819,6 +3834,38 @@ function vExplore2(){
   h += '<div class="cols">'+COLS.map(c=>{ const n = colPlaces(c.k).length;
     return '<button class="colcard" style="--cc:'+c.cc+'" data-col="'+c.k+'"><span class="n2">'+n+' places</span><b>'+esc(c.t)+'</b><span>'+esc(c.s)+'</span></button>'; }).join("")+'</div>';
   h += '<div class="row"><button class="btn" data-go="all">All places with filters</button><button class="btn" data-go="now">Everything open now</button><button class="btn" data-go="river">River cruise times</button></div>';
+  if(window.MOVIE_LOCATIONS){
+    var mvCity = MOVIE_LOCATIONS.filter(function(m){ return !m.daytrip; });
+    var mvTrip = MOVIE_LOCATIONS.filter(function(m){ return m.daytrip; });
+    h += '<details class="cat"'+(S.secs.movies?' open':'')+'><summary data-sec="movies"><span class="t2">🎬 Movie Locations</span><span class="c">'+MOVIE_LOCATIONS.length+' spots</span><span class="hint">Visit where famous films were shot and retake iconic photos.</span></summary><div class="body">';
+    h += '<p class="small">Famous scenes filmed right here in New Orleans. Tap a location to see it on the map.</p>';
+    h += '<div class="mv-grid">';
+    mvCity.forEach(function(m){
+      h += '<button class="mv-card" data-moviemap="'+m.lat+','+m.lon+'" title="'+esc(m.loc)+'">';
+      h += '<div class="mv-hdr"><b>'+esc(m.movie)+'</b><span class="mv-year">'+m.year+'</span></div>';
+      h += '<div class="mv-loc">'+esc(m.loc)+'</div>';
+      h += '<p class="mv-scene">'+esc(m.scene)+'</p>';
+      h += '<p class="mv-tip">'+esc(m.tip)+'</p>';
+      h += '<span class="mv-go">Show on map ›</span>';
+      h += '</button>';
+    });
+    h += '</div>';
+    if(mvTrip.length){
+      h += '<h4 style="margin:12px 0 4px;font-family:var(--display)">Day Trips</h4><p class="small muted">These are outside the city but worth the drive.</p>';
+      h += '<div class="mv-grid">';
+      mvTrip.forEach(function(m){
+        h += '<button class="mv-card" data-moviemap="'+m.lat+','+m.lon+'" title="'+esc(m.loc)+'">';
+        h += '<div class="mv-hdr"><b>'+esc(m.movie)+'</b><span class="mv-year">'+m.year+'</span><span class="mv-daytrip">Day trip</span></div>';
+        h += '<div class="mv-loc">'+esc(m.loc)+'</div>';
+        h += '<p class="mv-scene">'+esc(m.scene)+'</p>';
+        h += '<p class="mv-tip">'+esc(m.tip)+'</p>';
+        h += '<span class="mv-go">Show on map ›</span>';
+        h += '</button>';
+      });
+      h += '</div>';
+    }
+    h += '</div></details>';
+  }
   if(window.STREETCAR_LINES){
     h += '<details class="cat sc-section"'+(S.secs.sctram?' open':'')+'><summary data-sec="sctram"><span class="t2">🚃 Getting Around by Streetcar</span><span class="hint">4 lines, $1.25 a ride, $3 day pass</span></summary><div class="body">';
     h += '<p class="small">New Orleans has 4 streetcar lines. The <b>St. Charles</b> is the oldest in the world (since 1835). All accept cash or the Jazzy Pass.</p>';
@@ -4448,7 +4495,7 @@ render = function(){
 /* ---------- v2 events ---------- */
 window.addEventListener("error", e=>{ try{ toast("Something hiccuped. Pull down to refresh if a button stops working."); console.error(e.error||e.message); }catch(_){} });
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle],[data-surpclear],[data-bghome],[data-scmap],[data-scline],[data-copylink],[data-calscclose]");
+  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle],[data-surpclear],[data-bghome],[data-scmap],[data-scline],[data-copylink],[data-calscclose],[data-moviemap]");
   if(!el) return; const d = el.dataset;
   if(d.copylink){ navigator.clipboard.writeText(d.copylink).then(function(){ toast("Link copied!"); }).catch(function(){ prompt("Copy this link:", d.copylink); }); return; }
   if(d.surp){ const [k,v]=d.surp.split(":"), nv = k==="hrs" ? +v : v; S.surp[k] = S.surp[k]===nv ? null : nv; S.surpRes = (S.surp.mood||S.surp.hrs||S.surp.mode) ? surpriseNow() : null; if(!d.go){ render(); return; } }
@@ -4474,6 +4521,7 @@ document.addEventListener("click", e=>{
   if(d.share){ shareLink(); return; }
   if(d.bghome){ openBirthdayGirlHome(); return; }
   if(d.scline){ if(S.tab==="cal"){ S.calSc = !S.calSc; render(); setTimeout(function(){ var panel=document.getElementById("cal-sc-panel"); if(panel) panel.scrollIntoView({block:"nearest",behavior:"smooth"}); if(S.calSc) initCalScMap(); },100); return; } const lk = "sc_"+d.scline; S.tab = "map"; S.mapStreetcar = true; S.sheet = null; window.scrollTo(0,0); if(LVIEWS[lk]) S.mapGo = LVIEWS[lk][1]; render(); return; }
+  if(d.moviemap){ var ll = d.moviemap.split(","); S.tab = "map"; S.mapGo = [+ll[0], +ll[1], 17]; S.sheet = null; window.scrollTo(0,0); render(); return; }
   if(d.calscclose){ S.calSc = false; render(); return; }
   if(d.inkstyle){ S.inkStyle = d.inkstyle; render(); return; }
   if(d.girl){ S.girl = d.girl; S.tab = "girl"; S.sheet = null; window.scrollTo(0,0); render(); return; }
@@ -6369,6 +6417,7 @@ html body nav.vswitch.vswitch{display:none!important}
 <script src="config.js"></script>
 <script src="auth.js"></script>
 <script src="streetcars.js"></script>
+<script src="movies.js"></script>
 <script src="admin.js"></script>
 </body>
 </html>
