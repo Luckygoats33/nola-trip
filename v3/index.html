@@ -592,6 +592,7 @@ h3{font-family:var(--display);font-style:normal;font-weight:600}
 .wx-desc{font-size:.75rem;color:var(--muted)}
 .wx-rain{font-size:.75rem;color:var(--muted)}
 .wx-rain.high{color:var(--coral);font-weight:700}
+.wx-hum{font-size:.7rem;color:var(--muted)}
 /* AI ink gallery */
 .ai-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
 .ai-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:grid}
@@ -604,6 +605,7 @@ h3{font-family:var(--display);font-style:normal;font-weight:600}
 .tattoo-share{padding:8px 0}.tattoo-preview{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;text-align:center;margin-bottom:16px}
 .tattoo-preview a{text-decoration:none;color:inherit;display:flex;flex-direction:column;align-items:center;gap:8px}
 .tattoo-thumb{width:80px;height:80px;border-radius:16px;background:var(--brass);display:grid;place-items:center;font-size:2.2rem;margin-bottom:4px}
+.tattoo-pdf{width:100%;max-width:320px;height:400px;border:none;border-radius:12px;pointer-events:none;margin-bottom:4px;background:var(--bg)}
 .tattoo-preview b{font-family:var(--display);font-size:1.1rem}.tattoo-actions{display:flex;flex-direction:column;gap:10px}
 .tattoo-actions h3{font-family:var(--display);font-size:1.05rem;margin:0 0 4px}
 .tattoo-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;text-decoration:none;font-size:.95rem;padding:14px}
@@ -1759,10 +1761,7 @@ function plinks(ids){
   if(!ids||!ids.length) return "";
   return '<div class="links">'+ids.map(id=>{ const p=BY[id], on=pickersOf(id).length; return '<button class="plink'+(on?' picked':'')+'" data-open="'+id+'">'+esc(p.n)+'</button>'; }).join("")+'</div>';
 }
-function talk(tab){
-  const pool = TALK[tab], i = (S.talkIx[tab]||0) % pool.length, [g,line] = pool[i];
-  return '<div class="talk" data-g="'+g+'"><span class="badge-g" aria-hidden="true">'+g[0]+'</span><div><q>'+esc(line)+'</q><span class="who-g">— '+g+'</span></div><button class="again" data-talk="'+tab+'">Another one</button></div>';
-}
+function talk(){ return ""; }
 
 /* ---------- views ---------- */
 const GROUP_ORDER = ["coffee","eat","drink","jazz","party","queer","history","spooky","shop","tattoo","nature","daytrip","river","sports"];
@@ -2237,7 +2236,7 @@ const SAFETY = [
  ["red","Far Bywater toward the Industrial Canal",[[29.9648,-90.0335],[29.9708,-90.0348],[29.9732,-90.0238],[29.9655,-90.0228]]]
 ];
 const SAFE_TXT = {green:"Safer visitor area: busy and better lit. Still use normal city sense.", yellow:"Caution: fine by day. At night stay alert, stick to the main street, or take a rideshare.", red:"Avoid walking here at night. Take a car door to door. Daytime visits are a different story."};
-S.mapSafety = true;
+S.mapSafety = false;
 S.safeOn = {green:true, yellow:true, red:true};
 const MAP_VIEWS = {city:["Whole city",29.905,30.04,-90.145,-89.975], fq:["French Quarter",29.949,29.968,-90.076,-90.049], mb:["Marigny & Bywater",29.955,29.976,-90.068,-90.030], cbd:["CBD & Warehouse",29.938,29.958,-90.090,-90.055], up:["Garden District & Uptown",29.918,29.955,-90.140,-90.066]};
 const GROUP_COLOR = ["var(--coral)","var(--lav)","var(--gold)","var(--accent)"];
@@ -2553,6 +2552,7 @@ document.addEventListener("click", e=>{
 });
 function mapList(){
   const N = S.when || nolaNow(), cat = S.mapCat||"all";
+  if(S.mapScOnly) return [];
   return P.filter(p=>COORD[p.id] && (cat==="all"||p.c.includes(cat)) && (!S.mapSaved||pickersOf(p.id).length) &&
     (!S.mapOpen || (isSailing(p) ? eventsAt(p,N,240).length>0 : statusAt(p,N).state==="open")));
 }
@@ -2893,7 +2893,7 @@ async function refreshProfiles(){
 
 /* ---------- events ---------- */
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-tab],[data-day],[data-calday],[data-dayback],[data-daynav],[data-dayadd],[data-cat],[data-heart],[data-open],[data-close],[data-scrim],[data-copy],[data-check],[data-talk],[data-edit],[data-save],[data-cancel],[data-nowbtn],[data-when],[data-ncat],[data-editplan],[data-reset],[data-addday],[data-addstop],[data-planb],[data-addplace],[data-mv],[data-del],[data-rmp],[data-swap],[data-addp],[data-altsame],[data-addto],[data-doadd],[data-slot],[data-fixed],[data-vote],[data-ink],[data-inkfav],[data-locate],[data-next2],[data-lview],[data-ceadd],[data-ceplace],[data-cemap],[data-ceclear],[data-evedit],[data-evsave],[data-evcancel],[data-evdel],[data-share],#mapOpen,#mapSaved,[data-sec],[data-stop],[data-mapcat],[data-mapview],[data-mapzoom],[data-mapcolor],[data-clearq],[data-clearex],#mapSafety,#mapStreetcar,[data-safetoggle],[data-safelv],#nowLate,#exOpen,#exWalk,#picksOnly,#walkOnly,#nowPicks,[data-slotadd]");
+  const el = e.target.closest("[data-tab],[data-day],[data-calday],[data-dayback],[data-daynav],[data-dayadd],[data-cat],[data-heart],[data-open],[data-close],[data-scrim],[data-copy],[data-check],[data-talk],[data-edit],[data-save],[data-cancel],[data-nowbtn],[data-when],[data-ncat],[data-editplan],[data-reset],[data-addday],[data-addstop],[data-planb],[data-addplace],[data-mv],[data-del],[data-rmp],[data-swap],[data-addp],[data-altsame],[data-addto],[data-doadd],[data-slot],[data-fixed],[data-vote],[data-ink],[data-inkfav],[data-locate],[data-next2],[data-lview],[data-ceadd],[data-ceplace],[data-cemap],[data-ceclear],[data-evedit],[data-evsave],[data-evcancel],[data-evdel],[data-share],#mapOpen,#mapSaved,[data-sec],[data-stop],[data-mapcat],[data-mapview],[data-mapzoom],[data-mapcolor],[data-clearq],[data-clearex],#mapSafety,#mapStreetcar,#mapScOnly,[data-safetoggle],[data-safelv],#nowLate,#exOpen,#exWalk,#picksOnly,#walkOnly,#nowPicks,[data-slotadd]");
   if(!el) return;
   if(el.dataset.scrim && e.target!==el) return;
   if(el.dataset.sec){ e.preventDefault(); const det=el.parentElement; S.secs[el.dataset.sec]=!det.open; render(); return; }
@@ -2930,6 +2930,7 @@ document.addEventListener("click", e=>{
   if(el.id==="mapOpen"){ S.mapOpen=!S.mapOpen; render(); return; }
   if(el.id==="mapSaved"){ S.mapSaved=!S.mapSaved; render(); return; }
   if(el.id==="mapStreetcar"){ S.mapStreetcar=!S.mapStreetcar; render(); return; }
+  if(el.id==="mapScOnly"){ S.mapScOnly=!S.mapScOnly; if(S.mapScOnly) S.mapStreetcar=true; render(); return; }
   if(el.id==="nowLate"){ S.nowLate=!S.nowLate; render(); return; }
   if(el.id==="exOpen"){ S.exOpen=!S.exOpen; render(); return; }
   if(el.id==="exWalk"){ S.exWalk=!S.exWalk; render(); return; }
@@ -3281,10 +3282,10 @@ let WX = null, WXDAYS = null;
 const WXL = c => c===0?"Clear":c<=3?"Partly cloudy":c<=48?"Foggy":c<=67?"Rain":c<=77?"Wintry mix":c<=82?"Showers":"Thunderstorms";
 const WXI = c => c===0?"☀️":c<=3?"⛅":c<=48?"🌫️":c<=67?"🌧️":c<=77?"❄️":c<=82?"🌦️":"⛈️";
 function loadWX(){
-  try{ fetch("https://api.open-meteo.com/v1/forecast?latitude=29.95&longitude=-90.07&current=temperature_2m,weather_code&hourly=precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&temperature_unit=fahrenheit&timezone=America%2FChicago&forecast_days=7")
+  try{ fetch("https://api.open-meteo.com/v1/forecast?latitude=29.95&longitude=-90.07&current=temperature_2m,weather_code,relative_humidity_2m&hourly=precipitation_probability,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&temperature_unit=fahrenheit&timezone=America%2FChicago&forecast_days=7")
     .then(r=>r.json()).then(j=>{ const t=j.current.time.slice(0,13), H=j.hourly, i0=Math.max(0,H.time.findIndex(x=>x.slice(0,13)>=t));
-      WX = {temp:Math.round(j.current.temperature_2m), code:j.current.weather_code, rain:Math.max(0,...H.precipitation_probability.slice(i0,i0+3))};
-      if(j.daily){ const D=j.daily; WXDAYS = D.time.map((d,i)=>({date:d, hi:Math.round(D.temperature_2m_max[i]), lo:Math.round(D.temperature_2m_min[i]), code:D.weather_code[i], rain:D.precipitation_probability_max[i]})); }
+      WX = {temp:Math.round(j.current.temperature_2m), code:j.current.weather_code, rain:Math.max(0,...H.precipitation_probability.slice(i0,i0+3)), humidity:j.current.relative_humidity_2m};
+      if(j.daily){ const D=j.daily; WXDAYS = D.time.map((d,i)=>{ var hSlice=H.relative_humidity_2m.slice(i*24,(i+1)*24).filter(v=>v!=null); var avgH=hSlice.length?Math.round(hSlice.reduce((a,b)=>a+b,0)/hSlice.length):null; return {date:d, hi:Math.round(D.temperature_2m_max[i]), lo:Math.round(D.temperature_2m_min[i]), code:D.weather_code[i], rain:D.precipitation_probability_max[i], humidity:avgH}; }); }
       render(); }).catch(()=>{}); }catch(e){}
 }
 const OUTDOOR = ["garden","royal","magazine","ponchatoula","ferry","lakefront","gretna","chalmette","stl1","anansi","barataria","cajunpride","honeyisland","fontainebleau","covington","baystlouis","oakalley","whitney","laura","destrehan"];
@@ -3293,9 +3294,9 @@ const wxBad = () => WX && (WX.rain>=50 || WX.temp>=90 || WX.code>=61);
 function wxBox(){
   if(!WX) return "";
   const bad = wxBad(), why = WX.rain>=50||WX.code>=61 ? "Rain is likely in the next few hours" : WX.temp>=90 ? "It's hot out there" : "";
-  let h = '<div class="wx'+(bad?' alert':'')+'"><span class="deg">'+WX.temp+'°</span><div><b>'+esc(WXL(WX.code))+' in New Orleans</b><div class="small muted">Rain chance next 3 hrs: '+WX.rain+'%'+(bad?' · '+why+', so indoor picks come first.':'')+'</div></div></div>';
+  let h = '<div class="wx'+(bad?' alert':'')+'"><span class="deg">'+WX.temp+'°</span><div><b>'+esc(WXL(WX.code))+' in New Orleans</b><div class="small muted">Rain chance next 3 hrs: '+WX.rain+'%'+(WX.humidity!=null?' · Humidity: '+WX.humidity+'%':'')+(bad?' · '+why+', so indoor picks come first.':'')+'</div></div></div>';
   if(bad){ const N=nolaNow(); const ins = P.filter(p=>isIndoor(p) && statusAt(p,N).state==="open").sort((a,b)=>{ const x=distInfo(a),y=distInfo(b); return (x&&y)?x.m-y.m:a.d-b.d; }).slice(0,4);
-    if(ins.length) h += '<div class="links">'+ins.map(p=>'<button class="plink" data-open="'+p.id+'">'+esc(p.n)+'</button>').join("")+'</div>'; }
+    if(ins.length) h += '<div class="small muted" style="margin:8px 0 4px"><b>Indoor picks open now</b></div><div class="links">'+ins.map(p=>'<button class="plink" data-open="'+p.id+'">'+esc(p.n)+'</button>').join("")+'</div>'; }
   return h;
 }
 function wxForecast(){
@@ -3311,6 +3312,7 @@ function wxForecast(){
       +'<span class="wx-hilo"><b>'+d.hi+'°</b> / '+d.lo+'°</span>'
       +'<span class="wx-desc">'+esc(WXL(d.code))+'</span>'
       +'<span class="wx-rain'+(d.rain>=50?' high':'')+'">'+d.rain+'%</span>'
+      +(d.humidity!=null?'<span class="wx-hum">💧'+d.humidity+'%</span>':'')
       +'</div>';
   }).join("");
   h += '</div>';
@@ -4046,7 +4048,7 @@ function vTattooDesign(){
   var body = encodeURIComponent("Hey! Here's the tattoo design I want to get while I'm in New Orleans. Check it out:\n\n" + fullUrl + "\n\nLet me know if you can fit me in Nov 4-8!");
   var smsBody = encodeURIComponent("Hey! Here's my tattoo design for NOLA: " + fullUrl + " - Can you fit me in Nov 4-8?");
   var h = '<div class="tattoo-share">'
-    + '<div class="tattoo-preview"><a href="'+esc(pdfUrl)+'" target="_blank" rel="noopener"><div class="tattoo-thumb">🎨</div><b>tattoo_design.pdf</b><span class="muted small">Tap to view full design</span></a></div>'
+    + '<div class="tattoo-preview"><a href="'+esc(pdfUrl)+'" target="_blank" rel="noopener"><iframe class="tattoo-pdf" src="'+esc(pdfUrl)+'" title="Tattoo design preview"></iframe><b>tattoo_design.pdf</b><span class="muted small">Tap to view full design</span></a></div>'
     + '<div class="tattoo-actions">'
     + '<h3>Send to your artist</h3>'
     + '<a class="btn primary tattoo-btn" href="mailto:?subject='+subj+'&body='+body+'">📧 Email design</a>'
@@ -4169,7 +4171,7 @@ function vMap2(){
   h += '<div class="mapwrap"><div id="mapSlot" class="mapslot"></div>'+safeLegendHtml()+'</div>';
   h += '<div class="mapctl"><label class="mapsel wide"><span>Show</span><select class="field" id="mapcolsel" aria-label="Which places to show on the map"><option value="all"'+(!S.mapCol||S.mapCol==="all"?' selected':'')+'>All places</option>'+COLS.filter(c=>!c.special).map(c=>'<option value="'+c.k+'"'+(S.mapCol===c.k?' selected':'')+'>'+esc(c.t)+'</option>').join("")+'</select></label></div>';
   h += '<div class="row hscroll" role="group" aria-label="Walking radius"><span class="small muted">Within</span>'+[0,5,10,15,30].map(m=>'<button class="chip" data-radius="'+m+'" aria-pressed="'+((S.radius||0)===m)+'">'+(m?m+' min walk':'Any distance')+'</button>').join("")+(S.radius&&!o?'<span class="small muted">Tap Near me first</span>':'')+'</div>';
-  h += '<div class="row hscroll"><button class="chip" id="mapOpen" aria-pressed="'+!!S.mapOpen+'">Open now</button><button class="chip cake" id="mapSaved" aria-pressed="'+!!S.mapSaved+'">Saved</button><button class="chip" data-mapcolor="'+(S.mapColor==="open"?"type":"open")+'" aria-pressed="'+(S.mapColor==="open")+'">Color by open now</button><button class="chip" id="mapSafety" aria-pressed="'+!!S.mapSafety+'">Safety zones</button><button class="chip sc-chip" id="mapStreetcar" aria-pressed="'+!!S.mapStreetcar+'">🚃 Streetcars</button></div>';
+  h += '<div class="row hscroll"><button class="chip" id="mapOpen" aria-pressed="'+!!S.mapOpen+'">Open now</button><button class="chip cake" id="mapSaved" aria-pressed="'+!!S.mapSaved+'">Saved</button><button class="chip" data-mapcolor="'+(S.mapColor==="open"?"type":"open")+'" aria-pressed="'+(S.mapColor==="open")+'">Color by open now</button><button class="chip" id="mapSafety" aria-pressed="'+!!S.mapSafety+'">Safety zones</button><button class="chip sc-chip" id="mapStreetcar" aria-pressed="'+!!S.mapStreetcar+'">🚃 Streetcars</button><button class="chip sc-chip" id="mapScOnly" aria-pressed="'+!!S.mapScOnly+'">🗺️ Streetcar map</button></div>';
   h += '<div class="safety"><h3>Walking zones</h3><div class="safe-key" role="list"><span><i class="sw green"></i> Green · safer</span><span><i class="sw yellow"></i> Yellow · caution</span><span><i class="sw red"></i> Red · avoid at night</span></div><ul class="tips"><li>Green is the busier, better-lit visitor core: Bourbon, Royal, Decatur, Frenchmen, Canal, and St. Charles.</li><li>Yellow means fine by day; at night stay on the main street or take a car.</li><li>Red means don\'t walk it at night. Order the rideshare from inside and meet it at the door.</li></ul><p class="small muted">Shaded zones are visitor guidance, not legal advice or crime data. Edges are approximate. Emergency 911 · NOPD non-emergency <span class="mono">504-821-2222</span></p></div>';
   h += talk("map");
   h += '<details class="cat" open><summary data-sec="maplx"><span class="t2">Places in this view</span><span class="c" id="maplistcount"></span><span class="hint">Move the map to update the list.</span></summary><div class="body" id="maplist"></div></details>';
