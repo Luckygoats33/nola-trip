@@ -4521,7 +4521,7 @@ document.addEventListener("click", e=>{
   if(d.share){ shareLink(); return; }
   if(d.bghome){ openBirthdayGirlHome(); return; }
   if(d.scline){ if(S.tab==="cal"){ S.calSc = !S.calSc; render(); setTimeout(function(){ var panel=document.getElementById("cal-sc-panel"); if(panel) panel.scrollIntoView({block:"nearest",behavior:"smooth"}); if(S.calSc) initCalScMap(); },100); return; } const lk = "sc_"+d.scline; S.tab = "map"; S.mapStreetcar = true; S.sheet = null; window.scrollTo(0,0); if(LVIEWS[lk]) S.mapGo = LVIEWS[lk][1]; render(); return; }
-  if(d.moviemap){ var ll = d.moviemap.split(","); S.tab = "map"; S.mapGo = [+ll[0], +ll[1], 17]; S.sheet = null; window.scrollTo(0,0); render(); return; }
+  if(d.moviemap){ var ll = d.moviemap.split(","); S.tab = "map"; S.mapGo = [[+ll[0], +ll[1]], 17]; S.sheet = null; window.scrollTo(0,0); render(); return; }
   if(d.calscclose){ S.calSc = false; render(); return; }
   if(d.inkstyle){ S.inkStyle = d.inkstyle; render(); return; }
   if(d.girl){ S.girl = d.girl; S.tab = "girl"; S.sheet = null; window.scrollTo(0,0); render(); return; }
