@@ -878,9 +878,9 @@ button.dayev-name{all:unset;display:block;max-width:100%;font-family:var(--displ
 .daywalk a:hover{text-decoration:underline}
 
 /* streetcar time bars on calendar */
-.sc-bar-ov{border-left:5px solid;background:rgba(46,139,87,.06);border-radius:0;display:flex;align-items:flex-start;padding:4px 2px;cursor:pointer;z-index:1;pointer-events:auto;overflow:hidden}
-.sc-bar-ov:hover{background:rgba(46,139,87,.12)}
-.sc-bar-nm{writing-mode:vertical-lr;text-orientation:mixed;font-size:.55rem;font-weight:800;color:var(--muted);white-space:nowrap;transform:rotate(180deg)}
+.sc-bar-ov{border-left:5px solid;background:color-mix(in srgb, var(--sc-clr,#2E8B57) 12%, transparent);border-radius:0;display:flex;align-items:flex-start;padding:4px 2px;cursor:pointer;z-index:1;pointer-events:auto;overflow:hidden}
+.sc-bar-ov:hover{background:color-mix(in srgb, var(--sc-clr,#2E8B57) 22%, transparent)}
+.sc-bar-nm{writing-mode:vertical-lr;text-orientation:mixed;font-size:.58rem;font-weight:800;white-space:nowrap;transform:rotate(180deg)}
 .cal-sc-fare{border-top:1px solid rgba(255,255,255,.3);padding-top:5px;text-align:center;font-weight:800;font-size:.58rem;margin-top:auto;line-height:1.4}
 @media(max-width:599px){.cal-sc-bar{width:56px;padding:8px 4px}.cal-sc-nm{font-size:.56rem}.cal-sc-hrs{font-size:.5rem}.cal-sc-fare{font-size:.52rem}}
 
@@ -894,6 +894,11 @@ button.dayev-name{all:unset;display:block;max-width:100%;font-family:var(--displ
 .cal-sc-dot{width:12px;height:12px;border-radius:50%;flex:none}
 .cal-sc-line b{font-size:.85rem}.cal-sc-line .small{color:var(--muted)}
 .cal-sc-close{float:right;background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer}
+/* streetcar legend on map */
+.sc-map-legend{position:absolute;bottom:12px;left:12px;z-index:800;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:.82rem;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.sc-map-legend b{display:block;margin-bottom:6px;font-size:.85rem}
+.sc-leg-row{display:flex;align-items:center;gap:6px;margin:3px 0;font-weight:600}
+.sc-leg-swatch{width:24px;height:5px;border-radius:3px;flex:none}
 /* calendar-only share view */
 body.cal-only .topbar,body.cal-only .logo-row,body.cal-only .tabbar,body.cal-only .global-alert,body.cal-only footer{display:none!important}
 body.cal-only{padding-top:0!important}
@@ -2543,6 +2548,19 @@ function ensureMap(slot){
   applyLock(slot);
   setTimeout(()=>{ LMAP.invalidateSize(); if(S.mapGo){ const g=S.mapGo; S.mapGo=null; if(g==="all") fitAll(); else LMAP.setView(g[0], g[1]); } updateMapList(); }, 30);
 }
+function updateScLegend(show){
+  var el = document.getElementById("sc-map-legend");
+  if(!show){ if(el) el.remove(); return; }
+  if(el) el.remove();
+  var wrap = document.getElementById("mapSlot");
+  if(!wrap || !window.STREETCAR_LINES) return;
+  var d = document.createElement("div"); d.id = "sc-map-legend"; d.className = "sc-map-legend";
+  var h = '<b>Streetcar Lines</b>';
+  STREETCAR_LINES.forEach(function(l){ h += '<div class="sc-leg-row"><span class="sc-leg-swatch" style="background:'+l.color+'"></span>'+l.name+'</div>'; });
+  d.innerHTML = h;
+  wrap.parentElement.style.position = "relative";
+  wrap.parentElement.appendChild(d);
+}
 var _calScMap = null;
 function initCalScMap(){
   var slot = document.getElementById("cal-sc-map");
@@ -2616,16 +2634,17 @@ function updateMarkers(){
   LSTREETCAR.clearLayers();
   if(S.mapStreetcar && window.STREETCAR_LINES){
     STREETCAR_LINES.forEach(line=>{
-      L.polyline(line.route, {color:line.color, weight:4, opacity:.85, dashArray:"8 6"}).bindTooltip(line.name+" Line", {sticky:true}).addTo(LSTREETCAR);
+      L.polyline(line.route, {color:line.color, weight:7, opacity:.9}).bindTooltip("Streetcar: "+line.name+" Line", {sticky:true}).addTo(LSTREETCAR);
       line.stops.forEach(st=>{
-        const mk = L.circleMarker([st.lat,st.lon], {radius:5, color:"#fff", weight:2, fillColor:line.color, fillOpacity:1});
-        mk.bindTooltip(st.name+"<br><span style='color:"+line.color+"'>"+line.name+" Line</span>", {direction:"top", offset:[0,-6]});
-        mk.bindPopup("<b>"+st.name+"</b><br><span style='color:"+line.color+"'>"+line.name+" Line</span><br>"+line.freq+"<br>"+line.hours);
+        const mk = L.circleMarker([st.lat,st.lon], {radius:6, color:"#fff", weight:2, fillColor:line.color, fillOpacity:1});
+        mk.bindTooltip("<span style='display:inline-block;width:8px;height:8px;border-radius:50%;background:"+line.color+";margin-right:4px'></span>Streetcar: "+st.name, {direction:"top", offset:[0,-6]});
+        mk.bindPopup("<b style='color:"+line.color+"'>🚃 Streetcar: "+line.name+" Line</b><br>"+st.name+"<br>"+line.freq+"<br>"+line.hours);
         LSTREETCAR.addLayer(mk);
       });
     });
     if(!LMAP.hasLayer(LSTREETCAR)) LSTREETCAR.addTo(LMAP);
-  } else if(LMAP.hasLayer(LSTREETCAR)) LMAP.removeLayer(LSTREETCAR);
+    updateScLegend(true);
+  } else { if(LMAP.hasLayer(LSTREETCAR)) LMAP.removeLayer(LSTREETCAR); updateScLegend(false); }
 }
 function fitAll(){ const pts = mapList().map(coordOf); if(pts.length) LMAP.fitBounds(pts, {padding:[24,24], maxZoom:16}); }
 function updateMapList(){
@@ -3339,7 +3358,7 @@ function wxForecast(){
       +'<span class="wx-hilo"><b>'+d.hi+'°</b> / '+d.lo+'°</span>'
       +'<span class="wx-desc">'+esc(WXL(d.code))+'</span>'
       +'<span class="wx-rain'+(d.rain>=50?' high':'')+'">'+d.rain+'%</span>'
-      +(d.humidity!=null?'<span class="wx-hum">💧'+d.humidity+'%</span>':'')
+      +(d.humidity!=null?'<span class="wx-hum">💧 Humidity '+d.humidity+'%</span>':'')
       +'</div>';
   }).join("");
   h += '</div>';
@@ -3962,7 +3981,7 @@ function vDayTimeline(){
     });
   }
   if(S.calSc && window.STREETCAR_LINES){
-    h += '<div class="cal-sc-panel" id="cal-sc-panel"><button class="cal-sc-close" data-calscclose="1" aria-label="Close streetcar map">&times;</button><h3>🚃 Streetcar Routes</h3>';
+    h += '<div class="cal-sc-panel" id="cal-sc-panel"><button class="cal-sc-close" data-calscclose="1" aria-label="Close streetcar map">&times;</button>';
     h += '<div id="cal-sc-map" class="cal-sc-map"></div>';
     h += '<div class="cal-sc-legend">';
     STREETCAR_LINES.forEach(function(line){
@@ -4012,7 +4031,7 @@ function vDayTimeline(){
     if(barEnd <= barStart) return;
     var r1 = Math.round((barStart - from)/ADD_STEP) + 1;
     var r2 = Math.round((barEnd - from)/ADD_STEP) + 1;
-    h += '<div class="sc-bar-ov" data-scline="'+sb.line.id+'" style="grid-column:1;grid-row:'+r1+'/'+r2+';border-left-color:'+sb.line.color+'" title="'+esc(sb.line.name)+': '+esc(sb.line.freq)+'"><span class="sc-bar-nm">'+esc(sb.line.name.replace(/ - /g,"-").replace("Rampart-St. Claude","Rampart"))+'</span></div>';
+    h += '<div class="sc-bar-ov" data-scline="'+sb.line.id+'" style="grid-column:1;grid-row:'+r1+'/'+r2+';border-left-color:'+sb.line.color+';--sc-clr:'+sb.line.color+'" title="'+esc(sb.line.name)+': '+esc(sb.line.freq)+'"><span class="sc-bar-nm" style="color:'+sb.line.color+'">'+esc(sb.line.name.replace(/ - /g,"-").replace("Rampart-St. Claude","Rampart"))+'</span></div>';
   });
   h += '</div>';
   if(S.editingEv){
