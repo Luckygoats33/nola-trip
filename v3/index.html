@@ -4372,9 +4372,18 @@ function onRoute(){ if(location.hash==="#"+lastRoute) return; routing = true; if
 window.addEventListener("popstate", onRoute);
 window.addEventListener("hashchange", onRoute);
 function shareLink(){
-  const base = location.origin + location.pathname + '?view=cal' + location.hash;
-  if(navigator.share) try{ navigator.share({title:document.title, url:base}); return; }catch(_){}
-  try{ navigator.clipboard.writeText(base).then(()=>toast("Calendar link copied. It shows just the calendar, no nav."), ()=>toast(base)); }catch(e){ toast(base); }
+  var payload = {arrive:trip.arrive, depart:trip.depart, hotel:trip.hotel, days:[]};
+  plan.days.forEach(function(d){
+    var items = (d.items||[]).map(function(it){
+      var places = (it.p||[]).map(function(id){ var p=BY[id]; return p?{n:p.n,ad:p.ad||""}:{n:id,ad:""}; });
+      return {t:it.t, end:it.end||"", h:it.h, d:it.d||"", places:places};
+    });
+    payload.days.push({n:d.n, h:d.h||"", who:d.who||"", items:items});
+  });
+  var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  var base = location.origin + location.pathname.replace(/index\.html$/,"") + "share.html#" + encoded;
+  if(navigator.share) try{ navigator.share({title:"NOLA Girls Trip Itinerary", url:base}); return; }catch(_){}
+  try{ navigator.clipboard.writeText(base).then(function(){toast("Share link copied! Send it to your friends.");}, function(){prompt("Copy this link:",base);}); }catch(e){ prompt("Copy this link:",base); }
 }
 
 /* ---------- Get Birthday Girl Home ---------- */

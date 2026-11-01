@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#23172C">
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<title>NOLA Girls · Shared Itinerary</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#1A0F22;--surface:#23172C;--line:#3A2A47;--ink:#F6EBDD;--muted:#A89BB0;--coral:#E05A6D;--brass:#D9A441;--display:"Playfair Display",Georgia,serif;--mono:ui-monospace,Menlo,Consolas,monospace}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100dvh;padding:0}
+a{color:var(--coral);text-decoration:none}
+a:hover{text-decoration:underline}
+
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 60px}
+.header{text-align:center;padding:24px 0 20px;border-bottom:1px solid var(--line);margin-bottom:24px}
+.header .brand{font-family:var(--display);font-size:1.6rem;color:var(--ink);margin-bottom:4px}
+.header .sub{font-size:.82rem;color:var(--muted)}
+.header .dates{font-family:var(--mono);font-size:.78rem;color:var(--brass);letter-spacing:.06em;margin-top:8px}
+.header .hotel{font-size:.82rem;color:var(--muted);margin-top:4px}
+
+.cal-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
+.cal-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 .88rem/1.3 system-ui,sans-serif;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.cal-btn:hover{border-color:var(--coral);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.cal-btn svg{flex-shrink:0}
+.cal-btn.google{border-color:var(--brass);color:var(--brass)}
+.cal-btn.apple{border-color:var(--coral);color:var(--coral)}
+
+.day{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px}
+.day-head{margin-bottom:14px}
+.day-head h3{font-family:var(--display);font-size:1.15rem;margin-bottom:2px}
+.day-head .date{font-family:var(--mono);font-size:.72rem;color:var(--brass);letter-spacing:.06em}
+.day-head .who{font-size:.8rem;color:var(--muted);margin-top:2px}
+
+.stops{list-style:none;padding:0}
+.stop{display:grid;grid-template-columns:auto 1fr;gap:0 12px;padding:10px 0;border-top:1px solid var(--line)}
+.stop:first-child{border-top:none;padding-top:0}
+.stop .time{font-family:var(--mono);font-size:.82rem;color:var(--brass);white-space:nowrap;padding-top:2px}
+.stop .info h4{font-size:.95rem;font-weight:600;margin-bottom:2px}
+.stop .info .desc{font-size:.8rem;color:var(--muted);margin-bottom:2px}
+.stop .places{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.place-chip{display:inline-flex;align-items:center;gap:4px;font-size:.78rem;background:rgba(246,235,221,.06);border:1px solid var(--line);border-radius:6px;padding:3px 8px;color:var(--ink)}
+.place-chip .addr{font-size:.7rem;color:var(--muted)}
+
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty h2{font-family:var(--display);color:var(--ink);margin-bottom:8px}
+
+.footer{text-align:center;padding:20px 0;font-size:.78rem;color:var(--muted);border-top:1px solid var(--line);margin-top:20px}
+.footer a{color:var(--coral)}
+
+@media(max-width:480px){
+  .wrap{padding:12px 12px 40px}
+  .day{padding:14px}
+  .cal-actions{flex-direction:column;align-items:stretch}
+  .cal-btn{justify-content:center}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+(function(){
+"use strict";
+
+var esc = function(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]}); };
+
+function decode(){
+  var h = location.hash.replace(/^#/,"");
+  if(!h) return null;
+  try{
+    var json = decodeURIComponent(escape(atob(h)));
+    return JSON.parse(json);
+  }catch(e){}
+  return null;
+}
+
+function fmtDate(s){
+  if(!s) return "";
+  var d = new Date(s+"T12:00:00Z");
+  return d.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric",timeZone:"UTC"});
+}
+
+function dateOf(arrive, n){
+  var a = new Date(arrive+"T12:00:00Z");
+  a.setUTCDate(a.getUTCDate()+(n-1));
+  return a;
+}
+
+function dayLabel(arrive, n){
+  var d = dateOf(arrive, n);
+  return d.toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric",timeZone:"UTC"});
+}
+
+function fmtTime(t){
+  if(!t) return "";
+  var p = t.split(":"), h = +p[0], m = +p[1];
+  var ampm = h>=12?"PM":"AM";
+  var h12 = h%12||12;
+  return h12+":"+(m<10?"0":"")+m+" "+ampm;
+}
+
+function fmtTimeRange(t, end){
+  if(!end) return fmtTime(t);
+  var ts = toMin(t), te = toMin(end);
+  if(te<=ts) return fmtTime(t);
+  return fmtTime(t)+" - "+fmtTime(end);
+}
+
+function toMin(t){
+  var p = t.split(":"); return (+p[0])*60+(+p[1]);
+}
+
+function gcalUrl(item, arrive){
+  var d = dateOf(arrive, item.dayN);
+  var ymd = d.getUTCFullYear()+
+    ((d.getUTCMonth()+1)<10?"0":"")+(d.getUTCMonth()+1)+
+    (d.getUTCDate()<10?"0":"")+(d.getUTCDate());
+  var start = ymd+"T"+item.t.replace(":","")+"00";
+  var endT = item.end || addMin(item.t, 60);
+  var end = ymd+"T"+endT.replace(":","")+"00";
+  var title = item.h;
+  var loc = (item.places||[]).map(function(p){return p.ad||""}).filter(Boolean).join("; ");
+  var details = (item.places||[]).map(function(p){return p.n+(p.ad?" - "+p.ad:"")}).join("\\n");
+  return "https://calendar.google.com/calendar/render?action=TEMPLATE"
+    +"&text="+encodeURIComponent(title)
+    +"&dates="+start+"/"+end
+    +"&ctz=America/New_Orleans"
+    +"&location="+encodeURIComponent(loc)
+    +"&details="+encodeURIComponent(details);
+}
+
+function addMin(t, mins){
+  var p = t.split(":"), total = (+p[0])*60+(+p[1])+mins;
+  var h = Math.min(Math.floor(total/60),23), m = total%60;
+  return (h<10?"0":"")+h+":"+(m<10?"0":"")+m;
+}
+
+function makeIcs(data){
+  var lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//NOLA Girls//Trip//EN","CALSCALE:GREGORIAN","METHOD:PUBLISH"];
+  (data.days||[]).forEach(function(day){
+    (day.items||[]).forEach(function(it){
+      var d = dateOf(data.arrive, day.n);
+      var ymd = d.getUTCFullYear()+
+        ((d.getUTCMonth()+1)<10?"0":"")+(d.getUTCMonth()+1)+
+        (d.getUTCDate()<10?"0":"")+(d.getUTCDate());
+      var start = ymd+"T"+it.t.replace(":","")+"00";
+      var endT = it.end || addMin(it.t, 60);
+      var end = ymd+"T"+endT.replace(":","")+"00";
+      var loc = (it.places||[]).map(function(p){return p.ad||""}).filter(Boolean).join("; ");
+      var desc = (it.places||[]).map(function(p){return p.n+(p.ad?" - "+p.ad:"")}).join("\\n");
+      lines.push("BEGIN:VEVENT");
+      lines.push("DTSTART;TZID=America/New_Orleans:"+start);
+      lines.push("DTEND;TZID=America/New_Orleans:"+end);
+      lines.push("SUMMARY:"+icsEsc(it.h));
+      if(loc) lines.push("LOCATION:"+icsEsc(loc));
+      if(desc) lines.push("DESCRIPTION:"+icsEsc(desc));
+      lines.push("END:VEVENT");
+    });
+  });
+  lines.push("END:VCALENDAR");
+  return lines.join("\r\n");
+}
+
+function icsEsc(s){ return s.replace(/[,;\\]/g,function(c){return"\\"+c}).replace(/\n/g,"\\n"); }
+
+function downloadIcs(data){
+  var ics = makeIcs(data);
+  var blob = new Blob([ics],{type:"text/calendar;charset=utf-8"});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = "nola-trip.ics";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function gcalAllUrl(data){
+  var items = [];
+  (data.days||[]).forEach(function(day){
+    (day.items||[]).forEach(function(it){
+      items.push({dayN:day.n, t:it.t, end:it.end, h:it.h, places:it.places});
+    });
+  });
+  if(items.length===0) return "#";
+  return gcalUrl(items[0], data.arrive);
+}
+
+function render(){
+  var data = decode();
+  var app = document.getElementById("app");
+
+  if(!data || !data.days){
+    app.innerHTML = '<div class="empty"><h2>No itinerary found</h2><p>This share link may have expired or the data is missing.<br>Ask your friend to share the link again from their NOLA Girls calendar.</p></div>';
+    return;
+  }
+
+  var totalStops = 0;
+  data.days.forEach(function(d){ totalStops += (d.items||[]).length; });
+
+  var h = '<div class="header">';
+  h += '<div class="brand">The NOLA Girls</div>';
+  h += '<div class="sub">Shared Itinerary</div>';
+  if(data.arrive){
+    h += '<div class="dates">'+esc(fmtDate(data.arrive));
+    if(data.depart) h += ' &ndash; '+esc(fmtDate(data.depart));
+    h += '</div>';
+  }
+  if(data.hotel) h += '<div class="hotel">Staying at '+esc(data.hotel)+'</div>';
+  h += '</div>';
+
+  if(totalStops>0){
+    h += '<div class="cal-actions">';
+    h += '<button class="cal-btn apple" id="ics-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Add all to calendar (.ics)</button>';
+    h += '<a class="cal-btn google" href="'+esc(gcalAllUrl(data))+'" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h2v2H8z"/></svg>Add to Google Calendar</a>';
+    h += '</div>';
+  }
+
+  data.days.forEach(function(day){
+    h += '<div class="day">';
+    h += '<div class="day-head">';
+    h += '<h3>Day '+day.n+(day.h?' &middot; '+esc(day.h):'')+'</h3>';
+    if(data.arrive) h += '<span class="date">'+esc(dayLabel(data.arrive, day.n))+'</span>';
+    if(day.who) h += '<div class="who">'+esc(day.who)+'</div>';
+    h += '</div>';
+
+    if(day.items && day.items.length){
+      h += '<ol class="stops">';
+      day.items.forEach(function(it){
+        h += '<li class="stop">';
+        h += '<span class="time">'+esc(fmtTimeRange(it.t, it.end))+'</span>';
+        h += '<div class="info">';
+        h += '<h4>'+esc(it.h)+'</h4>';
+        if(it.d) h += '<div class="desc">'+esc(it.d)+'</div>';
+        if(it.places && it.places.length){
+          h += '<div class="places">';
+          it.places.forEach(function(p){
+            h += '<span class="place-chip">'+esc(p.n);
+            if(p.ad) h += ' <span class="addr">'+esc(p.ad)+'</span>';
+            h += '</span>';
+          });
+          h += '</div>';
+        }
+        if(data.arrive){
+          h += '<a class="place-chip" style="color:var(--brass);border-color:var(--brass);cursor:pointer;text-decoration:none;margin-top:4px" href="'+esc(gcalUrl({dayN:day.n,t:it.t,end:it.end,h:it.h,places:it.places||[]},data.arrive))+'" target="_blank" rel="noopener">+ Google Cal</a>';
+        }
+        h += '</div>';
+        h += '</li>';
+      });
+      h += '</ol>';
+    } else {
+      h += '<p style="color:var(--muted);font-size:.85rem">No stops planned yet.</p>';
+    }
+    h += '</div>';
+  });
+
+  h += '<div class="footer">Shared from <a href="https://luckygoats33.github.io/nola-trip/v3/">The NOLA Girls</a> trip planner</div>';
+
+  app.innerHTML = h;
+
+  document.getElementById("ics-btn").addEventListener("click",function(){ downloadIcs(data); });
+}
+
+render();
+})();
+</script>
+</body>
+</html>
