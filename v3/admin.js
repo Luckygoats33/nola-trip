@@ -169,27 +169,33 @@
   function syncTabs(){ var i = TABS.findIndex(function(t){ return t[0] === "admin"; });
     if (amAdmin() && i < 0) TABS.push(["admin", "Admin"]); else if (!amAdmin() && i >= 0) TABS.splice(i, 1); }
   var _render = render;
-  render = function(){ syncTabs(); var r = _render.apply(this, arguments);
+  function admToggle(){
+    return '<div class="seg adm-seg adm-savedtoggle" role="tablist" aria-label="Whose trip plans">' + [["mine", "My trip plans"], ["all", "All trip plans"]].map(function(x){ return '<button role="tab" data-admsaved="' + x[0] + '" aria-selected="' + (A.savedMode === x[0]) + '" aria-pressed="' + (A.savedMode === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</div>';
+  }
+  render = function(){ syncTabs(); var r; try { r = _render.apply(this, arguments); } catch(x){ console.error("[admin] base render:", x); }
+    try {
     if (S.tab === "admin"){ var m = document.getElementById("main"); if (m) m.innerHTML = '<section class="view adm-view">' + vAdmin() + '</section>'; }
     if (S.tab === "saved" && amAdmin()){ var m2 = document.getElementById("main"); if (m2){
-      var tg = '<div class="seg adm-seg adm-savedtoggle" role="tablist" aria-label="Whose trip plans">' + [["mine", "My trip plans"], ["all", "All trip plans"]].map(function(x){ return '<button role="tab" data-admsaved="' + x[0] + '" aria-selected="' + (A.savedMode === x[0]) + '" aria-pressed="' + (A.savedMode === x[0]) + '">' + x[1] + '</button>'; }).join("") + '</div>';
+      var tg = admToggle();
       if (A.savedMode === "all"){
         var body;
         if (!A.data){ if (!A.loading && !A.err) setTimeout(load, 0); body = '<div class="empty">' + (A.err ? "Couldn't load: " + e(A.err) : "Loading everyone…") + '</div>'; }
-        else { var sm = A.data.summary, rk = rankOverlap(sm, { nameOf: pname }), all = function(){ return true; };
-          body = '<div class="head"><span class="eyebrow">Everyone\'s saves</span><h2>All trip plans</h2></div>' + groupPicksHtml(rk, all) + '<h3 class="adm-h">By person</h3>' + peopleHtml(sm, sm, all); }
+        else { try { var sm = A.data.summary, rk = rankOverlap(sm, { nameOf: pname }), all = function(){ return true; };
+          body = '<div class="head"><span class="eyebrow">Everyone\'s saves</span><h2>All trip plans</h2></div>' + groupPicksHtml(rk, all) + '<h3 class="adm-h">By person</h3>' + peopleHtml(sm, sm, all);
+        } catch(bx){ console.error("[admin] body render:", bx); body = '<div class="empty">Something went wrong rendering. <button class="btn" data-admreload="1">Try again</button></div>'; } }
         m2.innerHTML = '<section class="view adm-view">' + tg + body + '</section>';
       } else { var sec = m2.querySelector("section.view"); if (sec) sec.insertAdjacentHTML("afterbegin", tg); }
     } }
+    } catch(x){ console.error("[admin] overlay render:", x); }
     return r; };
-  window.nolaAuthChanged = function(){ if (!amAdmin()) A.data = null; render(); };
+  window.nolaAuthChanged = function(){ if (!amAdmin()) A.data = null; try { render(); } catch(x){ console.error("[admin] authChanged render:", x); } };
   document.addEventListener("click", function(ev){
     var el = ev.target.closest && ev.target.closest("[data-admsec],[data-admperson],[data-admcat],[data-admopen],[data-admsolo],[data-admreload],[data-admsaved]"); if (!el) return;
     var d = el.dataset;
     if (d.admsolo){ ev.preventDefault(); A.open.solo = !A.open.solo; }
     if (d.admsaved){ A.savedMode = d.admsaved; if (d.admsaved === "all" && A.data && (!A.at || Date.now() - A.at > 30000)) { A.data = null; } } if (d.admsec) A.sec = d.admsec; if (d.admperson) A.person = d.admperson; if (d.admcat) A.cat = d.admcat;
     if (d.admopen) A.open[d.admopen] = !A.open[d.admopen]; if (d.admreload){ A.err = null; load(); }
-    render();
+    try { render(); } catch(x){ console.error("[admin] click render:", x); }
   });
   render();
 })();
