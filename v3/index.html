@@ -884,6 +884,16 @@ button.dayev-name{all:unset;display:block;max-width:100%;font-family:var(--displ
 .cal-sc-fare{border-top:1px solid rgba(255,255,255,.3);padding-top:5px;text-align:center;font-weight:800;font-size:.58rem;margin-top:auto;line-height:1.4}
 @media(max-width:599px){.cal-sc-bar{width:56px;padding:8px 4px}.cal-sc-nm{font-size:.56rem}.cal-sc-hrs{font-size:.5rem}.cal-sc-fare{font-size:.52rem}}
 
+/* inline streetcar map panel on calendar */
+.cal-sc-panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+.cal-sc-panel h3{margin:0 0 10px;font-family:var(--display)}
+.cal-sc-map{width:100%;height:320px;border-radius:12px;margin-bottom:12px}
+.cal-sc-legend{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+@media(max-width:599px){.cal-sc-legend{grid-template-columns:1fr}}
+.cal-sc-line{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
+.cal-sc-dot{width:12px;height:12px;border-radius:50%;flex:none}
+.cal-sc-line b{font-size:.85rem}.cal-sc-line .small{color:var(--muted)}
+.cal-sc-close{float:right;background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer}
 /* calendar-only share view */
 body.cal-only .topbar,body.cal-only .logo-row,body.cal-only .tabbar,body.cal-only .global-alert,body.cal-only footer{display:none!important}
 body.cal-only{padding-top:0!important}
@@ -2237,6 +2247,7 @@ const SAFETY = [
 ];
 const SAFE_TXT = {green:"Safer visitor area: busy and better lit. Still use normal city sense.", yellow:"Caution: fine by day. At night stay alert, stick to the main street, or take a rideshare.", red:"Avoid walking here at night. Take a car door to door. Daytime visits are a different story."};
 S.mapSafety = false;
+S.calSc = false;
 S.safeOn = {green:true, yellow:true, red:true};
 const MAP_VIEWS = {city:["Whole city",29.905,30.04,-90.145,-89.975], fq:["French Quarter",29.949,29.968,-90.076,-90.049], mb:["Marigny & Bywater",29.955,29.976,-90.068,-90.030], cbd:["CBD & Warehouse",29.938,29.958,-90.090,-90.055], up:["Garden District & Uptown",29.918,29.955,-90.140,-90.066]};
 const GROUP_COLOR = ["var(--coral)","var(--lav)","var(--gold)","var(--accent)"];
@@ -2531,6 +2542,22 @@ function ensureMap(slot){
   }
   applyLock(slot);
   setTimeout(()=>{ LMAP.invalidateSize(); if(S.mapGo){ const g=S.mapGo; S.mapGo=null; if(g==="all") fitAll(); else LMAP.setView(g[0], g[1]); } updateMapList(); }, 30);
+}
+var _calScMap = null;
+function initCalScMap(){
+  var slot = document.getElementById("cal-sc-map");
+  if(!slot || !window.L || !window.STREETCAR_LINES) return;
+  if(_calScMap){ _calScMap.remove(); _calScMap = null; }
+  _calScMap = L.map(slot, {zoomControl:true, scrollWheelZoom:false, dragging:true}).setView([29.955,-90.075], 13);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom:18, attribution:'&copy; OSM'}).addTo(_calScMap);
+  if(isDark()) slot.classList.add("dark");
+  STREETCAR_LINES.forEach(function(line){
+    L.polyline(line.route, {color:line.color, weight:5, opacity:.85}).addTo(_calScMap);
+    line.stops.forEach(function(stop){
+      L.circleMarker([stop.lat, stop.lon], {radius:5, fillColor:line.color, fillOpacity:1, color:"#fff", weight:1.5}).bindTooltip(stop.name, {direction:"top"}).addTo(_calScMap);
+    });
+  });
+  setTimeout(function(){ _calScMap.invalidateSize(); }, 50);
 }
 const isTouch = () => !!(window.matchMedia && matchMedia("(pointer:coarse)").matches);
 const isPhone = () => !!(window.matchMedia && matchMedia("(max-width:899px)").matches);
@@ -3934,6 +3961,16 @@ function vDayTimeline(){
       scBarData.push({line:line, startMin:startMin, endMin:endMin});
     });
   }
+  if(S.calSc && window.STREETCAR_LINES){
+    h += '<div class="cal-sc-panel" id="cal-sc-panel"><button class="cal-sc-close" data-calscclose="1" aria-label="Close streetcar map">&times;</button><h3>🚃 Streetcar Routes</h3>';
+    h += '<div id="cal-sc-map" class="cal-sc-map"></div>';
+    h += '<div class="cal-sc-legend">';
+    STREETCAR_LINES.forEach(function(line){
+      h += '<div class="cal-sc-line"><span class="cal-sc-dot" style="background:'+line.color+'"></span><div><b>'+esc(line.name)+'</b><br><span class="small">'+esc(line.hours)+'</span><br><span class="small">'+esc(line.freq)+'</span></div></div>';
+    });
+    h += '</div><p class="small muted">Fare: '+STREETCAR_FARE.single+' per ride / '+STREETCAR_FARE.day+' day pass. Colored left borders on your events show streetcar access.</p>';
+    h += '<button class="btn" data-go="map" data-scmap="1">Open full map with streetcars</button></div>';
+  }
   h += '<div class="dayboard" style="grid-template-columns:68px repeat('+colCount+',minmax(0,1fr))" role="grid" aria-label="Schedule for '+esc(parts.long)+'">';
   for(let i=0;i<rows;i++){
     const m = from + i*ADD_STEP;
@@ -3946,8 +3983,9 @@ function vDayTimeline(){
     const startM = toM(it.t||"12:00");
     const whenLab = it.end && toM(it.end)>startM ? fmtClock(startM)+"–"+fmtClock(toM(it.end)) : fmtClock(startM);
     const place = (it.p||[]).map(id=>BY[id]).find(Boolean);
-    const nearSc = window.streetcarStopsNear && (it.p||[]).some(function(id){ return COORD[id] && streetcarStopsNear(COORD[id][0],COORD[id][1],800).length>0; });
-    h += '<div class="dayev'+(isFlightItem(it)?' flight':'')+(it.custom?' custom':'')+(nearSc?' sc-near-ev':'')+'" style="grid-column:'+(p.col+2)+';grid-row:'+row+' / span '+p.slots+'" role="gridcell">';
+    var scLineForEv = null;
+    if(window.streetcarNearestStop){ (it.p||[]).some(function(id){ if(!COORD[id]) return false; var sc2=streetcarNearestStop(COORD[id][0],COORD[id][1]); if(sc2 && sc2.meters<800){ scLineForEv=sc2.line; return true; } return false; }); }
+    h += '<div class="dayev'+(isFlightItem(it)?' flight':'')+(it.custom?' custom':'')+(scLineForEv?' sc-near-ev':'')+'" style="grid-column:'+(p.col+2)+';grid-row:'+row+' / span '+p.slots+(scLineForEv?';border-left-color:'+scLineForEv.color:'')+'" role="gridcell">';
     if(!readOnly) h += '<button type="button" class="dayev-edit" data-evedit="'+it.k+'" aria-label="Edit '+esc(it.h||"stop")+'">&#9998;</button>';
     var needsRes = place && place.hrs && (function(rv){ rv=rv.toLowerCase(); return rv.includes("reserv")||rv.includes("ticket")||rv.includes("resy")||rv.includes("opentable")||rv.includes("book"); })(place.hrs.reserve||"");
     h += place ? '<button type="button" class="dayev-name" data-open="'+place.id+'">'+esc(it.h||"Stop")+'</button>' : '<b class="dayev-name">'+esc(it.h||"Stop")+'</b>';
@@ -4391,7 +4429,7 @@ render = function(){
 /* ---------- v2 events ---------- */
 window.addEventListener("error", e=>{ try{ toast("Something hiccuped. Pull down to refresh if a button stops working."); console.error(e.error||e.message); }catch(_){} });
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle],[data-surpclear],[data-bghome],[data-scmap],[data-scline],[data-copylink]");
+  const el = e.target.closest("[data-go],[data-col],[data-surp],[data-surprun],[data-surpadd],[data-tm],[data-visit],[data-rate],[data-person],[data-savedtab],[data-modebtn],[data-setmode],[data-radius],[data-mapcol],[data-aiink],[data-addnight],[data-nearme],[data-clearuq],[data-share],[data-girl],[data-girlsurp],[data-inkstyle],[data-surpclear],[data-bghome],[data-scmap],[data-scline],[data-copylink],[data-calscclose]");
   if(!el) return; const d = el.dataset;
   if(d.copylink){ navigator.clipboard.writeText(d.copylink).then(function(){ toast("Link copied!"); }).catch(function(){ prompt("Copy this link:", d.copylink); }); return; }
   if(d.surp){ const [k,v]=d.surp.split(":"), nv = k==="hrs" ? +v : v; S.surp[k] = S.surp[k]===nv ? null : nv; S.surpRes = (S.surp.mood||S.surp.hrs||S.surp.mode) ? surpriseNow() : null; if(!d.go){ render(); return; } }
@@ -4416,7 +4454,8 @@ document.addEventListener("click", e=>{
   if(d.clearuq){ S.uq = ""; render(); return; }
   if(d.share){ shareLink(); return; }
   if(d.bghome){ openBirthdayGirlHome(); return; }
-  if(d.scline){ const lk = "sc_"+d.scline; S.tab = "map"; S.mapStreetcar = true; S.sheet = null; window.scrollTo(0,0); if(LVIEWS[lk]) S.mapGo = LVIEWS[lk][1]; render(); return; }
+  if(d.scline){ if(S.tab==="cal"){ S.calSc = !S.calSc; render(); setTimeout(function(){ var panel=document.getElementById("cal-sc-panel"); if(panel) panel.scrollIntoView({block:"nearest",behavior:"smooth"}); if(S.calSc) initCalScMap(); },100); return; } const lk = "sc_"+d.scline; S.tab = "map"; S.mapStreetcar = true; S.sheet = null; window.scrollTo(0,0); if(LVIEWS[lk]) S.mapGo = LVIEWS[lk][1]; render(); return; }
+  if(d.calscclose){ S.calSc = false; render(); return; }
   if(d.inkstyle){ S.inkStyle = d.inkstyle; render(); return; }
   if(d.girl){ S.girl = d.girl; S.tab = "girl"; S.sheet = null; window.scrollTo(0,0); render(); return; }
   if(d.girlsurp){ S.surp.mood = GIRL_MOOD[d.girlsurp] || "hidden"; S.surpRes = surpriseNow(); S.tab = "home"; render(); setTimeout(()=>document.getElementById("adv")?.scrollIntoView({block:"start", behavior:"smooth"}), 60); return; }
