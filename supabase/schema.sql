@@ -103,3 +103,17 @@ grant select, insert, update, delete on public.lists, public.list_items, public.
 
 -- 2026-10-21: first-run welcome flag
 alter table public.profiles add column if not exists welcomed_at timestamptz;
+
+-- 2026-10-31: shareable calendar snapshots (public read, no login needed to view)
+create table if not exists public.shared_plans (
+  id text primary key,
+  user_id uuid references auth.users(id) not null,
+  data jsonb not null,
+  created_at timestamptz default now()
+);
+alter table public.shared_plans enable row level security;
+create policy "Public read" on public.shared_plans for select using (true);
+create policy "Owner insert" on public.shared_plans for insert with check (auth.uid() = user_id);
+create policy "Owner delete" on public.shared_plans for delete using (auth.uid() = user_id);
+grant select on public.shared_plans to anon;
+grant select, insert, delete on public.shared_plans to authenticated;

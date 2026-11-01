@@ -44,6 +44,10 @@ a:hover{text-decoration:underline}
 .place-chip{display:inline-flex;align-items:center;gap:4px;font-size:.78rem;background:rgba(246,235,221,.06);border:1px solid var(--line);border-radius:6px;padding:3px 8px;color:var(--ink)}
 .place-chip .addr{font-size:.7rem;color:var(--muted)}
 
+.loading{text-align:center;padding:60px 20px;color:var(--muted)}
+.loading .spinner{display:inline-block;width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--coral);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
 .empty{text-align:center;padding:40px 20px;color:var(--muted)}
 .empty h2{font-family:var(--display);color:var(--ink);margin-bottom:8px}
 
@@ -59,23 +63,42 @@ a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
-<div class="wrap" id="app"></div>
+<div class="wrap" id="app"><div class="loading"><div class="spinner"></div><p>Loading itinerary...</p></div></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 <script>
 (function(){
 "use strict";
 
 var esc = function(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]}); };
 
-function decode(){
+function loadData(){
   var params = new URLSearchParams(location.search);
+  var shareId = params.get("id");
+  if(shareId){
+    var cfg = window.NOLA_SUPABASE || {};
+    if(!window.supabase || !cfg.url || !cfg.key){ showError(); return; }
+    var sb = window.supabase.createClient(cfg.url, cfg.key, {auth:{persistSession:false}});
+    sb.from("shared_plans").select("data").eq("id", shareId).maybeSingle().then(function(res){
+      if(res.error || !res.data){ showError(); return; }
+      render(res.data.data);
+    });
+    return;
+  }
   var h = params.get("d") || location.hash.replace(/^#/,"");
-  if(!h) return null;
-  try{
-    var json = decodeURIComponent(escape(atob(h)));
-    return JSON.parse(json);
-  }catch(e){}
-  return null;
+  if(h){
+    try{
+      var json = decodeURIComponent(escape(atob(h)));
+      render(JSON.parse(json));
+      return;
+    }catch(e){}
+  }
+  showError();
+}
+
+function showError(){
+  document.getElementById("app").innerHTML = '<div class="empty"><h2>No itinerary found</h2><p>This share link may have expired or the data is missing.<br>Ask your friend to share the link again from their NOLA Girls calendar.</p></div>';
 }
 
 function fmtDate(s){
@@ -191,12 +214,11 @@ function gcalAllUrl(data){
   return gcalUrl(items[0], data.arrive);
 }
 
-function render(){
-  var data = decode();
+function render(data){
   var app = document.getElementById("app");
 
   if(!data || !data.days){
-    app.innerHTML = '<div class="empty"><h2>No itinerary found</h2><p>This share link may have expired or the data is missing.<br>Ask your friend to share the link again from their NOLA Girls calendar.</p></div>';
+    showError();
     return;
   }
 
@@ -263,10 +285,11 @@ function render(){
 
   app.innerHTML = h;
 
-  document.getElementById("ics-btn").addEventListener("click",function(){ downloadIcs(data); });
+  var icsBtn = document.getElementById("ics-btn");
+  if(icsBtn) icsBtn.addEventListener("click",function(){ downloadIcs(data); });
 }
 
-render();
+loadData();
 })();
 </script>
 </body>
