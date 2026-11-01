@@ -68,7 +68,8 @@ a:hover{text-decoration:underline}
 var esc = function(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]}); };
 
 function decode(){
-  var h = location.hash.replace(/^#/,"");
+  var params = new URLSearchParams(location.search);
+  var h = params.get("d") || location.hash.replace(/^#/,"");
   if(!h) return null;
   try{
     var json = decodeURIComponent(escape(atob(h)));

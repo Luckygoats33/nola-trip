@@ -4381,8 +4381,8 @@ function shareLink(){
     payload.days.push({n:d.n, h:d.h||"", who:d.who||"", items:items});
   });
   var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-  var base = location.origin + location.pathname.replace(/index\.html$/,"") + "share.html#" + encoded;
-  if(navigator.share) try{ navigator.share({title:"NOLA Girls Trip Itinerary", url:base}); return; }catch(_){}
+  var base = location.origin + location.pathname.replace(/index\.html$/,"") + "share.html?d=" + encoded;
+  if(navigator.share){ navigator.share({title:"NOLA Girls Trip Itinerary", url:base}).catch(function(){}); return; }
   try{ navigator.clipboard.writeText(base).then(function(){toast("Share link copied! Send it to your friends.");}, function(){prompt("Copy this link:",base);}); }catch(e){ prompt("Copy this link:",base); }
 }
 
